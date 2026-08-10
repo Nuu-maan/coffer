@@ -1,0 +1,48 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: dist:win
+          - os: ubuntu-latest
+            target: dist:linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Package
+        run: npm run ${{ matrix.target }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coffer-${{ matrix.os }}
+          path: |
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
