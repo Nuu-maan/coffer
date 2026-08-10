@@ -23,7 +23,7 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#111113',
+    backgroundColor: '#131110',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
