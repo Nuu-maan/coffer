@@ -75,21 +75,20 @@ export function ItemList(): React.JSX.Element {
   if (items.length === 0) {
     return (
       <div className="flex h-full min-h-0 flex-col">
-        <Composer />
-        <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
-          <p className="text-ink">Nothing stashed yet</p>
-          <p className="text-[13px] text-ink-dim">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-8 text-center">
+          <p className="text-[15px] text-ink [text-wrap:balance]">Nothing stashed yet</p>
+          <p className="text-[13px] leading-relaxed text-ink-dim">
             Select text anywhere, then tap Shift twice to stash it.
           </p>
         </div>
+        <Composer />
       </div>
     )
   }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Composer />
-      <ul className="min-h-0 flex-1 list-none overflow-y-auto px-2 py-1.5">
+      <ul className="min-h-0 flex-1 list-none space-y-1.5 overflow-y-auto px-3 pb-2 pt-0.5">
         {items.map((item) => (
           <ItemRow
             key={item.id}
@@ -110,7 +109,7 @@ export function ItemList(): React.JSX.Element {
         ))}
       </ul>
 
-      <footer className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-ink-dim">
+      <footer className="flex shrink-0 items-center justify-between px-6 pb-1 pt-1.5 text-[11px] tabular-nums text-ink-faint">
         <span>{pending} open</span>
         {doneCount > 0 && (
           <button onClick={clearDone} className="transition-colors hover:text-ink">
@@ -118,6 +117,8 @@ export function ItemList(): React.JSX.Element {
           </button>
         )}
       </footer>
+
+      <Composer />
     </div>
   )
 }

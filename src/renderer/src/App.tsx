@@ -10,25 +10,38 @@ export function App(): React.JSX.Element {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex h-[38px] shrink-0 items-center border-b border-line pr-1.5">
-        <div className="drag-region flex h-full flex-1 items-center pl-4">
-          <span className="text-xs uppercase tracking-[0.08em] text-ink-dim">Coffer</span>
-        </div>
+      <header className="drag-region flex h-14 shrink-0 items-center gap-2 px-3">
+        <span className="pl-2 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-faint">
+          Coffer
+        </span>
 
-        <nav className="no-drag flex gap-0.5">
-          <TitlebarButton active={tab === 'list'} onClick={() => setTab('list')}>
-            List
-          </TitlebarButton>
-          <TitlebarButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-            Settings
-          </TitlebarButton>
-          <TitlebarButton onClick={() => coffer.window.minimize()} title="Minimise">
-            –
-          </TitlebarButton>
-          <TitlebarButton onClick={() => coffer.window.hideMain()} title="Close to tray">
-            ×
-          </TitlebarButton>
-        </nav>
+        <div className="no-drag ml-auto flex items-center gap-2">
+          <div className="raised flex rounded-full bg-surface p-1 shadow-card">
+            <SegmentButton active={tab === 'list'} onClick={() => setTab('list')}>
+              List
+            </SegmentButton>
+            <SegmentButton active={tab === 'settings'} onClick={() => setTab('settings')}>
+              Settings
+            </SegmentButton>
+          </div>
+
+          <RoundButton onClick={() => coffer.window.minimize()} title="Minimise">
+            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden>
+              <path d="M4 8h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </RoundButton>
+
+          <RoundButton onClick={() => coffer.window.hideMain()} title="Close to tray">
+            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden>
+              <path
+                d="M4.5 4.5l7 7m0-7l-7 7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </RoundButton>
+        </div>
       </header>
 
       <main className="min-h-0 flex-1">
@@ -38,24 +51,42 @@ export function App(): React.JSX.Element {
   )
 }
 
-function TitlebarButton({
-  active = false,
+function SegmentButton({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full px-3.5 py-1.5 text-xs transition-colors ${
+        active ? 'bg-surface-hi text-ink shadow-card' : 'text-ink-dim hover:text-ink'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function RoundButton({
   onClick,
   title,
   children
 }: {
-  active?: boolean
   onClick: () => void
-  title?: string
+  title: string
   children: React.ReactNode
 }): React.JSX.Element {
   return (
     <button
       onClick={onClick}
       title={title}
-      className={`rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-surface-hover hover:text-ink ${
-        active ? 'text-ink' : 'text-ink-dim'
-      }`}
+      aria-label={title}
+      className="raised hit-40 grid size-9 place-items-center rounded-full bg-surface text-ink-dim shadow-card transition-[color,background-color,scale] hover:bg-surface-hi hover:text-ink active:scale-[0.96]"
     >
       {children}
     </button>
