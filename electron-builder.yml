@@ -21,3 +21,33 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   shortcutName: Coffer
+linux:
+  icon: resources/icon.png
+  category: Utility
+  synopsis: A capture buffer and prompt queue for AI-assisted work
+  desktop:
+    entry:
+      Name: Coffer
+      Comment: Local-only stash for AI-assisted work
+      Keywords: clipboard;stash;todo;notes;
+      StartupWMClass: Coffer
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+artifactName: ${productName}-${version}-${arch}.${ext}
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
+  recommends:
+    - xdotool
+    - libayatana-appindicator3-1

@@ -4,6 +4,8 @@ import { coffer } from '@/lib/ipc'
 
 export function useItems(): {
   items: Item[]
+  addText: (text: string) => void
+  addImage: (data: Uint8Array) => Promise<void>
   toggle: (id: string) => void
   update: (id: string, text: string) => void
   remove: (id: string) => void
@@ -19,6 +21,10 @@ export function useItems(): {
 
   return {
     items,
+    addText: useCallback((text: string) => void coffer.items.add({ text }).then(setItems), []),
+    addImage: useCallback(async (data: Uint8Array) => {
+      setItems(await coffer.items.addImage({ data }))
+    }, []),
     toggle: useCallback((id: string) => void coffer.items.toggle(id).then(setItems), []),
     update: useCallback(
       (id: string, text: string) => void coffer.items.update(id, text).then(setItems),

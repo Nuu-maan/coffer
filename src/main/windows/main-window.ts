@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, nativeTheme, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { MAIN_HEIGHT, MAIN_WIDTH } from '@shared/constants'
 import { mainWindowOrigin } from './positioning'
@@ -23,7 +23,7 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#131110',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,

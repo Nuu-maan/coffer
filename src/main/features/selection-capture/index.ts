@@ -1,76 +1,60 @@
-import { execFile } from 'node:child_process'
 import { clipboard } from 'electron'
-import { UiohookKey, uIOhook } from 'uiohook-napi'
+import { isLinux, isWayland } from '@main/platform/session'
+import { readClipboard, restoreClipboard, snapshotClipboard } from './clipboard'
+import { sendCopyKeystroke } from './copy-key'
+import type { Capture } from './types'
+
+export type { Capture } from './types'
 
 const SETTLE_POLL_MS = 25
 const SETTLE_TIMEOUT_MS = 500
 
-export type SelectionResult =
-  | { ok: true; text: string }
-  | { ok: false; reason: 'empty' | 'failed' }
+export async function readSelection(): Promise<Capture> {
+  return isLinux() ? readSelectionLinux() : readSelectionRoundTrip()
+}
 
-export async function readSelection(): Promise<SelectionResult> {
-  const previous = clipboard.readText()
+async function readSelectionLinux(): Promise<Capture> {
+  const primary = readClipboard('selection')
+  if (primary.ok) return primary
+
+  if (isWayland()) {
+    const current = readClipboard('clipboard')
+    return current.ok ? current : { ok: false, reason: 'empty' }
+  }
+
+  return readSelectionRoundTrip()
+}
+
+async function readSelectionRoundTrip(): Promise<Capture> {
+  const previous = snapshotClipboard()
 
   clipboard.clear()
 
-  const sent = sendCopyKeystroke()
-  if (!sent) {
-    restore(previous)
+  if (!sendCopyKeystroke()) {
+    restoreClipboard(previous)
     return { ok: false, reason: 'failed' }
   }
 
-  const text = await waitForClipboard()
+  const captured = await waitForClipboard()
 
-  if (!text.trim()) {
-    restore(previous)
+  if (!captured.ok) {
+    restoreClipboard(previous)
     return { ok: false, reason: 'empty' }
   }
 
-  return { ok: true, text: text.trim() }
+  return captured
 }
 
-function restore(previous: string): void {
-  if (previous) clipboard.writeText(previous)
-}
-
-function sendCopyKeystroke(): boolean {
-  try {
-    uIOhook.keyTap(UiohookKey.C, [UiohookKey.Ctrl])
-    return true
-  } catch {
-    return sendCopyViaShell()
-  }
-}
-
-function sendCopyViaShell(): boolean {
-  try {
-    execFile(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        'Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait("^c")'
-      ],
-      { timeout: 2000, windowsHide: true }
-    )
-    return true
-  } catch {
-    return false
-  }
-}
-
-async function waitForClipboard(): Promise<string> {
+async function waitForClipboard(): Promise<Capture> {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS
 
   while (Date.now() < deadline) {
-    const text = clipboard.readText()
-    if (text) return text
+    const result = readClipboard('clipboard')
+    if (result.ok) return result
     await delay(SETTLE_POLL_MS)
   }
 
-  return clipboard.readText()
+  return readClipboard('clipboard')
 }
 
 function delay(ms: number): Promise<void> {

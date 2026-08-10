@@ -1,6 +1,6 @@
 import { Notification } from 'electron'
 import { APP_NAME } from '@shared/constants'
-import { addItem } from '@main/features/items/service'
+import { addImage, addItem } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { readSelection } from '@main/features/selection-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
@@ -18,20 +18,31 @@ export async function stashSelection(): Promise<void> {
 
     if (!selection.ok) {
       await takeCapturedSource()
-      notify(
-        selection.reason === 'empty'
-          ? 'Nothing selected'
-          : 'Could not read the selection'
-      )
+      notify(reasonMessage(selection.reason))
       return
     }
 
     const source = await takeCapturedSource()
-    broadcastItems(addItem({ text: selection.text, ...(source ? { source } : {}) }))
+    const attribution = source ? { source } : {}
+
+    if (selection.kind === 'image') {
+      const size = selection.image.getSize()
+      broadcastItems(await addImage(selection.image, attribution))
+      notify(`Image ${size.width}×${size.height}`)
+      return
+    }
+
+    broadcastItems(addItem({ text: selection.text, ...attribution }))
     notify(preview(selection.text))
   } finally {
     running = false
   }
+}
+
+function reasonMessage(reason: 'empty' | 'failed' | 'unsupported'): string {
+  if (reason === 'empty') return 'Nothing selected'
+  if (reason === 'unsupported') return 'Selection capture is not available in this session'
+  return 'Could not read the selection'
 }
 
 function notify(body: string): void {

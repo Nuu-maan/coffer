@@ -1,8 +1,15 @@
-import { BrowserWindow, clipboard, ipcMain } from 'electron'
+import { readFile } from 'node:fs/promises'
+import { BrowserWindow, clipboard, ipcMain, nativeImage } from 'electron'
 import { CH } from '@shared/ipc/channels'
-import type { AddItemInput, ReorderInput } from '@shared/ipc/contract'
+import type {
+  AddImageInput,
+  AddItemInput,
+  ClipRegion,
+  ReorderInput
+} from '@shared/ipc/contract'
 import type { Settings } from '@shared/types/item'
 import {
+  addImage,
   addItem,
   clearDone,
   listItems,
@@ -11,8 +18,19 @@ import {
   toggleItem,
   updateItem
 } from '@main/features/items/service'
+import { resolveImage } from '@main/features/images/store'
 import { applySettings, getSettings } from '@main/features/settings/service'
 import { stashSelection } from '@main/features/stash/capture-flow'
+import {
+  cancelClip,
+  commitClip,
+  currentDraft,
+  frameFor,
+  selectRegion,
+  startClip
+} from '@main/features/clipper'
+import { overlayDisplayId } from '@main/windows/clipper-overlay'
+import { platformInfo } from '@main/platform/session'
 import { hideMainWindow, showMainWindow } from '@main/windows/main-window'
 import { broadcast, broadcastItems } from './broadcast'
 
@@ -21,6 +39,10 @@ type OnSettingsChanged = (settings: Settings) => void
 export function registerIpc(onSettingsChanged: OnSettingsChanged): void {
   ipcMain.handle(CH.ITEMS_LIST, () => listItems())
   ipcMain.handle(CH.ITEMS_ADD, (_event, input: AddItemInput) => broadcastItems(addItem(input)))
+  ipcMain.handle(CH.ITEMS_ADD_IMAGE, async (_event, input: AddImageInput) => {
+    const image = nativeImage.createFromBuffer(Buffer.from(input.data))
+    return broadcastItems(await addImage(image, { caption: input.caption, source: input.source }))
+  })
   ipcMain.handle(CH.ITEMS_TOGGLE, (_event, id: string) => broadcastItems(toggleItem(id)))
   ipcMain.handle(CH.ITEMS_UPDATE, (_event, id: string, text: string) =>
     broadcastItems(updateItem(id, text))
@@ -35,8 +57,39 @@ export function registerIpc(onSettingsChanged: OnSettingsChanged): void {
   ipcMain.handle(CH.CLIPBOARD_WRITE, (_event, text: string) => {
     clipboard.writeText(text)
   })
+  ipcMain.handle(CH.CLIPBOARD_WRITE_IMAGE, async (_event, file: string, text?: string) => {
+    const path = resolveImage(file)
+    if (!path) return false
+    try {
+      const image = nativeImage.createFromBuffer(await readFile(path))
+      const caption = text?.trim()
+      if (caption) clipboard.write({ image, text: caption })
+      else clipboard.writeImage(image)
+      return true
+    } catch {
+      return false
+    }
+  })
 
   ipcMain.handle(CH.STASH_SELECTION, () => stashSelection())
+
+  ipcMain.handle(CH.CLIPPER_START, () => startClip())
+  ipcMain.handle(CH.CLIPPER_FRAME, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    const displayId = window ? overlayDisplayId(window) : null
+    return displayId === null ? null : frameFor(displayId)
+  })
+  ipcMain.handle(CH.CLIPPER_DRAFT, () => currentDraft())
+  ipcMain.handle(CH.CLIPPER_COMMIT, (_event, caption: string) => commitClip(caption))
+  ipcMain.on(CH.CLIPPER_CANCEL, () => cancelClip())
+  ipcMain.on(CH.CLIPPER_REGION, (event, region: ClipRegion) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    const displayId = window ? overlayDisplayId(window) : null
+    if (displayId === null) return cancelClip()
+    selectRegion(displayId, region)
+  })
+
+  ipcMain.handle(CH.PLATFORM_INFO, () => platformInfo())
 
   ipcMain.handle(CH.SETTINGS_GET, () => getSettings())
   ipcMain.handle(CH.SETTINGS_SET, (_event, patch: Partial<Settings>) => {
