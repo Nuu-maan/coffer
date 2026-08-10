@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { CH } from '@shared/ipc/channels'
-import type { AddItemInput, CofferApi, ReorderInput, Unsubscribe } from '@shared/ipc/contract'
+import type {
+  AddImageInput,
+  AddItemInput,
+  ClipRegion,
+  CofferApi,
+  ReorderInput,
+  Unsubscribe
+} from '@shared/ipc/contract'
 import type { Item, Settings } from '@shared/types/item'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): Unsubscribe {
@@ -13,6 +20,7 @@ const api: CofferApi = {
   items: {
     list: () => ipcRenderer.invoke(CH.ITEMS_LIST),
     add: (input: AddItemInput) => ipcRenderer.invoke(CH.ITEMS_ADD, input),
+    addImage: (input: AddImageInput) => ipcRenderer.invoke(CH.ITEMS_ADD_IMAGE, input),
     toggle: (id: string) => ipcRenderer.invoke(CH.ITEMS_TOGGLE, id),
     update: (id: string, text: string) => ipcRenderer.invoke(CH.ITEMS_UPDATE, id, text),
     remove: (id: string) => ipcRenderer.invoke(CH.ITEMS_DELETE, id),
@@ -21,10 +29,23 @@ const api: CofferApi = {
   },
   clipboard: {
     read: () => ipcRenderer.invoke(CH.CLIPBOARD_READ),
-    write: (text: string) => ipcRenderer.invoke(CH.CLIPBOARD_WRITE, text)
+    write: (text: string) => ipcRenderer.invoke(CH.CLIPBOARD_WRITE, text),
+    writeImage: (file: string, text?: string) =>
+      ipcRenderer.invoke(CH.CLIPBOARD_WRITE_IMAGE, file, text)
   },
   stash: {
     selection: () => ipcRenderer.invoke(CH.STASH_SELECTION)
+  },
+  clipper: {
+    start: () => ipcRenderer.invoke(CH.CLIPPER_START),
+    frame: () => ipcRenderer.invoke(CH.CLIPPER_FRAME),
+    draft: () => ipcRenderer.invoke(CH.CLIPPER_DRAFT),
+    region: (region: ClipRegion) => ipcRenderer.send(CH.CLIPPER_REGION, region),
+    cancel: () => ipcRenderer.send(CH.CLIPPER_CANCEL),
+    commit: (caption: string) => ipcRenderer.invoke(CH.CLIPPER_COMMIT, caption)
+  },
+  platform: {
+    info: () => ipcRenderer.invoke(CH.PLATFORM_INFO)
   },
   settings: {
     get: () => ipcRenderer.invoke(CH.SETTINGS_GET),

@@ -1,6 +1,7 @@
 export const CH = {
   ITEMS_LIST: 'items:list',
   ITEMS_ADD: 'items:add',
+  ITEMS_ADD_IMAGE: 'items:addImage',
   ITEMS_TOGGLE: 'items:toggle',
   ITEMS_UPDATE: 'items:update',
   ITEMS_DELETE: 'items:delete',
@@ -9,8 +10,18 @@ export const CH = {
 
   CLIPBOARD_READ: 'clipboard:read',
   CLIPBOARD_WRITE: 'clipboard:write',
+  CLIPBOARD_WRITE_IMAGE: 'clipboard:writeImage',
 
   STASH_SELECTION: 'stash:selection',
+
+  CLIPPER_START: 'clipper:start',
+  CLIPPER_REGION: 'clipper:region',
+  CLIPPER_CANCEL: 'clipper:cancel',
+  CLIPPER_COMMIT: 'clipper:commit',
+  CLIPPER_FRAME: 'clipper:frame',
+  CLIPPER_DRAFT: 'clipper:draft',
+
+  PLATFORM_INFO: 'platform:info',
 
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
