@@ -1,0 +1,23 @@
+appId: com.coffer.app
+productName: Coffer
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**
+  - resources/**
+  - package.json
+asarUnpack:
+  - '**/*.node'
+win:
+  icon: resources/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Coffer

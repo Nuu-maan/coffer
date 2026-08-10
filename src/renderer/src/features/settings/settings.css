@@ -1,0 +1,30 @@
+.settings {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.settings__row select,
+.settings__row input[type='range'] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--text);
+}
+
+.settings__value {
+  color: var(--text-dim);
+  font-size: 12px;
+  width: 48px;
+  text-align: right;
+}
