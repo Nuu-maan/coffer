@@ -1,32 +1,81 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
-@theme {
-  --color-bg: #131110;
-  --color-surface: #1d1a18;
-  --color-surface-hi: #272220;
-  --color-line: rgba(255, 255, 255, 0.07);
-  --color-line-hi: rgba(255, 255, 255, 0.12);
-  --color-ink: #f2ede9;
-  --color-ink-dim: #9a918a;
-  --color-ink-faint: #6b635e;
-  --color-accent: #e0954a;
-  --color-accent-soft: rgba(224, 149, 74, 0.14);
+@custom-variant dark (&:is(.dark *));
 
-  --font-sans:
-    'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+}
 
-  --radius-card: 18px;
-  --radius-dock: 26px;
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+}
 
-  --shadow-card:
-    0 1px 1px rgba(0, 0, 0, 0.22), 0 2px 4px rgba(0, 0, 0, 0.18),
-    0 4px 10px rgba(0, 0, 0, 0.12);
-  --shadow-dock:
-    0 1px 1px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.3),
-    0 10px 30px rgba(0, 0, 0, 0.42);
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html,
   body,
   #root {
@@ -34,17 +83,11 @@
   }
 
   body {
-    background: var(--color-bg);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
+    @apply bg-background text-foreground;
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
     user-select: none;
-  }
-
-  button {
-    cursor: pointer;
   }
 
   p {
@@ -54,26 +97,6 @@
   input,
   textarea {
     user-select: text;
-    resize: none;
-  }
-
-  textarea::placeholder {
-    color: var(--color-ink-faint);
-  }
-
-  ::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-clip: padding-box;
-    border: 3px solid transparent;
-    border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.09);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.16);
   }
 }
 
@@ -85,15 +108,6 @@
   -webkit-app-region: no-drag;
 }
 
-/* Top edge highlight that gives raised surfaces their physical feel. */
-@utility raised {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/*
- * Extends a small control's hit target without changing its visual size.
- * Sized to stay inside the neighbouring gap so targets never overlap.
- */
 @utility hit-36 {
   position: relative;
 
