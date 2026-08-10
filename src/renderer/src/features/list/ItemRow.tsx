@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
+import { GripVertical, X } from 'lucide-react'
 import type { Item } from '@shared/types/item'
+import { imageUrl } from '@shared/constants'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 type Props = {
   item: Item
   selected: boolean
-  copied: boolean
+  copied: 'image' | 'text' | null
   onSelect: () => void
-  onCopy: () => void
+  onCopy: (what: 'image' | 'text') => void
   onToggle: () => void
   onRemove: () => void
   onUpdate: (text: string) => void
@@ -28,8 +36,9 @@ export function ItemRow({
   onDragOver,
   onDrop
 }: Props): React.JSX.Element {
+  const label = item.kind === 'text' ? item.text : item.caption
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(item.text)
+  const [draft, setDraft] = useState(label)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -37,12 +46,12 @@ export function ItemRow({
   }, [editing])
 
   useEffect(() => {
-    setDraft(item.text)
-  }, [item.text])
+    setDraft(label)
+  }, [label])
 
   function commit(): void {
     setEditing(false)
-    if (draft.trim() !== item.text) onUpdate(draft)
+    if (draft.trim() !== label) onUpdate(draft)
   }
 
   return (
@@ -52,81 +61,108 @@ export function ItemRow({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onMouseDown={onSelect}
-      className={`group raised flex items-start gap-3 rounded-card bg-surface px-3.5 py-3 shadow-card transition-colors ${
-        selected ? 'bg-surface-hi ring-1 ring-accent/40' : 'hover:bg-surface-hi'
-      }`}
-    >
-      <button
-        onClick={onToggle}
-        aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
-        className={`hit-36 mt-px grid size-[18px] shrink-0 place-items-center rounded-full transition-[color,background-color,box-shadow,scale] active:scale-[0.96] ${
-          item.done
-            ? 'bg-accent text-bg'
-            : 'ring-1 ring-line-hi hover:ring-accent'
-        }`}
-      >
-        {item.done && (
-          <svg viewBox="0 0 16 16" className="size-3" aria-hidden>
-            <path
-              d="M4 8.5l2.5 2.5L12 5.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </button>
-
-      {editing ? (
-        <textarea
-          ref={inputRef}
-          rows={1}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={commit}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              commit()
-            }
-            if (event.key === 'Escape') {
-              setDraft(item.text)
-              setEditing(false)
-            }
-          }}
-          className="flex-1 whitespace-pre-wrap break-words text-left leading-normal outline-none"
-        />
-      ) : (
-        <button
-          onClick={onCopy}
-          onDoubleClick={() => setEditing(true)}
-          className={`flex-1 whitespace-pre-wrap break-words text-left leading-normal [text-wrap:pretty] ${
-            item.done ? 'text-ink-dim line-through' : ''
-          }`}
-        >
-          {item.text}
-        </button>
+      className={cn(
+        'group flex items-start gap-2.5 rounded-lg border bg-card px-3 py-2.5 text-card-foreground shadow-xs transition-colors',
+        selected ? 'border-ring bg-accent' : 'hover:bg-accent/50'
       )}
+    >
+      <GripVertical className="mt-1 size-4 shrink-0 cursor-grab text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
 
-      <span
-        className={`shrink-0 self-center rounded-full bg-accent-soft px-2 py-0.5 text-[10px] text-accent transition-opacity ${
-          copied ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        Copied
-      </span>
+      <Checkbox
+        checked={item.done}
+        onCheckedChange={onToggle}
+        aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
+        className="hit-36 mt-0.5 shrink-0"
+      />
 
-      <button
-        onClick={onRemove}
-        aria-label="Delete"
-        className="hit-36 grid size-6 shrink-0 self-center place-items-center rounded-full text-ink-faint opacity-0 transition-[color,background-color,opacity,scale] hover:bg-surface hover:text-ink focus-visible:opacity-100 active:scale-[0.96] group-hover:opacity-100"
-      >
-        <svg viewBox="0 0 16 16" className="size-3" aria-hidden>
-          <path d="M4.5 4.5l7 7m0-7l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {item.kind === 'image' && (
+          <button
+            onClick={() => onCopy('image')}
+            onDoubleClick={() => setEditing(true)}
+            aria-label="Copy image"
+            className="overflow-hidden rounded-md border bg-muted/40"
+          >
+            <img
+              src={imageUrl(item.file)}
+              alt={item.caption || 'Stashed image'}
+              draggable={false}
+              className={cn(
+                'max-h-44 w-full object-contain transition-opacity',
+                item.done && 'opacity-40'
+              )}
+            />
+          </button>
+        )}
+
+        {editing ? (
+          <Textarea
+            ref={inputRef}
+            rows={1}
+            value={draft}
+            placeholder={item.kind === 'image' ? 'Add a caption…' : ''}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={commit}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                commit()
+              }
+              if (event.key === 'Escape') {
+                setDraft(label)
+                setEditing(false)
+              }
+            }}
+            className="min-h-0 resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
+        ) : (
+          (item.kind === 'text' || label) && (
+            <button
+              onClick={() => onCopy('text')}
+              onDoubleClick={() => setEditing(true)}
+              aria-label={item.kind === 'image' ? 'Copy caption' : 'Copy text'}
+              className={cn(
+                'whitespace-pre-wrap break-words text-left leading-normal [text-wrap:pretty]',
+                item.done && 'text-muted-foreground line-through'
+              )}
+            >
+              {label}
+            </button>
+          )
+        )}
+
+        {item.kind === 'image' && !label && !editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="self-start text-xs text-muted-foreground hover:text-foreground"
+          >
+            Add a caption
+          </button>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1 self-center">
+        {copied && (
+          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+            {copied === 'image' ? 'Image copied' : 'Copied'}
+          </Badge>
+        )}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onRemove}
+              aria-label="Delete"
+              className="hit-36 text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              <X />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
+      </div>
     </li>
   )
 }
