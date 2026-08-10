@@ -1,56 +1,56 @@
-:root {
-  --bg: #111113;
-  --surface: #191a1d;
-  --surface-hover: #212328;
-  --border: #2a2c31;
-  --text: #e8e8ea;
-  --text-dim: #8b8d96;
-  --accent: #c98a3e;
-  --radius: 10px;
-  --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #111113;
+  --color-surface: #191a1d;
+  --color-surface-hover: #212328;
+  --color-line: #2a2c31;
+  --color-ink: #e8e8ea;
+  --color-ink-dim: #8b8d96;
+  --color-accent: #c98a3e;
+
+  --font-sans:
+    'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  --radius-panel: 10px;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  input,
+  textarea {
+    user-select: text;
+    resize: none;
+  }
+
+  textarea::placeholder {
+    color: var(--color-ink-dim);
+  }
 }
 
-html,
-body,
-#root {
-  height: 100%;
+@utility drag-region {
+  -webkit-app-region: drag;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  user-select: none;
-}
-
-body.capture-body {
-  background: transparent;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-input,
-textarea {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  outline: none;
-  user-select: text;
-  resize: none;
+@utility no-drag {
+  -webkit-app-region: no-drag;
 }

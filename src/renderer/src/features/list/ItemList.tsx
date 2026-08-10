@@ -4,7 +4,6 @@ import { coffer } from '@/lib/ipc'
 import { useItems } from '@/hooks/use-items'
 import { ItemRow } from './ItemRow'
 import { Composer } from './Composer'
-import './list.css'
 
 export function ItemList(): React.JSX.Element {
   const { items, toggle, update, remove, clearDone, move } = useItems()
@@ -75,11 +74,11 @@ export function ItemList(): React.JSX.Element {
 
   if (items.length === 0) {
     return (
-      <div className="list">
+      <div className="flex h-full min-h-0 flex-col">
         <Composer />
-        <div className="empty">
-          <p className="empty__title">Nothing stashed yet</p>
-          <p className="empty__hint">
+        <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+          <p className="text-ink">Nothing stashed yet</p>
+          <p className="text-[13px] text-ink-dim">
             Select text anywhere, then tap Shift twice to stash it.
           </p>
         </div>
@@ -88,9 +87,9 @@ export function ItemList(): React.JSX.Element {
   }
 
   return (
-    <div className="list">
+    <div className="flex h-full min-h-0 flex-col">
       <Composer />
-      <ul className="list__items">
+      <ul className="min-h-0 flex-1 list-none overflow-y-auto px-2 py-1.5">
         {items.map((item) => (
           <ItemRow
             key={item.id}
@@ -111,10 +110,10 @@ export function ItemList(): React.JSX.Element {
         ))}
       </ul>
 
-      <footer className="list__footer">
+      <footer className="flex items-center justify-between border-t border-line px-4 py-2.5 text-xs text-ink-dim">
         <span>{pending} open</span>
         {doneCount > 0 && (
-          <button className="list__clear" onClick={clearDone}>
+          <button onClick={clearDone} className="transition-colors hover:text-ink">
             Clear {doneCount} done
           </button>
         )}
