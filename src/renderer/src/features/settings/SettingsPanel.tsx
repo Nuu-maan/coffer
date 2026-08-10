@@ -17,11 +17,14 @@ export function SettingsPanel(): React.JSX.Element {
   }
 
   const control =
-    'rounded-md border border-line bg-surface px-2 py-1 text-ink outline-none focus:border-accent'
+    'rounded-full bg-surface-hi px-3 py-2 text-[13px] text-ink shadow-card outline-none focus-visible:ring-1 focus-visible:ring-accent'
+
+  const row =
+    'raised flex items-center justify-between gap-3 rounded-card bg-surface px-4 py-3.5 text-[13px] shadow-card'
 
   return (
-    <div className="flex flex-col gap-3.5 px-4 py-3.5">
-      <label className="flex items-center justify-between gap-3 text-[13px]">
+    <div className="flex flex-col gap-2 px-3 pt-0.5">
+      <label className={row}>
         <span>Trigger</span>
         <select
           value={settings.hotkeyMode}
@@ -34,7 +37,7 @@ export function SettingsPanel(): React.JSX.Element {
       </label>
 
       {settings.hotkeyMode === 'double-shift' && (
-        <label className="flex items-center justify-between gap-3 text-[13px]">
+        <label className={row}>
           <span>Tap window</span>
           <input
             type="range"
@@ -43,15 +46,15 @@ export function SettingsPanel(): React.JSX.Element {
             step={25}
             value={settings.doubleTapWindowMs}
             onChange={(event) => patch({ doubleTapWindowMs: Number(event.target.value) })}
-            className={control}
+            className="flex-1 accent-accent"
           />
-          <span className="w-12 text-right text-xs text-ink-dim">
+          <span className="w-12 shrink-0 text-right text-xs tabular-nums text-ink-dim">
             {settings.doubleTapWindowMs}ms
           </span>
         </label>
       )}
 
-      <label className="flex items-center justify-between gap-3 text-[13px]">
+      <label className={row}>
         <span>Launch on login</span>
         <input
           type="checkbox"
