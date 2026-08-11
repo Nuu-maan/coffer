@@ -88,7 +88,9 @@ export function ItemRow({
       className={cn(
         'group list-none rounded-[5px] transition-colors duration-100',
         dragging && 'z-20 bg-card shadow-float',
-        selected && !dragging && 'bg-selected text-selected-foreground',
+        selected &&
+          !dragging &&
+          'bg-selected text-selected-foreground shadow-[inset_0_0_0_0.5px_var(--selected-edge)]',
         !selected && !dragging && 'hover:bg-accent'
       )}
     >
@@ -116,10 +118,7 @@ export function ItemRow({
           checked={item.done}
           onCheckedChange={onToggle}
           aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
-          className={cn(
-            'hit-36 mt-[3px] shrink-0 self-start',
-            selected && 'border-white/50 bg-white/15 data-[state=checked]:bg-white/25'
-          )}
+          className="hit-36 mt-[3px] shrink-0 self-start"
         />
 
         <div
@@ -200,8 +199,7 @@ export function ItemRow({
                   className={cn(
                     'text-left text-base break-words whitespace-pre-wrap [text-wrap:pretty]',
                     long && !expanded && 'line-clamp-6',
-                    item.done && !selected && 'text-muted-foreground line-through decoration-border',
-                    item.done && selected && 'line-through opacity-60'
+                    item.done && 'text-muted-foreground line-through decoration-border'
                   )}
                 >
                   {label}
@@ -214,10 +212,7 @@ export function ItemRow({
                       setExpanded((current) => !current)
                     }}
                     onDoubleClick={(event) => event.stopPropagation()}
-                    className={cn(
-                      'text-xs font-medium transition-colors',
-                      selected ? 'text-current/80 hover:text-current' : 'text-tint hover:text-tint-hover'
-                    )}
+                    className="text-xs font-medium text-tint transition-colors hover:text-tint-hover"
                   >
                     {expanded ? 'Show less' : 'Show more'}
                   </button>
@@ -229,20 +224,14 @@ export function ItemRow({
           {item.kind === 'image' && !label && !editing && (
             <button
               onClick={() => setEditing(true)}
-              className={cn(
-                'self-start text-xs transition-colors',
-                selected ? 'text-current/70 hover:text-current' : 'text-muted-foreground hover:text-foreground'
-              )}
+              className="self-start text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Add a caption
             </button>
           )}
 
           <div
-            className={cn(
-              'relative flex items-center gap-1.5 text-2xs tabular-nums',
-              selected ? 'text-current/65' : 'text-muted-foreground/80'
-            )}
+            className="relative flex items-center gap-1.5 text-2xs text-muted-foreground/80 tabular-nums"
           >
             <time dateTime={new Date(item.createdAt).toISOString()}>{time(item.createdAt)}</time>
             {item.source?.app && (
@@ -270,8 +259,7 @@ export function ItemRow({
           aria-label="Delete"
           className={cn(
             'hit-36 self-center opacity-0 transition-opacity duration-100',
-            'group-hover:opacity-100 focus-visible:opacity-100',
-            selected && 'text-current hover:bg-white/20 hover:text-current'
+            'group-hover:opacity-100 focus-visible:opacity-100'
           )}
         >
           <X />
