@@ -1,7 +1,10 @@
-import type { Settings } from '@shared/types/item'
+import type { HotkeyStatus, Settings } from '@shared/types/item'
 import { platformInfo } from '@main/platform/session'
+import { ensureDesktopEntry } from '@main/platform/desktop-entry'
 import { startAcceleratorHotkey, type FallbackHandle } from './fallback'
 import { startDoubleShiftHook, type HookHandle } from './hook'
+import { bindPortalShortcuts, type PortalHandle } from './portal'
+import { toPortalTrigger } from './trigger'
 
 export type HotkeyTriggers = {
   onStash: () => void
@@ -11,58 +14,150 @@ export type HotkeyTriggers = {
 export type HotkeyManager = {
   apply(settings: Settings): void
   dispose(): void
-  activeMode(): 'double-shift' | 'accelerator' | 'none'
+  status(): HotkeyStatus
 }
 
-export function createHotkeyManager(triggers: HotkeyTriggers): HotkeyManager {
+const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [] }
+
+export function createHotkeyManager(
+  triggers: HotkeyTriggers,
+  onStatusChange: (status: HotkeyStatus) => void = () => undefined
+): HotkeyManager {
   let hook: HookHandle | null = null
   let stashAccelerator: FallbackHandle | null = null
   let clipAccelerator: FallbackHandle | null = null
-  let mode: 'double-shift' | 'accelerator' | 'none' = 'none'
+  let portal: PortalHandle | null = null
+  let current: HotkeyStatus = IDLE
+
+  // Portal binding is asynchronous, so a settings change that lands mid-flight
+  // must be able to discard the work it started.
+  let generation = 0
+
+  function publish(next: HotkeyStatus): void {
+    current = next
+    onStatusChange(next)
+  }
 
   function teardown(): void {
+    generation += 1
     hook?.stop()
     hook = null
     stashAccelerator?.stop()
     stashAccelerator = null
     clipAccelerator?.stop()
     clipAccelerator = null
-    mode = 'none'
+    portal?.close()
+    portal = null
+  }
+
+  function applyViaPortal(settings: Settings): void {
+    const mine = generation
+    publish({ mode: 'portal', error: null, portalShortcuts: [] })
+
+    void (async () => {
+      try {
+        await ensureDesktopEntry()
+
+        const handle = await bindPortalShortcuts([
+          {
+            id: 'stash',
+            description: 'Stash the selection',
+            preferredTrigger: toPortalTrigger(settings.accelerator),
+            onActivated: triggers.onStash
+          },
+          {
+            id: 'clip',
+            description: 'Clip a region of the screen',
+            preferredTrigger: toPortalTrigger(settings.clipperAccelerator),
+            onActivated: triggers.onClip
+          }
+        ])
+
+        if (mine !== generation) {
+          handle.close()
+          return
+        }
+
+        portal = handle
+        publish({ mode: 'portal', error: null, portalShortcuts: handle.shortcuts() })
+      } catch (error) {
+        if (mine !== generation) return
+        console.error('[hotkey] the desktop portal would not bind shortcuts', error)
+        publish({
+          mode: 'none',
+          error: error instanceof Error ? error.message : String(error),
+          portalShortcuts: []
+        })
+      }
+    })()
+  }
+
+  function applyViaAccelerators(settings: Settings): void {
+    if (settings.accelerator === settings.clipperAccelerator) {
+      publish({
+        mode: 'none',
+        error: 'Both shortcuts use the same keys, so neither one is registered.',
+        portalShortcuts: []
+      })
+      return
+    }
+
+    clipAccelerator = startAcceleratorHotkey(settings.clipperAccelerator, triggers.onClip)
+    stashAccelerator = startAcceleratorHotkey(settings.accelerator, triggers.onStash)
+
+    const refused = [
+      clipAccelerator ? null : settings.clipperAccelerator,
+      stashAccelerator ? null : settings.accelerator
+    ].filter((value): value is string => value !== null)
+
+    publish({
+      mode: stashAccelerator ? 'accelerator' : 'none',
+      error: refused.length
+        ? `Another application already owns ${refused.join(' and ')}.`
+        : null,
+      portalShortcuts: []
+    })
   }
 
   function apply(settings: Settings): void {
     teardown()
 
-    if (settings.clipperAccelerator) {
-      clipAccelerator = startAcceleratorHotkey(settings.clipperAccelerator, triggers.onClip)
-      if (!clipAccelerator) {
-        console.error(`[hotkey] could not register clipper ${settings.clipperAccelerator}`)
-      }
-    }
+    const platform = platformInfo()
 
-    if (settings.hotkeyMode === 'double-shift' && platformInfo().supportsDoubleShift) {
-      try {
-        hook = startDoubleShiftHook(triggers.onStash, settings.doubleTapWindowMs)
-        mode = 'double-shift'
-        return
-      } catch (error) {
-        console.error('[hotkey] low level hook unavailable, falling back', error)
-      }
-    }
-
-    if (settings.accelerator === settings.clipperAccelerator) {
-      console.error('[hotkey] stash and clipper accelerators collide')
-      mode = 'none'
+    if (!platform.supportsAccelerators) {
+      applyViaPortal(settings)
       return
     }
 
-    stashAccelerator = startAcceleratorHotkey(settings.accelerator, triggers.onStash)
-    mode = stashAccelerator ? 'accelerator' : 'none'
+    clipAccelerator = startAcceleratorHotkey(settings.clipperAccelerator, triggers.onClip)
 
-    if (!stashAccelerator) {
-      console.error(`[hotkey] could not register accelerator ${settings.accelerator}`)
+    if (settings.hotkeyMode === 'double-shift' && platform.supportsDoubleShift) {
+      try {
+        hook = startDoubleShiftHook(triggers.onStash, settings.doubleTapWindowMs)
+        publish({
+          mode: 'double-shift',
+          error: clipAccelerator
+            ? null
+            : `Another application already owns ${settings.clipperAccelerator}.`,
+          portalShortcuts: []
+        })
+        return
+      } catch (error) {
+        console.error('[hotkey] the low level hook is unavailable, falling back', error)
+      }
     }
+
+    clipAccelerator?.stop()
+    clipAccelerator = null
+    applyViaAccelerators(settings)
   }
 
-  return { apply, dispose: teardown, activeMode: () => mode }
+  return {
+    apply,
+    dispose() {
+      teardown()
+      current = IDLE
+    },
+    status: () => current
+  }
 }

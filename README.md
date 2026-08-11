@@ -36,9 +36,11 @@ Anywhere:
 | --- | --- |
 | `Shift` `Shift` | Stash the current selection (X11 and Windows) |
 | `Ctrl+Shift+Space` | Clip a region of the screen |
-| `Ctrl+Alt+Space` | Stash the selection — the fallback trigger, and the only one on Wayland |
+| `Ctrl+Alt+Space` | Stash the selection — the fallback trigger |
 
 Both accelerators are rebindable in Settings. Coffer refuses to register either if they collide, and says so.
+
+On Wayland the compositor owns key bindings, so there are no defaults to list: Coffer registers the named actions `com.coffer.app:stash` and `com.coffer.app:clip` with the desktop portal, and Settings shows the config line that binds them. See [Wayland shortcuts](#wayland-shortcuts).
 
 In the clipper overlay:
 
@@ -117,14 +119,31 @@ The overlays are created once at startup and reused, so a clip never waits for a
 | --- | --- | --- |
 | Windows | `uiohook-napi` low-level hook, or accelerator | Synthesize `Ctrl+C`, poll the clipboard, restore it on failure |
 | Linux / X11 | Same hook, or accelerator | Read the PRIMARY selection directly — no keystroke needed |
-| Linux / Wayland | Accelerator only, via the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
+| Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
 
-The double-tap trigger needs to watch the keyboard, which Wayland does not permit. Coffer detects the session, forces accelerator mode, and says so in Settings rather than failing silently.
+The double-tap trigger needs to watch the keyboard, which Wayland does not permit. Neither does it permit `globalShortcut`, which reports success there and then never fires. Coffer detects the session and takes the portal route instead of pretending an accelerator was registered.
+
+### Wayland shortcuts
+
+The portal hands out *names*; the compositor owns the *keys*. Three things have to line up:
+
+1. **An app id.** xdg-desktop-portal refuses a shortcuts session from an application it cannot name (`An app id is required`), and it names unsandboxed applications by resolving `<app-id>.desktop` through GLib — which only succeeds if the entry exists in an XDG application directory *and* its `Exec` points at a real binary. Coffer writes its own `NoDisplay=true` entry at `$XDG_DATA_HOME/applications/com.coffer.app.desktop` so this holds however it was installed, including in `npm run dev`.
+2. **Registration.** Coffer calls `org.freedesktop.host.portal.Registry.Register` on the same D-Bus connection before opening the session.
+3. **A binding.** After `BindShortcuts` the actions exist but have no keys. On Hyprland, `hyprctl globalshortcuts` lists them and `hyprland.conf` binds them:
+
+   ```
+   bind = SUPER, S, global, com.coffer.app:stash
+   bind = SUPER SHIFT, S, global, com.coffer.app:clip
+   ```
+
+   Settings shows the right snippet for the running desktop, with a copy button.
+
+Compositors that do not speak the shortcuts portal can bind a command instead: `coffer --stash` and `coffer --clip` are forwarded to the running instance through the single-instance lock.
 
 ## Notes
 
 - The `uiohook-napi` hook is blocked on some managed or antivirus-protected machines. Settings offers `Ctrl+Shift+Space`, and the app falls back automatically if the hook cannot start.
-- Wayland global shortcuts require `--enable-features=GlobalShortcutsPortal`, which Coffer sets itself, and a working `xdg-desktop-portal`. The first press raises a system permission prompt. Portal 1.20+ (GNOME 50) has a known registration bug upstream in Chromium.
+- Wayland global shortcuts go through Coffer's own D-Bus client (`hotkey/portal.ts`) rather than Chromium's `GlobalShortcutsPortal` feature, so the action names, the bound state, and any portal refusal are all visible in Settings instead of failing silently.
 - Images are written to `images/<id>.png` beside the store rather than inlined as base64, so the store file stays small and every debounced save stays cheap. The renderer loads them over a registered `coffer://` scheme, so the CSP never needs to allow `file:`.
 - On Wayland the clipper does not use `desktopCapturer`, whose screencast portal demands a source picker on every use. It tries, in order of what the session supports: `grim` on wlroots compositors, the `org.freedesktop.portal.Screenshot` portal, then `spectacle` on KDE. The portal may ask for permission once, then stays silent. If every backend fails it falls back to `desktopCapturer` and the picker returns.
 - Theme is stored in settings and pushed to `nativeTheme.themeSource` in the main process. Every renderer then just follows `prefers-color-scheme`, so the overlay and the clip form stay in sync with the list window for free.

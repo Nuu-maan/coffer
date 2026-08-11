@@ -18,11 +18,14 @@ import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
 import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
+import { useHotkeyStatus } from '@/hooks/use-hotkey-status'
+import { PortalShortcuts } from './PortalShortcuts'
 import { ShortcutInput } from './ShortcutInput'
 
 export function SettingsPanel(): React.JSX.Element {
   const [settings, setSettings] = useState<Settings | null>(null)
   const platform = usePlatform()
+  const hotkeys = useHotkeyStatus()
 
   useEffect(() => {
     void coffer.settings.get().then(setSettings)
@@ -36,9 +39,12 @@ export function SettingsPanel(): React.JSX.Element {
   }
 
   const doubleShiftAvailable = platform?.supportsDoubleShift ?? true
+  const acceleratorsAvailable = platform?.supportsAccelerators ?? true
   const effectiveMode = doubleShiftAvailable ? settings.hotkeyMode : 'accelerator'
   const collides =
-    effectiveMode === 'accelerator' && settings.accelerator === settings.clipperAccelerator
+    acceleratorsAvailable &&
+    effectiveMode === 'accelerator' &&
+    settings.accelerator === settings.clipperAccelerator
 
   return (
     <ScrollArea className="h-full bg-background">
@@ -67,89 +73,87 @@ export function SettingsPanel(): React.JSX.Element {
           </Row>
         </Group>
 
-        <Group title="Clipper">
-          <Row label="Clip a region" htmlFor="clipper-shortcut">
-            <ShortcutInput
-              value={settings.clipperAccelerator}
-              invalid={collides}
-              onChange={(accelerator) => patch({ clipperAccelerator: accelerator })}
-            />
-          </Row>
-        </Group>
+        {acceleratorsAvailable ? (
+          <>
+            <Group title="Clipper">
+              <Row label="Clip a region" htmlFor="clipper-shortcut">
+                <ShortcutInput
+                  value={settings.clipperAccelerator}
+                  invalid={collides}
+                  onChange={(accelerator) => patch({ clipperAccelerator: accelerator })}
+                />
+              </Row>
+            </Group>
 
-        <Group title="Stashing">
-          <Row label="Trigger" htmlFor="trigger">
-            <Select
-              value={effectiveMode}
-              disabled={!doubleShiftAvailable}
-              onValueChange={(value) => patch({ hotkeyMode: value as Settings['hotkeyMode'] })}
-            >
-              <SelectTrigger id="trigger" size="sm" className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="double-shift" disabled={!doubleShiftAvailable}>
-                  Double tap Shift
-                </SelectItem>
-                <SelectItem value="accelerator">A shortcut</SelectItem>
-              </SelectContent>
-            </Select>
-          </Row>
+            <Group title="Stashing">
+              <Row label="Trigger" htmlFor="trigger">
+                <Select
+                  value={effectiveMode}
+                  disabled={!doubleShiftAvailable}
+                  onValueChange={(value) => patch({ hotkeyMode: value as Settings['hotkeyMode'] })}
+                >
+                  <SelectTrigger id="trigger" size="sm" className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="double-shift" disabled={!doubleShiftAvailable}>
+                      Double tap Shift
+                    </SelectItem>
+                    <SelectItem value="accelerator">A shortcut</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Row>
 
-          <AnimatePresence initial={false}>
-            {effectiveMode === 'accelerator' && (
-              <Reveal key="stash-shortcut">
-                <Row label="Stash the selection" htmlFor="stash-shortcut">
-                  <ShortcutInput
-                    value={settings.accelerator}
-                    invalid={collides}
-                    onChange={(accelerator) => patch({ accelerator })}
-                  />
-                </Row>
-              </Reveal>
-            )}
+              <AnimatePresence initial={false}>
+                {effectiveMode === 'accelerator' && (
+                  <Reveal key="stash-shortcut">
+                    <Row label="Stash the selection" htmlFor="stash-shortcut">
+                      <ShortcutInput
+                        value={settings.accelerator}
+                        invalid={collides}
+                        onChange={(accelerator) => patch({ accelerator })}
+                      />
+                    </Row>
+                  </Reveal>
+                )}
 
-            {effectiveMode === 'double-shift' && (
-              <Reveal key="tap-window">
-                <Row label="Tap window" htmlFor="tap-window">
-                  <div className="flex w-40 items-center gap-2.5">
-                    <Slider
-                      id="tap-window"
-                      min={200}
-                      max={600}
-                      step={25}
-                      value={[settings.doubleTapWindowMs]}
-                      onValueChange={([value]) => {
-                        if (value !== undefined) patch({ doubleTapWindowMs: value })
-                      }}
-                    />
-                    <span className="w-12 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                      {settings.doubleTapWindowMs}ms
-                    </span>
-                  </div>
-                </Row>
-              </Reveal>
-            )}
-          </AnimatePresence>
-        </Group>
+                {effectiveMode === 'double-shift' && (
+                  <Reveal key="tap-window">
+                    <Row label="Tap window" htmlFor="tap-window">
+                      <div className="flex w-40 items-center gap-2.5">
+                        <Slider
+                          id="tap-window"
+                          min={200}
+                          max={600}
+                          step={25}
+                          value={[settings.doubleTapWindowMs]}
+                          onValueChange={([value]) => {
+                            if (value !== undefined) patch({ doubleTapWindowMs: value })
+                          }}
+                        />
+                        <span className="w-12 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                          {settings.doubleTapWindowMs}ms
+                        </span>
+                      </div>
+                    </Row>
+                  </Reveal>
+                )}
+              </AnimatePresence>
+            </Group>
 
-        <AnimatePresence initial={false}>
-          {collides && (
-            <Reveal key="collides">
-              <Note variant="warning">
-                Both shortcuts are set to the same keys, so neither is registered. Change one of
-                them.
-              </Note>
-            </Reveal>
-          )}
-        </AnimatePresence>
-
-        {!doubleShiftAvailable && (
-          <Note>
-            This is a Wayland session, which does not let applications watch the keyboard. Coffer
-            uses a system shortcut instead, granted through the desktop portal. Log into an X11
-            session if you want the double-tap trigger.
-          </Note>
+            <AnimatePresence initial={false}>
+              {hotkeys?.error && (
+                <Reveal key="hotkey-error">
+                  <Note variant="warning">{hotkeys.error}</Note>
+                </Reveal>
+              )}
+            </AnimatePresence>
+          </>
+        ) : (
+          <section className="flex flex-col gap-1">
+            <h2 className="px-1 text-sm font-semibold text-muted-foreground">Shortcuts</h2>
+            {platform && hotkeys && <PortalShortcuts status={hotkeys} platform={platform} />}
+          </section>
         )}
 
         <Group title="Window">
