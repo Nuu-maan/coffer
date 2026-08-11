@@ -4,7 +4,7 @@ import {
   Loader2Icon,
   OctagonXIcon,
   TriangleAlertIcon
-} from 'lucide-react'
+} from '@/components/icons'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
 const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {

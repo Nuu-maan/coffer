@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Minus, X } from 'lucide-react'
+import { Minus, X } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
