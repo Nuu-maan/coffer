@@ -1,9 +1,10 @@
 import type { ClipDraft, Item, ItemSource, PlatformInfo, Settings } from '../types/item'
 
 export type OverlayFrame = {
-  dataUrl: string
+  url: string
   width: number
   height: number
+  scaleFactor: number
 }
 
 export type ClipRegion = {
@@ -53,8 +54,9 @@ export interface CofferApi {
   }
   clipper: {
     start(): Promise<void>
-    frame(): Promise<OverlayFrame | null>
     draft(): Promise<ClipDraft | null>
+    mounted(): void
+    painted(): void
     region(region: ClipRegion): void
     cancel(): void
     commit(caption: string): Promise<void>
@@ -72,6 +74,7 @@ export interface CofferApi {
     hideMain(): void
   }
   on: {
+    clipperFrame(callback: (frame: OverlayFrame) => void): Unsubscribe
     itemsChanged(callback: (items: Item[]) => void): Unsubscribe
     settingsChanged(callback: (settings: Settings) => void): Unsubscribe
   }

@@ -25,11 +25,14 @@ import {
   cancelClip,
   commitClip,
   currentDraft,
-  frameFor,
   selectRegion,
   startClip
 } from '@main/features/clipper'
-import { overlayDisplayId } from '@main/windows/clipper-overlay'
+import {
+  markOverlayMounted,
+  markOverlayPainted,
+  overlayDisplayId
+} from '@main/windows/clipper-overlay'
 import { platformInfo } from '@main/platform/session'
 import { hideMainWindow, showMainWindow } from '@main/windows/main-window'
 import { broadcast, broadcastItems } from './broadcast'
@@ -74,12 +77,23 @@ export function registerIpc(onSettingsChanged: OnSettingsChanged): void {
   ipcMain.handle(CH.STASH_SELECTION, () => stashSelection())
 
   ipcMain.handle(CH.CLIPPER_START, () => startClip())
-  ipcMain.handle(CH.CLIPPER_FRAME, (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender)
-    const displayId = window ? overlayDisplayId(window) : null
-    return displayId === null ? null : frameFor(displayId)
-  })
   ipcMain.handle(CH.CLIPPER_DRAFT, () => currentDraft())
+  ipcMain.on(CH.CLIPPER_MOUNTED, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window) markOverlayMounted(window)
+  })
+  ipcMain.on(CH.CLIPPER_PAINTED, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window) markOverlayPainted(window)
+  })
+  ipcMain.on(CH.CLIPPER_MOUNTED, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window) markOverlayMounted(window)
+  })
+  ipcMain.on(CH.CLIPPER_PAINTED, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window) markOverlayPainted(window)
+  })
   ipcMain.handle(CH.CLIPPER_COMMIT, (_event, caption: string) => commitClip(caption))
   ipcMain.on(CH.CLIPPER_CANCEL, () => cancelClip())
   ipcMain.on(CH.CLIPPER_REGION, (event, region: ClipRegion) => {

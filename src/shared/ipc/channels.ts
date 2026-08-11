@@ -18,8 +18,9 @@ export const CH = {
   CLIPPER_REGION: 'clipper:region',
   CLIPPER_CANCEL: 'clipper:cancel',
   CLIPPER_COMMIT: 'clipper:commit',
-  CLIPPER_FRAME: 'clipper:frame',
   CLIPPER_DRAFT: 'clipper:draft',
+  CLIPPER_MOUNTED: 'clipper:mounted',
+  CLIPPER_PAINTED: 'clipper:painted',
 
   PLATFORM_INFO: 'platform:info',
 
@@ -30,6 +31,7 @@ export const CH = {
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_HIDE_MAIN: 'window:hideMain',
 
+  ON_CLIPPER_FRAME: 'on:clipperFrame',
   ON_ITEMS_CHANGED: 'on:itemsChanged',
   ON_SETTINGS_CHANGED: 'on:settingsChanged'
 } as const

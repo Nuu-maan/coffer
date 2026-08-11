@@ -5,6 +5,7 @@ import type {
   AddItemInput,
   ClipRegion,
   CofferApi,
+  OverlayFrame,
   ReorderInput,
   Unsubscribe
 } from '@shared/ipc/contract'
@@ -38,8 +39,9 @@ const api: CofferApi = {
   },
   clipper: {
     start: () => ipcRenderer.invoke(CH.CLIPPER_START),
-    frame: () => ipcRenderer.invoke(CH.CLIPPER_FRAME),
     draft: () => ipcRenderer.invoke(CH.CLIPPER_DRAFT),
+    mounted: () => ipcRenderer.send(CH.CLIPPER_MOUNTED),
+    painted: () => ipcRenderer.send(CH.CLIPPER_PAINTED),
     region: (region: ClipRegion) => ipcRenderer.send(CH.CLIPPER_REGION, region),
     cancel: () => ipcRenderer.send(CH.CLIPPER_CANCEL),
     commit: (caption: string) => ipcRenderer.invoke(CH.CLIPPER_COMMIT, caption)
@@ -57,6 +59,7 @@ const api: CofferApi = {
     hideMain: () => ipcRenderer.send(CH.WINDOW_HIDE_MAIN)
   },
   on: {
+    clipperFrame: (callback) => subscribe<OverlayFrame>(CH.ON_CLIPPER_FRAME, callback),
     itemsChanged: (callback) => subscribe<Item[]>(CH.ON_ITEMS_CHANGED, callback),
     settingsChanged: (callback) => subscribe<Settings>(CH.ON_SETTINGS_CHANGED, callback)
   }
