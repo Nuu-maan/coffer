@@ -322,19 +322,16 @@
 @utility material-thin {
   background-color: var(--mat-thin);
   backdrop-filter: blur(var(--mat-thin-blur)) saturate(var(--mat-saturate));
-  -webkit-backdrop-filter: blur(var(--mat-thin-blur)) saturate(var(--mat-saturate));
 }
 
 @utility material {
   background-color: var(--mat-regular);
   backdrop-filter: blur(var(--mat-regular-blur)) saturate(var(--mat-saturate));
-  -webkit-backdrop-filter: blur(var(--mat-regular-blur)) saturate(var(--mat-saturate));
 }
 
 @utility material-thick {
   background-color: var(--mat-thick);
   backdrop-filter: blur(var(--mat-thick-blur)) saturate(var(--mat-saturate));
-  -webkit-backdrop-filter: blur(var(--mat-thick-blur)) saturate(var(--mat-saturate));
 }
 
 @utility material-hud {
@@ -342,7 +339,6 @@
   color: var(--hud-foreground);
   border: 0.5px solid var(--hud-border);
   backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
 }
 
 @utility material-edge {
