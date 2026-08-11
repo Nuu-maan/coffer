@@ -85,8 +85,7 @@ export function ItemList(): React.JSX.Element {
     move(id, ordered[index - 1]?.id ?? null, ordered[index + 1]?.id ?? null)
   }
 
-  const pending = ordered.filter((item) => !item.done).length
-  const doneCount = ordered.length - pending
+  const doneCount = ordered.filter((item) => item.done).length
   const trigger = platform?.supportsDoubleShift ? 'tap Shift twice' : 'press Ctrl+Shift+Space'
 
   return (
@@ -151,20 +150,29 @@ export function ItemList(): React.JSX.Element {
 
       <Composer onSubmit={addText} />
 
-      {ordered.length > 0 && (
-        <footer className="flex h-[22px] shrink-0 items-center justify-between border-t border-border bg-muted px-2.5 text-2xs text-muted-foreground tabular-nums">
-          <span>
-            {pending} open
-            {doneCount > 0 && ` · ${doneCount} done`}
-          </span>
+      {/*
+        Only here when there is something to clear. As a permanent strip it
+        spent almost all of its life reporting a count the list is already
+        showing — and it put the control that clears the done items two bars
+        away from them. It arrives with them and leaves with them instead.
+      */}
+      <AnimatePresence initial={false}>
+        {doneCount > 0 && (
+          <motion.footer
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 24, opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={ease}
+            className="flex shrink-0 items-center justify-between overflow-hidden border-t border-border bg-muted px-2.5 text-2xs text-muted-foreground tabular-nums"
+          >
+            <span>{doneCount === 1 ? '1 done' : `${doneCount} done`}</span>
 
-          {doneCount > 0 && (
             <Button variant="ghost" size="xs" className="h-[16px] px-1.5" onClick={clearDone}>
-              Clear done
+              Clear
             </Button>
-          )}
-        </footer>
-      )}
+          </motion.footer>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {dragging && (

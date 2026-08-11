@@ -54,27 +54,11 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
 
   return (
     <div className="material relative z-20 shrink-0 border-t border-border">
-      {/* The field is the whole control: the accessories sit inside its border
-          so there is one focus ring and one rectangle, not four. */}
-      <div
-        data-focused={focused || undefined}
-        onPointerDown={(event) => {
-          if (event.target === event.currentTarget) areaRef.current?.focus()
-        }}
-        className={cn(
-          'm-1.5 flex items-end gap-1 rounded-lg border border-input-border bg-input px-1 py-1',
-          /* Recessed rather than flat: a field you type into is a well in the
-             surface, and on a dark ground the only thing that says so is the
-             shadow the top edge casts into it. */
-          'shadow-[inset_0_1px_2px_var(--well)]',
-          'transition-[border-color,box-shadow] duration-100',
-          'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
-        )}
-      >
-        {/* Both accessories add content, so they sit together on one side and
-            leave the right edge to the one control that commits. Split across
-            the two edges, the clipper sat where the send button appears and
-            read as the thing that submits. */}
+      <div className="flex items-end gap-1 p-1.5">
+        {/* Outside the field rather than in it. Chrome parked inside the box
+            pushes the caret two icons in from the leading edge, so the field
+            no longer reads as a place text starts • these two add content to
+            the panel, which is the bar's job, not the field's. */}
         <div className="flex shrink-0 items-center self-end">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -107,45 +91,61 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           </Tooltip>
         </div>
 
-        <Textarea
-          ref={areaRef}
-          variant="bare"
-          rows={1}
-          value={text}
-          placeholder="Type a stash…"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              submit()
-            }
+        {/* One field, shaped like one: a capsule at rest, growing into a rounded
+            box as the text wraps. The recess is what says it takes typing —
+            on a dark ground a flat panel says nothing. */}
+        <div
+          data-focused={focused || undefined}
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) areaRef.current?.focus()
           }}
-          /* Grown by field-sizing rather than by measuring: measuring after a
-             submit reads the height of text React has not cleared yet, which
-             is what left the box stuck open at its full height. */
-          className="max-h-28 flex-1 self-center py-[3px] leading-snug"
-        />
+          className={cn(
+            'flex min-h-[28px] flex-1 items-end gap-1 rounded-[14px] py-px pr-px pl-2.5',
+            'border border-input-border bg-input shadow-[inset_0_1px_2px_var(--well)]',
+            'transition-[border-color,box-shadow] duration-100',
+            'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
+          )}
+        >
+          <Textarea
+            ref={areaRef}
+            variant="bare"
+            rows={1}
+            value={text}
+            placeholder="Type a stash…"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                submit()
+              }
+            }}
+            /* Grown by field-sizing rather than by measuring: measuring after a
+               submit reads the height of text React has not cleared yet, which
+               is what left the box stuck open at its full height. */
+            className="max-h-28 flex-1 self-center py-[4px] leading-snug"
+          />
 
-        {/* The slot is held open whether or not the button is in it, so the
-            field does not lose 26px of width — and rewrap the line being
-            typed — on the first character. */}
-        <div className="flex size-[26px] shrink-0 items-center justify-center self-end">
-          <AnimatePresence initial={false}>
-            {canSubmit && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.6 }}
-                transition={springSnap}
-              >
-                <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
-                  <ArrowUp />
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* The slot is held open whether or not the button is in it, so the
+              field does not lose 26px of width — and rewrap the line being
+              typed — on the first character. */}
+          <div className="flex size-[26px] shrink-0 items-center justify-center self-end">
+            <AnimatePresence initial={false}>
+              {canSubmit && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  transition={springSnap}
+                >
+                  <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
+                    <ArrowUp />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
