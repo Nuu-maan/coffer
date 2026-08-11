@@ -2,31 +2,25 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { inputVariants } from './input'
 
-const textareaVariants = cva(
-  [
-    'field-sizing-content flex w-full text-base outline-none',
-    'placeholder:text-muted-foreground/70',
-    'disabled:cursor-not-allowed disabled:opacity-40',
-    'transition-[background-color,box-shadow,border-color] duration-100'
-  ],
-  {
-    variants: {
-      variant: {
-        default: [
-          'min-h-14 rounded-md border border-input-border bg-input px-2.5 py-1.5',
-          'shadow-[inset_0_1px_1px_rgb(0_0_0/0.04)]',
-          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30',
-          'aria-invalid:border-destructive aria-invalid:ring-destructive/25'
-        ],
-        bare: 'min-h-0 resize-none bg-transparent p-0'
-      }
-    },
-    defaultVariants: {
-      variant: 'default'
+const textareaVariants = cva('', {
+  variants: {
+    variant: {
+      /* Same field as Input, so a caption box and a text box match. */
+      default: cn(inputVariants(), 'resize-none'),
+      /* No chrome at all: for editing text in place, inside a row. */
+      bare: [
+        'field-sizing-content flex w-full resize-none bg-transparent p-0 text-base outline-none',
+        'placeholder:text-muted-foreground/70',
+        'disabled:cursor-not-allowed disabled:opacity-40'
+      ]
     }
+  },
+  defaultVariants: {
+    variant: 'default'
   }
-)
+})
 
 function Textarea({
   className,

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { coffer } from '@/lib/ipc'
+import { cn } from '@/lib/utils'
 import { toBytes } from '@/lib/images'
 import { ease, springSnap } from '@/lib/motion'
 
@@ -54,13 +55,25 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
 
   return (
     <div className="material relative z-20 shrink-0 border-t border-border">
-      <div className="flex items-end gap-1 px-1.5 py-1.5">
+      {/* The field is the whole control: the accessories sit inside its border
+          so there is one focus ring and one rectangle, not four. */}
+      <div
+        data-focused={focused || undefined}
+        onPointerDown={(event) => {
+          if (event.target === event.currentTarget) areaRef.current?.focus()
+        }}
+        className={cn(
+          'm-1.5 flex items-end gap-1 rounded-md border border-input-border bg-input px-1 py-1',
+          'transition-[border-color,box-shadow] duration-100',
+          'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
+        )}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon-sm"
-              className="hit-36 mb-[1px] shrink-0"
+              className="hit-36 shrink-0"
               aria-label="Add an image"
               onClick={() => fileRef.current?.click()}
             >
@@ -72,6 +85,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
 
         <Textarea
           ref={areaRef}
+          variant="bare"
           rows={1}
           value={text}
           placeholder="Type a stash…"
@@ -87,7 +101,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
               submit()
             }
           }}
-          className="max-h-28 min-h-[24px] flex-1 resize-none py-[3px] leading-snug"
+          className="max-h-28 min-h-[22px] flex-1 self-center py-[3px] leading-snug"
         />
 
         <Tooltip>
@@ -95,7 +109,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="hit-36 mb-[1px] shrink-0"
+              className="hit-36 shrink-0"
               aria-label="Clip a region"
               onClick={() => void coffer.clipper.start()}
             >
@@ -112,7 +126,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={springSnap}
-              className="mb-[1px] shrink-0"
+              className="shrink-0"
             >
               <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
                 <ArrowUp />
@@ -131,7 +145,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             transition={ease}
             className="overflow-hidden"
           >
-            <div className="flex items-center gap-2 border-t border-border px-1.5 py-1">
+            <div className="flex items-center gap-2 border-t border-border px-2 py-1">
               <Button
                 variant="ghost"
                 size="xs"
