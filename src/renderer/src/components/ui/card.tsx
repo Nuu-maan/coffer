@@ -3,18 +3,16 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-const cardVariants = cva('flex flex-col rounded-2xl text-card-foreground', {
+const cardVariants = cva('flex flex-col rounded-lg text-card-foreground', {
   variants: {
     variant: {
-      // The white sheet floating on warm chrome, as in the references.
       default: 'bg-card shadow-card',
       raised: 'bg-card shadow-raised',
       glass: 'material material-edge shadow-raised',
-      // No shadow, just a hairline — for cards packed in a list.
       flat: 'bg-card ring-1 ring-border'
     },
     padded: {
-      true: 'gap-5 p-5',
+      true: 'gap-3.5 p-3.5',
       false: ''
     }
   },
@@ -58,7 +56,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>): React.
   return (
     <div
       data-slot="card-title"
-      className={cn('text-lg leading-tight font-semibold', className)}
+      className={cn('text-md leading-tight font-semibold', className)}
       {...props}
     />
   )

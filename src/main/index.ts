@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, screen } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { APP_ID } from '@shared/constants'
 import { createHotkeyManager } from './hotkey'
@@ -8,6 +8,7 @@ import { registerCofferScheme, serveCofferScheme } from './protocol/coffer'
 import { flushStore, loadStore } from './store/store'
 import { createTray, destroyTray } from './tray'
 import { showMainWindow } from './windows/main-window'
+import { destroyOverlays, primeOverlays } from './windows/clipper-overlay'
 import { stashSelection } from './features/stash/capture-flow'
 import { startClip } from './features/clipper'
 import { syncLoginItem, syncTheme } from './features/settings/service'
@@ -43,6 +44,11 @@ async function boot(): Promise<void> {
   syncTheme(store.settings.theme)
   syncLoginItem(store.settings.launchOnLogin)
 
+  primeOverlays()
+  screen.on('display-added', () => primeOverlays())
+  screen.on('display-removed', () => primeOverlays())
+  screen.on('display-metrics-changed', () => primeOverlays())
+
   if (!process.argv.includes('--hidden')) showMainWindow()
 
   app.on('window-all-closed', () => undefined)
@@ -50,6 +56,7 @@ async function boot(): Promise<void> {
   app.on('before-quit', async (event) => {
     event.preventDefault()
     hotkeys.dispose()
+    destroyOverlays()
     destroyTray()
     await flushStore()
     app.exit(0)

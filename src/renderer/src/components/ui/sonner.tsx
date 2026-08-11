@@ -7,11 +7,6 @@ import {
 } from 'lucide-react'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
-/**
- * Toasts are a floating layer over the list, so they are glass rather than a
- * solid card — the content stays faintly visible underneath and the message
- * reads as temporary.
- */
 const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
   return (
     <Sonner
@@ -21,7 +16,7 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
       toastOptions={{
         classNames: {
           toast:
-            'material-thick material-edge !rounded-full !border-0 !px-3.5 !py-2 !text-xs !font-medium !shadow-float',
+            'material-hud !rounded-full !border-0 !px-3 !py-1.5 !text-xs !font-medium !shadow-float',
           description: '!text-muted-foreground',
           icon: '!mr-1.5'
         }
@@ -36,7 +31,7 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
       style={
         {
           '--normal-bg': 'transparent',
-          '--normal-text': 'var(--foreground)',
+          '--normal-text': 'var(--hud-foreground)',
           '--normal-border': 'transparent',
           '--border-radius': '9999px'
         } as React.CSSProperties

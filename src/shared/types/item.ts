@@ -64,7 +64,7 @@ export type Settings = {
 }
 
 export type ClipDraft = {
-  dataUrl: string
+  url: string
   width: number
   height: number
   source?: ItemSource

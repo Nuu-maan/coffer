@@ -5,13 +5,7 @@ import { LayoutGroup, motion } from 'motion/react'
 
 import { cn } from '@/lib/utils'
 import { toggleVariants } from '@/components/ui/toggle'
-import { spring } from '@/lib/motion'
-
-/**
- * A segmented control built on the toggle group. In single-select mode the
- * selection is one pill that slides between the segments — the same physical
- * object moving, not a highlight blinking from place to place.
- */
+import { springSnap } from '@/lib/motion'
 
 type Context = VariantProps<typeof toggleVariants> & {
   value?: string
@@ -41,8 +35,8 @@ function ToggleGroup({
       data-variant={variant}
       data-size={size}
       className={cn(
-        'group/toggle-group relative flex w-fit items-center rounded-full',
-        variant === 'segment' && 'gap-0 bg-muted p-[3px] ring-1 ring-border/60',
+        'group/toggle-group relative flex w-fit items-center rounded-[7px]',
+        variant === 'segment' && 'gap-0 bg-well p-[2px] shadow-[inset_0_0_0_0.5px_var(--border)]',
         variant === 'outline' && 'gap-1',
         variant === 'default' && 'gap-1',
         className
@@ -78,7 +72,7 @@ function ToggleGroupItem({
       className={cn(
         toggleVariants({ variant: resolvedVariant, size: context.size || size }),
         'relative w-auto min-w-0 shrink-0 focus:z-10 focus-visible:z-10',
-        resolvedVariant === 'segment' && 'px-3',
+        resolvedVariant === 'segment' && 'px-2.5',
         className
       )}
       {...props}
@@ -86,8 +80,8 @@ function ToggleGroupItem({
       {active && resolvedVariant === 'segment' && (
         <motion.span
           layoutId="segment-indicator"
-          transition={spring}
-          className="absolute inset-0 rounded-full bg-card shadow-card"
+          transition={springSnap}
+          className="absolute inset-0 rounded-[5px] bg-control shadow-control"
         />
       )}
       <span className="relative z-10 flex items-center gap-1.5">{children}</span>

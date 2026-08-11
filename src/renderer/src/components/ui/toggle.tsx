@@ -6,25 +6,24 @@ import { cn } from '@/lib/utils'
 
 const toggleVariants = cva(
   [
-    'press focus-halo inline-flex items-center justify-center gap-2 rounded-full',
+    'press focus-halo inline-flex items-center justify-center gap-1.5 rounded-[5px]',
     'text-sm font-medium whitespace-nowrap outline-none',
     'text-muted-foreground hover:text-foreground',
     'disabled:pointer-events-none disabled:opacity-40',
     'data-[state=on]:text-foreground',
-    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5"
   ],
   {
     variants: {
       variant: {
-        default: 'bg-transparent hover:bg-accent/60 data-[state=on]:bg-accent',
-        outline: 'border border-border-strong bg-card shadow-card hover:bg-accent/60',
-        // Sits inside a segmented track; the selected pill is drawn by the group.
+        default: 'bg-transparent hover:bg-accent data-[state=on]:bg-accent',
+        outline: 'border border-border-strong bg-control shadow-control hover:bg-control-active',
         segment: 'bg-transparent'
       },
       size: {
-        default: 'h-9 min-w-9 px-2.5',
-        sm: 'h-8 min-w-8 px-2',
-        lg: 'h-10 min-w-10 px-3'
+        default: 'h-[26px] min-w-[26px] px-2',
+        sm: 'h-[22px] min-w-[22px] px-1.5',
+        lg: 'h-8 min-w-8 px-2.5'
       }
     },
     defaultVariants: {

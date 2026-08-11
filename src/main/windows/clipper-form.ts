@@ -11,7 +11,7 @@ export function openClipForm(draft: ClipDraft): void {
   closeClipForm()
 
   const previewHeight = Math.min(Math.round((WIDTH - 32) * (draft.height / draft.width)), 320)
-  const height = Math.min(MAX_HEIGHT, Math.max(240, previewHeight + 168))
+  const height = Math.min(MAX_HEIGHT, Math.max(230, previewHeight + 140))
   const cursor = screen.getCursorScreenPoint()
   const area = screen.getDisplayNearestPoint(cursor).workArea
 

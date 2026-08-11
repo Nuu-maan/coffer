@@ -10,7 +10,7 @@ const surface =
 const item = [
   'relative flex cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5',
   'text-base outline-hidden select-none transition-colors duration-100',
-  'focus:bg-accent focus:text-accent-foreground',
+  'focus:bg-tint focus:text-tint-foreground',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   "[&_svg:not([class*='text-'])]:text-muted-foreground"
@@ -46,7 +46,6 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         className={cn(
           surface,
-          // Grows out of the trigger's corner rather than its own centre (§7).
           'max-h-(--radix-dropdown-menu-content-available-height) overflow-y-auto',
           'origin-(--radix-dropdown-menu-content-transform-origin)',
           className

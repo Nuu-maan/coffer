@@ -1,49 +1,41 @@
 import { Notification, type NativeImage, type Rectangle } from 'electron'
 import { APP_NAME } from '@shared/constants'
 import type { ClipDraft, ItemSource } from '@shared/types/item'
-import type { OverlayFrame } from '@shared/ipc/contract'
 import { addImage } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
 import { closeClipForm, openClipForm } from '@main/windows/clipper-form'
-import { closeOverlays, openOverlays } from '@main/windows/clipper-overlay'
-import { captureDisplays, cropFrame, type DisplayFrame } from './capture'
+import { closeOverlays, openOverlays, overlaysOpen } from '@main/windows/clipper-overlay'
+import { captureDisplays, cropFrame } from './capture'
+import { clearDraft, clearFrames, displayFrame, frameCount, setDraft, setFrames } from './frames'
 
-let frames: DisplayFrame[] = []
 let draft: NativeImage | null = null
 let pendingDraft: ClipDraft | null = null
-let source: ItemSource | undefined
+let source: Promise<ItemSource | undefined> | null = null
 let starting = false
-
-export function frameFor(displayId: number): OverlayFrame | null {
-  const frame = frames.find((candidate) => candidate.displayId === displayId)
-  if (!frame) return null
-
-  const size = frame.image.getSize()
-  return { dataUrl: frame.image.toDataURL(), width: size.width, height: size.height }
-}
 
 export function currentDraft(): ClipDraft | null {
   return pendingDraft
 }
 
 export async function startClip(): Promise<void> {
-  if (starting) return
+  if (starting || overlaysOpen()) return
   starting = true
 
   try {
     reset()
     beginSourceCapture()
 
-    frames = await captureDisplays()
-    source = await takeCapturedSource()
+    const captured = await captureDisplays()
+    setFrames(captured)
 
-    if (frames.length === 0) {
+    if (frameCount() === 0) {
       notify('Could not read the screen')
       return
     }
 
-    openOverlays(frames)
+    source = takeCapturedSource()
+    openOverlays(captured)
   } catch (error) {
     console.error('[clipper] capture failed', error)
     notify('Could not read the screen')
@@ -56,29 +48,24 @@ export async function startClip(): Promise<void> {
 export function selectRegion(displayId: number, region: Rectangle): void {
   closeOverlays()
 
-  const frame = frames.find((candidate) => candidate.displayId === displayId)
+  const frame = displayFrame(displayId)
   if (!frame) return cancelClip()
 
   const cropped = cropFrame(frame, region)
   if (!cropped) return cancelClip()
 
   draft = cropped
-  frames = []
+  clearFrames()
 
   const size = cropped.getSize()
-  pendingDraft = {
-    dataUrl: cropped.toDataURL(),
-    width: size.width,
-    height: size.height,
-    ...(source ? { source } : {})
-  }
+  pendingDraft = { url: setDraft(cropped), width: size.width, height: size.height }
 
   openClipForm(pendingDraft)
 }
 
 export async function commitClip(caption: string): Promise<void> {
   const image = draft
-  const attribution = source
+  const attribution = await source
   reset()
   closeClipForm()
 
@@ -98,10 +85,11 @@ export function cancelClip(): void {
 }
 
 function reset(): void {
-  frames = []
+  clearFrames()
+  clearDraft()
   draft = null
   pendingDraft = null
-  source = undefined
+  source = null
 }
 
 function notify(body: string): void {

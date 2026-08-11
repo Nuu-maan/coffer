@@ -42,18 +42,16 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
       onClick={() => setRecording((current) => !current)}
       aria-live="polite"
       className={cn(
-        'relative w-44 justify-center gap-1 text-xs tabular-nums',
-        recording && 'border-tint text-muted-foreground',
+        'relative w-40 justify-center gap-1 text-xs tabular-nums',
+        recording && 'border-tint text-tint',
         invalid && !recording && 'border-destructive text-destructive'
       )}
     >
       {recording ? (
         <>
-          {/* A slow pulse is the clearest way to say "still listening" without
-              any text changing while the user is mid-chord. */}
           <motion.span
             animate={{ opacity: [1, 0.25, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="size-1.5 rounded-full bg-tint"
           />
           Press keys…
@@ -63,7 +61,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
           {parts(value).map((part, index) => (
             <kbd
               key={`${part}-${index}`}
-              className="rounded-[5px] bg-muted px-1.5 py-0.5 text-[10px] leading-4 text-foreground/80 ring-1 ring-border ring-inset"
+              className="rounded-[4px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground shadow-[inset_0_0_0_0.5px_var(--border)]"
             >
               {part}
             </kbd>
@@ -125,7 +123,6 @@ function keyName(code: string): string | null {
   return named[code] ?? null
 }
 
-/** Each key gets its own cap, the way a shortcut is drawn on a keyboard. */
 function parts(accelerator: string): string[] {
   return accelerator.split('+').map((part) => {
     if (part === 'Control') return 'Ctrl'

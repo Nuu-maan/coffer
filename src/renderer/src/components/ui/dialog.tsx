@@ -33,8 +33,6 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        // A modal task dims what is behind it and pushes it back, so attention
-        // has one place to go (§12).
         'fixed inset-0 z-50 bg-scrim backdrop-blur-[2px]',
         'data-[state=open]:animate-in data-[state=open]:fade-in-0',
         'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
@@ -60,7 +58,7 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           'materialize material-thick material-edge fixed top-1/2 left-1/2 z-50 grid w-full',
-          'max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl p-5',
+          'max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl p-5',
           'text-foreground shadow-overlay outline-none sm:max-w-lg',
           className
         )}

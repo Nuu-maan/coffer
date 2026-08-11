@@ -104,10 +104,10 @@ src/renderer    React + shadcn/ui, three HTML entries
 
 1. Screenshot every display first, via `desktopCapturer`.
 2. Open one frameless always-on-top window per display, painted with that display's frozen frame. Because the screenshot is taken *before* the overlay exists, the overlay can never appear in the shot.
-3. Drag a rectangle. Coordinates are CSS pixels, which equal DIPs because each overlay exactly covers its display — so cropping only needs the image-to-DIP scale factor.
+3. Drag a rectangle. Coordinates are CSS pixels, which equal DIPs because each overlay exactly covers its display — so cropping only needs the image-to-DIP scale factor, derived from the captured image rather than from `scaleFactor`.
 4. Crop, then open a small form with the preview and a note field. `Enter` or the button commits it as an image item; `Esc` discards.
 
-Both windows pull their payload with `invoke` rather than receiving a push on `did-finish-load` — the push races React's first effect and can arrive before anything is listening.
+The overlays are created once at startup and reused, so a clip never waits for a window to be built or a page to load. Main pushes the frame only after the renderer reports it is listening, the renderer decodes the image before painting, and the windows are revealed together once every one of them acks that it has painted — which is what keeps the screen from flashing black. Frames cross as bytes over the `coffer://` scheme rather than as base64 through IPC.
 
 `hotkey/double-tap.ts` is a pure function over key events so the trickiest logic is testable without a keyboard.
 
@@ -126,7 +126,7 @@ The double-tap trigger needs to watch the keyboard, which Wayland does not permi
 - The `uiohook-napi` hook is blocked on some managed or antivirus-protected machines. Settings offers `Ctrl+Shift+Space`, and the app falls back automatically if the hook cannot start.
 - Wayland global shortcuts require `--enable-features=GlobalShortcutsPortal`, which Coffer sets itself, and a working `xdg-desktop-portal`. The first press raises a system permission prompt. Portal 1.20+ (GNOME 50) has a known registration bug upstream in Chromium.
 - Images are written to `images/<id>.png` beside the store rather than inlined as base64, so the store file stays small and every debounced save stays cheap. The renderer loads them over a registered `coffer://` scheme, so the CSP never needs to allow `file:`.
-- On Wayland, `desktopCapturer` goes through the screencast portal, so the clipper raises a system picker on every use rather than capturing silently. It works, but it is two extra clicks.
+- On Wayland the clipper does not use `desktopCapturer`, whose screencast portal demands a source picker on every use. It tries, in order of what the session supports: `grim` on wlroots compositors, the `org.freedesktop.portal.Screenshot` portal, then `spectacle` on KDE. The portal may ask for permission once, then stays silent. If every backend fails it falls back to `desktopCapturer` and the picker returns.
 - Theme is stored in settings and pushed to `nativeTheme.themeSource` in the main process. Every renderer then just follows `prefers-color-scheme`, so the overlay and the clip form stay in sync with the list window for free.
 - `source` (foreground app and window title) is recorded on Windows and X11. Wayland does not expose it to applications at all.
 - Renaming the app means editing `src/shared/constants.ts` plus `name` in `package.json` and `appId`/`productName` in `electron-builder.yml`.

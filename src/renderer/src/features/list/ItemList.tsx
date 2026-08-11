@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
-import { ease, spring } from '@/lib/motion'
+import { ease } from '@/lib/motion'
 import { useImageIntake } from '@/hooks/use-image-intake'
 import { useItems } from '@/hooks/use-items'
 import { usePlatform } from '@/hooks/use-platform'
@@ -21,8 +21,6 @@ export function ItemList(): React.JSX.Element {
   const [copied, setCopied] = useState<{ id: string; what: 'image' | 'text' } | null>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // The list is dragged directly, so the on-screen order has to follow the
-  // pointer immediately and only settle with the store when the drag ends.
   const [ordered, setOrdered] = useState<Item[]>(items)
   const reordering = useRef(false)
 
@@ -71,7 +69,8 @@ export function ItemList(): React.JSX.Element {
         remove(selectedId)
         setSelectedId(null)
       } else if (event.key === 'Escape') {
-        coffer.window.hideMain()
+        if (selectedId) setSelectedId(null)
+        else coffer.window.hideMain()
       }
     }
 
@@ -92,44 +91,27 @@ export function ItemList(): React.JSX.Element {
 
   return (
     <div className="relative flex h-full min-h-0 flex-col" {...handlers}>
-      {ordered.length > 0 && (
-        <div className="flex h-9 shrink-0 items-center justify-between px-4">
-          <span className="text-2xs tracking-[0.08em] text-muted-foreground tabular-nums">
-            {pending} open
-            {doneCount > 0 && ` · ${doneCount} done`}
-          </span>
-
-          <AnimatePresence>
-            {doneCount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={ease}
-              >
-                <Button variant="ghost" size="xs" onClick={clearDone}>
-                  Clear done
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
       {ordered.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={spring}
-          className="flex flex-1 flex-col items-center justify-center gap-1.5 px-8 pb-16 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={ease}
+          className="flex flex-1 flex-col items-center justify-center gap-1 px-8 text-center"
         >
-          <p className="text-lg font-medium [text-wrap:balance]">Nothing stashed yet</p>
-          <p className="text-base leading-relaxed text-muted-foreground [text-wrap:balance]">
+          <p className="text-md font-semibold [text-wrap:balance]">Nothing stashed yet</p>
+          <p className="text-base text-muted-foreground [text-wrap:balance]">
             Select anything, then {trigger}. Images can be pasted or dropped here.
           </p>
         </motion.div>
       ) : (
-        <ScrollArea className="min-h-0 flex-1 scroll-fade-bottom">
+        <ScrollArea
+          className="min-h-0 flex-1"
+          onMouseDown={(event) => {
+            if (!(event.target as HTMLElement).closest('[data-slot="item-row"]')) {
+              setSelectedId(null)
+            }
+          }}
+        >
           <LayoutGroup>
             <Reorder.Group
               axis="y"
@@ -138,10 +120,8 @@ export function ItemList(): React.JSX.Element {
                 reordering.current = true
                 setOrdered(next)
               }}
-              className="list-none px-1.5 pb-20"
+              className="list-none px-1.5 py-1.5"
             >
-              {/* Sync, not popLayout: an exiting row must stay in the flow so
-                  the rows below it close the gap instead of snapping up. */}
               <AnimatePresence initial={false}>
                 {ordered.map((item, index) => (
                   <ItemRow
@@ -149,6 +129,11 @@ export function ItemList(): React.JSX.Element {
                     item={item}
                     index={index}
                     selected={item.id === selectedId}
+                    divider={
+                      index < ordered.length - 1 &&
+                      item.id !== selectedId &&
+                      ordered[index + 1]?.id !== selectedId
+                    }
                     copied={copied?.id === item.id ? copied.what : null}
                     onSelect={() => setSelectedId(item.id)}
                     onCopy={(what) => copy(item, what)}
@@ -166,20 +151,35 @@ export function ItemList(): React.JSX.Element {
 
       <Composer onSubmit={addText} />
 
+      {ordered.length > 0 && (
+        <footer className="flex h-[22px] shrink-0 items-center justify-between border-t border-border bg-muted px-2.5 text-2xs text-muted-foreground tabular-nums">
+          <span>
+            {pending} open
+            {doneCount > 0 && ` · ${doneCount} done`}
+          </span>
+
+          {doneCount > 0 && (
+            <Button variant="ghost" size="xs" className="h-[16px] px-1.5" onClick={clearDone}>
+              Clear done
+            </Button>
+          )}
+        </footer>
+      )}
+
       <AnimatePresence>
         {dragging && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={spring}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={ease}
             className={cn(
-              'material-thick pointer-events-none absolute inset-2 z-30 flex flex-col',
-              'items-center justify-center gap-2 rounded-xl text-base font-medium',
-              'ring-2 ring-tint/40 ring-inset'
+              'material-thick pointer-events-none absolute inset-1.5 z-30 flex flex-col',
+              'items-center justify-center gap-2 rounded-lg text-base font-medium',
+              'ring-2 ring-tint ring-inset'
             )}
           >
-            <ImagePlus className="size-6 text-tint" />
+            <ImagePlus className="size-5 text-tint" />
             Drop to stash the image
           </motion.div>
         )}

@@ -16,7 +16,7 @@ import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
-import { spring } from '@/lib/motion'
+import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
 import { ShortcutInput } from './ShortcutInput'
 
@@ -29,7 +29,7 @@ export function SettingsPanel(): React.JSX.Element {
     return coffer.on.settingsChanged(setSettings)
   }, [])
 
-  if (!settings) return <div className="px-4 py-3.5" />
+  if (!settings) return <div className="h-full bg-background" />
 
   function patch(next: Partial<Settings>): void {
     void coffer.settings.set(next).then(setSettings)
@@ -41,8 +41,8 @@ export function SettingsPanel(): React.JSX.Element {
     effectiveMode === 'accelerator' && settings.accelerator === settings.clipperAccelerator
 
   return (
-    <ScrollArea className="h-full">
-      <div className="flex flex-col gap-5 px-3 py-3">
+    <ScrollArea className="h-full bg-background">
+      <div className="flex flex-col gap-4 px-3 py-3">
         <Group title="Appearance">
           <Row label="Theme" htmlFor="theme">
             <ToggleGroup
@@ -84,7 +84,7 @@ export function SettingsPanel(): React.JSX.Element {
               disabled={!doubleShiftAvailable}
               onValueChange={(value) => patch({ hotkeyMode: value as Settings['hotkeyMode'] })}
             >
-              <SelectTrigger id="trigger" size="sm" className="w-44">
+              <SelectTrigger id="trigger" size="sm" className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -96,8 +96,6 @@ export function SettingsPanel(): React.JSX.Element {
             </Select>
           </Row>
 
-          {/* Dependent settings grow out of the choice that revealed them,
-              rather than appearing somewhere else on the screen. */}
           <AnimatePresence initial={false}>
             {effectiveMode === 'accelerator' && (
               <Reveal key="stash-shortcut">
@@ -114,7 +112,7 @@ export function SettingsPanel(): React.JSX.Element {
             {effectiveMode === 'double-shift' && (
               <Reveal key="tap-window">
                 <Row label="Tap window" htmlFor="tap-window">
-                  <div className="flex w-44 items-center gap-3">
+                  <div className="flex w-40 items-center gap-2.5">
                     <Slider
                       id="tap-window"
                       min={200}
@@ -175,7 +173,7 @@ export function SettingsPanel(): React.JSX.Element {
         </Group>
 
         {platform && (
-          <p className="px-1 pb-1 text-2xs text-muted-foreground/70">
+          <p className="px-1 pb-1 text-2xs text-muted-foreground">
             {sessionLabel(platform.session)}
             {platform.supportsSourceCapture ? '' : ' · source app is not recorded here'}
           </p>
@@ -185,20 +183,13 @@ export function SettingsPanel(): React.JSX.Element {
   )
 }
 
-/**
- * Settings are grouped the way iOS groups them: a quiet header, then one
- * rounded slab whose rows are divided by hairlines. Proximity does the work
- * that a border around every row used to do.
- */
 function Group({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
   return (
-    <section className="flex flex-col gap-1.5">
-      <h2 className="px-1 text-2xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-        {title}
-      </h2>
+    <section className="flex flex-col gap-1">
+      <h2 className="px-1 text-sm font-semibold text-muted-foreground">{title}</h2>
       <div
         className={cn(
-          'overflow-hidden rounded-xl bg-muted/60 ring-1 ring-border/70 ring-inset',
+          'overflow-hidden rounded-lg bg-card shadow-card',
           '[&>*:first-child]:border-t-0'
         )}
       >
@@ -214,7 +205,7 @@ function Reveal({ children }: { children: React.ReactNode }): React.JSX.Element 
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
-      transition={spring}
+      transition={ease}
       className="overflow-hidden"
     >
       {children}
@@ -232,10 +223,10 @@ function Note({
   return (
     <p
       className={cn(
-        'flex items-start gap-2 rounded-xl px-3 py-2.5 text-sm leading-relaxed',
+        'flex items-start gap-2 rounded-lg px-3 py-2 text-sm',
         variant === 'warning'
-          ? 'bg-destructive/8 text-destructive ring-1 ring-destructive/20 ring-inset'
-          : 'bg-muted/60 text-muted-foreground ring-1 ring-border/70 ring-inset'
+          ? 'bg-destructive/10 text-destructive'
+          : 'bg-card text-muted-foreground shadow-card'
       )}
     >
       <Info className="mt-0.5 size-3.5 shrink-0" />
@@ -256,8 +247,8 @@ function Row({
   return (
     <div
       className={cn(
-        'flex min-h-12 items-center justify-between gap-3 px-3.5 py-2',
-        'border-t border-border/70'
+        'flex min-h-[34px] items-center justify-between gap-3 px-3 py-1.5',
+        'border-t border-border'
       )}
     >
       <Label htmlFor={htmlFor}>{label}</Label>

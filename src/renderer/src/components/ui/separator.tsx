@@ -10,7 +10,6 @@ function Separator({
   inset = false,
   ...props
 }: React.ComponentProps<typeof SeparatorPrimitive.Root> & {
-  /** Inset dividers separate rows within a group; full-bleed ones split groups. */
   inset?: boolean
 }): React.JSX.Element {
   return (

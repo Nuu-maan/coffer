@@ -6,14 +6,16 @@ import { imageUrl } from '@shared/constants'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { STAGGER, spring, springMomentum, springSnap } from '@/lib/motion'
+import { STAGGER, spring, springSnap } from '@/lib/motion'
+
+const LONG_TEXT = 320
 
 type Props = {
   item: Item
   index: number
   selected: boolean
+  divider: boolean
   copied: 'image' | 'text' | null
   onSelect: () => void
   onCopy: (what: 'image' | 'text') => void
@@ -27,6 +29,7 @@ export function ItemRow({
   item,
   index,
   selected,
+  divider,
   copied,
   onSelect,
   onCopy,
@@ -38,17 +41,16 @@ export function ItemRow({
   const label = item.kind === 'text' ? item.text : item.caption
   const [editing, setEditing] = useState(false)
   const [dragging, setDragging] = useState(false)
-  // Two independent flags rather than one "what is hovered": moving off the
-  // image and back onto the column has to bring the text label back, and
-  // mouseenter does not fire again for the column you never left.
   const [overText, setOverText] = useState(false)
   const [overImage, setOverImage] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [draft, setDraft] = useState(label)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const controls = useDragControls()
 
   const canCopyText = !editing && label.trim().length > 0
   const copyTextLabel = item.kind === 'image' ? 'Copy caption' : 'Copy text'
+  const long = !editing && (label.length > LONG_TEXT || label.split('\n').length > 6)
 
   useEffect(() => {
     if (editing) inputRef.current?.focus()
@@ -56,6 +58,7 @@ export function ItemRow({
 
   useEffect(() => {
     setDraft(label)
+    setExpanded(false)
   }, [label])
 
   function commit(): void {
@@ -73,27 +76,27 @@ export function ItemRow({
         setDragging(false)
         onDragEnd()
       }}
-      // Rows arrive one after another rather than all at once, so the list
-      // reads as filling in rather than blinking into place.
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.16 } }}
-      transition={{ ...spring, delay: Math.min(index * STAGGER, 0.2) }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.12 } }}
+      transition={{ ...spring, delay: Math.min(index * STAGGER, 0.12) }}
       layout="position"
+      data-slot="item-row"
+      data-selected={selected || undefined}
       onMouseDown={onSelect}
       style={{ position: 'relative' }}
       className={cn(
-        'group list-none rounded-xl transition-colors duration-150',
-        // While a row is being carried it lifts off the sheet and the rest of
-        // the list flows underneath it.
-        dragging ? 'z-20 bg-card shadow-float' : 'z-0',
-        selected && !dragging && 'bg-accent/70',
-        !selected && !dragging && 'hover:bg-accent/40'
+        'group list-none rounded-[5px] transition-colors duration-100',
+        dragging && 'z-20 bg-card shadow-float',
+        selected && !dragging && 'bg-selected text-selected-foreground',
+        !selected && !dragging && 'hover:bg-accent'
       )}
     >
-      {/* No divider: spacing and the hover surface separate the rows on their
-          own, and a list of short lines does not need ruling. */}
-      <div className="flex items-stretch gap-2.5 px-2.5 py-2.5">
+      {divider && !dragging && (
+        <span className="pointer-events-none absolute right-2 bottom-0 left-[46px] h-px bg-border" />
+      )}
+
+      <div className="flex items-stretch gap-2 px-2 py-1.5">
         <button
           aria-label="Reorder"
           onPointerDown={(event) => {
@@ -101,24 +104,24 @@ export function ItemRow({
             controls.start(event)
           }}
           className={cn(
-            'hit-36 mt-[3px] shrink-0 self-start cursor-grab touch-none text-muted-foreground/40',
-            'opacity-0 transition-opacity duration-150 active:cursor-grabbing',
+            'hit-36 mt-[2px] shrink-0 cursor-grab touch-none self-start opacity-0',
+            'text-current/40 transition-opacity duration-100 active:cursor-grabbing',
             'group-hover:opacity-100 focus-visible:opacity-100'
           )}
         >
-          <GripVertical className="size-4" />
+          <GripVertical className="size-3.5" />
         </button>
 
         <Checkbox
           checked={item.done}
           onCheckedChange={onToggle}
           aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
-          className="hit-36 mt-[3px] shrink-0 self-start"
+          className={cn(
+            'hit-36 mt-[3px] shrink-0 self-start',
+            selected && 'border-white/50 bg-white/15 data-[state=checked]:bg-white/25'
+          )}
         />
 
-        {/* The whole column is the copy target, not just the glyphs. The
-            negative margin lets it reach into the row's padding so there is no
-            dead strip above and below the text. */}
         <div
           role={canCopyText ? 'button' : undefined}
           tabIndex={-1}
@@ -129,13 +132,11 @@ export function ItemRow({
           onDoubleClick={() => setEditing(true)}
           onMouseEnter={() => setOverText(true)}
           onMouseLeave={() => setOverText(false)}
-          className="-my-2.5 flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-2.5"
+          className="-my-1.5 flex min-w-0 flex-1 flex-col justify-center gap-1 py-1.5"
         >
           {item.kind === 'image' && (
             <motion.button
               onClick={(event) => {
-                // The column around it copies the caption, so the image has to
-                // claim its own click rather than let it through.
                 event.stopPropagation()
                 onCopy('image')
               }}
@@ -146,22 +147,20 @@ export function ItemRow({
               onMouseEnter={() => setOverImage(true)}
               onMouseLeave={() => setOverImage(false)}
               aria-label="Copy image"
-              whileTap={{ scale: 0.985 }}
-              transition={springMomentum}
-              className="relative overflow-hidden rounded-lg bg-muted ring-1 ring-border ring-inset"
+              whileTap={{ scale: 0.99 }}
+              transition={springSnap}
+              className="relative overflow-hidden rounded-md bg-well shadow-[inset_0_0_0_0.5px_var(--border)]"
             >
               <img
                 src={imageUrl(item.file)}
                 alt={item.caption || 'Stashed image'}
                 draggable={false}
                 className={cn(
-                  'max-h-44 w-full object-contain transition-opacity duration-200',
+                  'max-h-40 w-full object-contain transition-opacity duration-150',
                   item.done && 'opacity-40'
                 )}
               />
 
-              {/* The label sits on the image it describes, so what a click
-                  will copy is answered before the click, not after it. */}
               <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <CopyPill
                   shown={overImage || copied === 'image'}
@@ -192,18 +191,37 @@ export function ItemRow({
                   setEditing(false)
                 }
               }}
-              className="text-base leading-relaxed"
+              className="text-base"
             />
           ) : (
             (item.kind === 'text' || label) && (
-              <div
-                className={cn(
-                  'text-left text-base leading-relaxed break-words whitespace-pre-wrap',
-                  'transition-colors duration-200 [text-wrap:pretty]',
-                  item.done && 'text-muted-foreground line-through decoration-border'
+              <div className="flex flex-col items-start gap-0.5">
+                <div
+                  className={cn(
+                    'text-left text-base break-words whitespace-pre-wrap [text-wrap:pretty]',
+                    long && !expanded && 'line-clamp-6',
+                    item.done && !selected && 'text-muted-foreground line-through decoration-border',
+                    item.done && selected && 'line-through opacity-60'
+                  )}
+                >
+                  {label}
+                </div>
+
+                {long && (
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setExpanded((current) => !current)
+                    }}
+                    onDoubleClick={(event) => event.stopPropagation()}
+                    className={cn(
+                      'text-xs font-medium transition-colors',
+                      selected ? 'text-current/80 hover:text-current' : 'text-tint hover:text-tint-hover'
+                    )}
+                  >
+                    {expanded ? 'Show less' : 'Show more'}
+                  </button>
                 )}
-              >
-                {label}
               </div>
             )
           )}
@@ -211,16 +229,21 @@ export function ItemRow({
           {item.kind === 'image' && !label && !editing && (
             <button
               onClick={() => setEditing(true)}
-              className="self-start text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className={cn(
+                'self-start text-xs transition-colors',
+                selected ? 'text-current/70 hover:text-current' : 'text-muted-foreground hover:text-foreground'
+              )}
             >
               Add a caption
             </button>
           )}
 
-          {/* Provenance, in mono so the numbers line up down the list. The
-              copy label for the text rides on this line: it is directly under
-              the words it applies to, and being absolute it cannot move them. */}
-          <div className="relative flex items-center gap-1.5 text-2xs text-muted-foreground/70 tabular-nums">
+          <div
+            className={cn(
+              'relative flex items-center gap-1.5 text-2xs tabular-nums',
+              selected ? 'text-current/65' : 'text-muted-foreground/80'
+            )}
+          >
             <time dateTime={new Date(item.createdAt).toISOString()}>{time(item.createdAt)}</time>
             {item.source?.app && (
               <>
@@ -240,38 +263,24 @@ export function ItemRow({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 self-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={onRemove}
-                aria-label="Delete"
-                className={cn(
-                  'hit-36 opacity-0 transition-opacity duration-150',
-                  'group-hover:opacity-100 focus-visible:opacity-100'
-                )}
-              >
-                <X />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Delete</TooltipContent>
-          </Tooltip>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={onRemove}
+          aria-label="Delete"
+          className={cn(
+            'hit-36 self-center opacity-0 transition-opacity duration-100',
+            'group-hover:opacity-100 focus-visible:opacity-100',
+            selected && 'text-current hover:bg-white/20 hover:text-current'
+          )}
+        >
+          <X />
+        </Button>
       </div>
     </Reorder.Item>
   )
 }
 
-/**
- * One pill that answers "what will this copy?" before the click and "it
- * copied" after it — the same object in the same place, so the confirmation is
- * obviously about the thing you just touched (§13, causality).
- *
- * It is absolutely positioned by its callers and never participates in layout,
- * which is what keeps the row from shifting when it appears.
- */
 function CopyPill({
   shown,
   done,
@@ -287,35 +296,17 @@ function CopyPill({
     <AnimatePresence>
       {shown && (
         <motion.span
-          layout
-          initial={{ opacity: 0, scale: 0.88 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
+          exit={{ opacity: 0, scale: 0.96 }}
           transition={springSnap}
           className={cn(
-            'material-thick material-edge flex items-center gap-1 overflow-hidden rounded-full',
-            'px-2 py-0.5 font-sans text-2xs font-medium tracking-normal whitespace-nowrap shadow-card',
-            done ? 'text-tint' : 'text-foreground'
+            'material-hud vibrant flex items-center gap-1 rounded-full px-2 py-[1px]',
+            'text-2xs whitespace-nowrap shadow-float'
           )}
         >
-          <AnimatePresence mode="popLayout" initial={false}>
-            {done && (
-              <motion.span
-                key="tick"
-                initial={{ scale: 0.4, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.4, opacity: 0 }}
-                transition={{ type: 'spring', bounce: 0.4, duration: 0.3 }}
-                className="flex"
-              >
-                <Check className="size-3" strokeWidth={2.75} />
-              </motion.span>
-            )}
-          </AnimatePresence>
-
-          <motion.span layout="position" key={done ? 'done' : 'idle'}>
-            {done ? confirmed : idle}
-          </motion.span>
+          {done && <Check className="size-2.5" strokeWidth={3} />}
+          {done ? confirmed : idle}
         </motion.span>
       )}
     </AnimatePresence>
