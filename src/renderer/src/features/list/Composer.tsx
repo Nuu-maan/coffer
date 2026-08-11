@@ -62,25 +62,50 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           if (event.target === event.currentTarget) areaRef.current?.focus()
         }}
         className={cn(
-          'm-1.5 flex items-end gap-1 rounded-md border border-input-border bg-input px-1 py-1',
+          'm-1.5 flex items-end gap-1 rounded-lg border border-input-border bg-input px-1 py-1',
+          /* Recessed rather than flat: a field you type into is a well in the
+             surface, and on a dark ground the only thing that says so is the
+             shadow the top edge casts into it. */
+          'shadow-[inset_0_1px_2px_var(--well)]',
           'transition-[border-color,box-shadow] duration-100',
           'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
         )}
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="hit-36 shrink-0"
-              aria-label="Add an image"
-              onClick={() => fileRef.current?.click()}
-            >
-              <ImagePlus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Add an image file</TooltipContent>
-        </Tooltip>
+        {/* Both accessories add content, so they sit together on one side and
+            leave the right edge to the one control that commits. Split across
+            the two edges, the clipper sat where the send button appears and
+            read as the thing that submits. */}
+        <div className="flex shrink-0 items-center self-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="hit-36"
+                aria-label="Add an image"
+                onClick={() => fileRef.current?.click()}
+              >
+                <ImagePlus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add an image file</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="hit-36"
+                aria-label="Clip a region"
+                onClick={() => void coffer.clipper.start()}
+              >
+                <Crop />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Clip a region of the screen</TooltipContent>
+          </Tooltip>
+        </div>
 
         <Textarea
           ref={areaRef}
@@ -103,36 +128,25 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           className="max-h-28 flex-1 self-center py-[3px] leading-snug"
         />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="hit-36 shrink-0"
-              aria-label="Clip a region"
-              onClick={() => void coffer.clipper.start()}
-            >
-              <Crop />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Clip a region of the screen</TooltipContent>
-        </Tooltip>
-
-        <AnimatePresence mode="popLayout">
-          {canSubmit && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={springSnap}
-              className="shrink-0"
-            >
-              <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
-                <ArrowUp />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* The slot is held open whether or not the button is in it, so the
+            field does not lose 26px of width — and rewrap the line being
+            typed — on the first character. */}
+        <div className="flex size-[26px] shrink-0 items-center justify-center self-end">
+          <AnimatePresence initial={false}>
+            {canSubmit && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={springSnap}
+              >
+                <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
+                  <ArrowUp />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <AnimatePresence initial={false}>
