@@ -1,48 +1,56 @@
-"use client"
+import * as React from 'react'
+import { type VariantProps } from 'class-variance-authority'
+import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui'
+import { LayoutGroup, motion } from 'motion/react'
 
-import * as React from "react"
-import { type VariantProps } from "class-variance-authority"
-import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
+import { cn } from '@/lib/utils'
+import { toggleVariants } from '@/components/ui/toggle'
+import { spring } from '@/lib/motion'
 
-import { cn } from "@/lib/utils"
-import { toggleVariants } from "@/components/ui/toggle"
+/**
+ * A segmented control built on the toggle group. In single-select mode the
+ * selection is one pill that slides between the segments — the same physical
+ * object moving, not a highlight blinking from place to place.
+ */
 
-const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleVariants> & {
-    spacing?: number
-  }
->({
-  size: "default",
-  variant: "default",
-  spacing: 0,
+type Context = VariantProps<typeof toggleVariants> & {
+  value?: string
+  groupId: string
+}
+
+const ToggleGroupContext = React.createContext<Context>({
+  size: 'default',
+  variant: 'default',
+  groupId: 'toggle-group'
 })
 
 function ToggleGroup({
   className,
-  variant,
+  variant = 'segment',
   size,
-  spacing = 0,
   children,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants> & {
-    spacing?: number
-  }) {
+  VariantProps<typeof toggleVariants>): React.JSX.Element {
+  const groupId = React.useId()
+  const selected = props.type === 'single' ? props.value : undefined
+
   return (
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       data-variant={variant}
       data-size={size}
-      data-spacing={spacing}
-      style={{ "--gap": spacing } as React.CSSProperties}
       className={cn(
-        "group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md data-[spacing=default]:data-[variant=outline]:shadow-xs",
+        'group/toggle-group relative flex w-fit items-center rounded-full',
+        variant === 'segment' && 'gap-0 bg-muted p-[3px] ring-1 ring-border/60',
+        variant === 'outline' && 'gap-1',
+        variant === 'default' && 'gap-1',
         className
       )}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ variant, size, spacing }}>
-        {children}
+      <ToggleGroupContext.Provider value={{ variant, size, value: selected, groupId }}>
+        <LayoutGroup id={groupId}>{children}</LayoutGroup>
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
   )
@@ -53,29 +61,36 @@ function ToggleGroupItem({
   children,
   variant,
   size,
+  value,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
-  VariantProps<typeof toggleVariants>) {
+  VariantProps<typeof toggleVariants>): React.JSX.Element {
   const context = React.useContext(ToggleGroupContext)
+  const resolvedVariant = context.variant || variant
+  const active = context.value !== undefined && context.value === value
 
   return (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
-      data-variant={context.variant || variant}
+      data-variant={resolvedVariant}
       data-size={context.size || size}
-      data-spacing={context.spacing}
+      value={value}
       className={cn(
-        toggleVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
-        }),
-        "w-auto min-w-0 shrink-0 px-3 focus:z-10 focus-visible:z-10",
-        "data-[spacing=0]:rounded-none data-[spacing=0]:shadow-none data-[spacing=0]:first:rounded-l-md data-[spacing=0]:last:rounded-r-md data-[spacing=0]:data-[variant=outline]:border-l-0 data-[spacing=0]:data-[variant=outline]:first:border-l",
+        toggleVariants({ variant: resolvedVariant, size: context.size || size }),
+        'relative w-auto min-w-0 shrink-0 focus:z-10 focus-visible:z-10',
+        resolvedVariant === 'segment' && 'px-3',
         className
       )}
       {...props}
     >
-      {children}
+      {active && resolvedVariant === 'segment' && (
+        <motion.span
+          layoutId="segment-indicator"
+          transition={spring}
+          className="absolute inset-0 rounded-full bg-card shadow-card"
+        />
+      )}
+      <span className="relative z-10 flex items-center gap-1.5">{children}</span>
     </ToggleGroupPrimitive.Item>
   )
 }
