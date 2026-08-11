@@ -25,7 +25,7 @@ export function createMainWindow(): BrowserWindow {
     frame: false,
     titleBarStyle: 'hidden',
     alwaysOnTop: getStore().settings.alwaysOnTop,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#262626' : '#ffffff',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1f1f22' : '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,

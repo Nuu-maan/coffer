@@ -83,22 +83,22 @@
  * that a raised surface would catch.
  */
 .dark {
-  --background: #0b0b0c;
+  --background: #141416;
   --foreground: #f2f2f5;
 
-  --card: #161618;
+  --card: #1f1f22;
   --card-foreground: #f2f2f5;
-  --popover: #1f1f22;
+  --popover: #262629;
   --popover-foreground: #f2f2f5;
-  --elevated: #26262a;
+  --elevated: #2c2c31;
 
   --primary: #0a84ff;
   --primary-foreground: #ffffff;
   --secondary: #2a2a2f;
   --secondary-foreground: #f2f2f5;
-  --muted: #161618;
+  --muted: #1f1f22;
   --muted-foreground: #90909a;
-  --accent: #202024;
+  --accent: #2a2a2f;
   --accent-foreground: #f2f2f5;
   --destructive: #ff453a;
   --destructive-foreground: #ffffff;
@@ -115,7 +115,7 @@
 
   --border: rgb(255 255 255 / 0.09);
   --border-strong: rgb(255 255 255 / 0.22);
-  --input: #0e0e10;
+  --input: #17171a;
   --input-border: rgb(255 255 255 / 0.14);
   --ring: #0a84ff;
 
@@ -124,15 +124,15 @@
   --control-active: #38383e;
   --well: rgb(0 0 0 / 0.32);
 
-  --mat-thin: rgb(36 36 41 / 0.62);
+  --mat-thin: rgb(48 48 53 / 0.62);
   --mat-thin-blur: 20px;
-  --mat-regular: rgb(24 24 27 / 0.78);
+  --mat-regular: rgb(38 38 43 / 0.76);
   --mat-regular-blur: 30px;
-  --mat-thick: rgb(18 18 20 / 0.94);
+  --mat-thick: rgb(46 46 51 / 0.88);
   --mat-thick-blur: 50px;
   --mat-saturate: 170%;
   --mat-edge: rgb(255 255 255 / 0.12);
-  --mat-border: rgb(255 255 255 / 0.09);
+  --mat-border: rgb(255 255 255 / 0.13);
 
   --hud: rgb(28 28 32 / 0.9);
   --hud-foreground: #ffffff;
@@ -140,17 +140,19 @@
 
   --scrim: rgb(0 0 0 / 0.55);
 
-  --shadow-hairline: 0 0 0 0.5px rgb(255 255 255 / 0.1);
-  --shadow-control: inset 0 0.5px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.45),
-    0 0 0 0.5px rgb(0 0 0 / 0.6);
-  --shadow-card: inset 0 0.5px 0 rgb(255 255 255 / 0.06), 0 1px 4px rgb(0 0 0 / 0.4),
-    0 0 0 0.5px rgb(0 0 0 / 0.5);
-  --shadow-raised: inset 0 0.5px 0 rgb(255 255 255 / 0.08), 0 3px 10px rgb(0 0 0 / 0.45),
-    0 0 0 0.5px rgb(0 0 0 / 0.55);
-  --shadow-float: inset 0 0.5px 0 rgb(255 255 255 / 0.1), 0 10px 28px rgb(0 0 0 / 0.55),
-    0 0 0 0.5px rgb(0 0 0 / 0.6);
-  --shadow-overlay: inset 0 0.5px 0 rgb(255 255 255 / 0.12), 0 20px 56px rgb(0 0 0 / 0.65),
-    0 0 0 0.5px rgb(0 0 0 / 0.7);
+  /*
+   * Every edge here is drawn inside the box. An outer ring the colour of the
+   * dark it sits on subtracts from the corner instead of describing it, and a
+   * rounded card ends up looking bitten rather than curved. A surface in the
+   * dark separates by being lighter than its ground, which is what the inset
+   * hairline is for.
+   */
+  --shadow-hairline: inset 0 0 0 0.5px rgb(255 255 255 / 0.1);
+  --shadow-control: inset 0 0 0 0.5px rgb(255 255 255 / 0.11), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-card: inset 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 1px 3px rgb(0 0 0 / 0.35);
+  --shadow-raised: inset 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 3px 10px rgb(0 0 0 / 0.4);
+  --shadow-float: inset 0 0 0 0.5px rgb(255 255 255 / 0.12), 0 10px 28px rgb(0 0 0 / 0.5);
+  --shadow-overlay: inset 0 0 0 0.5px rgb(255 255 255 / 0.14), 0 20px 56px rgb(0 0 0 / 0.6);
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.1);
 }
 
