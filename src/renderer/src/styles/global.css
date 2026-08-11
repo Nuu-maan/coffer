@@ -32,14 +32,13 @@
   --tint-soft: rgb(0 122 255 / 0.12);
   --tint-hover: #0071eb;
 
-  /* A stash row is a cursor position, not a document selection, so it reads as
-     a neutral wash with a hairline edge rather than a solid fill. Neutral
-     rather than tinted: the blue read as a control the row was not, and it
-     collided with the tint the accessories already use. Body text keeps its
-     normal colour and contrast either way. */
+  /* A stash is a card, and a selected card is ringed rather than filled: the
+     text keeps the contrast it had, and several picked at once still read as
+     the same kind of thing rather than as a blue block. */
   --selected: rgb(0 0 0 / 0.07);
   --selected-foreground: #000000;
   --selected-edge: rgb(0 0 0 / 0.14);
+  --selected-ring: #007aff;
 
   --border: rgb(0 0 0 / 0.1);
   --border-strong: rgb(0 0 0 / 0.22);
@@ -112,6 +111,7 @@
   --selected: rgb(255 255 255 / 0.1);
   --selected-foreground: #ffffff;
   --selected-edge: rgb(255 255 255 / 0.16);
+  --selected-ring: #0a84ff;
 
   --border: rgb(255 255 255 / 0.09);
   --border-strong: rgb(255 255 255 / 0.22);
@@ -161,6 +161,7 @@
   --radius-lg: 8px;
   --radius-xl: 10px;
   --radius-2xl: 14px;
+  --radius-3xl: 18px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -186,6 +187,7 @@
   --color-selected: var(--selected);
   --color-selected-foreground: var(--selected-foreground);
   --color-selected-edge: var(--selected-edge);
+  --color-selected-ring: var(--selected-ring);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
