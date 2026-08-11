@@ -7,28 +7,27 @@ import { cn } from '@/lib/utils'
 const badgeVariants = cva(
   [
     'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden',
-    'rounded-full border border-transparent px-2 py-0.5 whitespace-nowrap',
-    'transition-[color,box-shadow,background-color] duration-150',
+    'rounded-full border border-transparent px-2 whitespace-nowrap',
+    'transition-[color,box-shadow,background-color] duration-100',
     '[&>svg]:pointer-events-none [&>svg]:size-3'
   ],
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground font-medium',
+        default: 'bg-tint text-tint-foreground font-medium',
         secondary: 'bg-secondary text-secondary-foreground font-medium',
-        tint: 'bg-tint/12 text-tint font-medium dark:bg-tint/20',
+        tint: 'bg-tint-soft text-tint font-medium',
         destructive: 'bg-destructive text-destructive-foreground font-medium',
-        // The dashed outline chips from the reference — quiet metadata that
-        // reads as a label rather than a control.
         outline: 'border-border-strong text-muted-foreground font-medium',
         dashed: 'border-dashed border-border-strong text-muted-foreground',
         glass: 'material-thin material-edge vibrant text-foreground',
+        hud: 'material-hud vibrant',
         ghost: 'text-muted-foreground'
       },
       size: {
-        default: 'h-5 text-xs',
-        sm: 'h-[18px] px-1.5 text-2xs',
-        lg: 'h-6 px-2.5 text-sm'
+        default: 'h-[17px] text-xs',
+        sm: 'h-[15px] px-1.5 text-2xs',
+        lg: 'h-[21px] px-2.5 text-sm'
       },
       numeric: {
         true: 'tabular-nums',

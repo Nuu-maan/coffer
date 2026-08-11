@@ -4,13 +4,7 @@ import { Tabs as TabsPrimitive } from 'radix-ui'
 import { LayoutGroup, motion } from 'motion/react'
 
 import { cn } from '@/lib/utils'
-import { spring } from '@/lib/motion'
-
-/**
- * A segmented control. The selection is a single physical pill that slides
- * between the options rather than a highlight that blinks out in one place and
- * in at another — the movement is what tells you the two are the same thing.
- */
+import { springSnap } from '@/lib/motion'
 
 const TabsContext = React.createContext<{ value?: string; id: string }>({ id: 'tabs' })
 
@@ -38,10 +32,7 @@ function Tabs({
           setInternal(next)
           onValueChange?.(next)
         }}
-        className={cn(
-          'group/tabs flex gap-2 data-[orientation=horizontal]:flex-col',
-          className
-        )}
+        className={cn('group/tabs flex gap-2 data-[orientation=horizontal]:flex-col', className)}
         {...props}
       />
     </TabsContext.Provider>
@@ -50,14 +41,14 @@ function Tabs({
 
 const tabsListVariants = cva(
   [
-    'group/tabs-list relative inline-flex w-fit items-center justify-center rounded-full p-[3px]',
+    'group/tabs-list relative inline-flex w-fit items-center justify-center rounded-[7px] p-[2px]',
     'text-muted-foreground',
     'group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col'
   ],
   {
     variants: {
       variant: {
-        default: 'bg-muted ring-1 ring-border/60',
+        default: 'bg-well shadow-[inset_0_0_0_0.5px_var(--border)]',
         glass: 'material-thin material-edge',
         line: 'gap-1 rounded-none bg-transparent p-0'
       }
@@ -104,12 +95,12 @@ function TabsTrigger({
       value={value}
       className={cn(
         'focus-halo relative inline-flex flex-1 items-center justify-center gap-1.5',
-        'rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap',
-        'text-muted-foreground transition-colors duration-150 outline-none',
+        'rounded-[5px] px-3 py-0.5 text-sm font-medium whitespace-nowrap',
+        'text-muted-foreground transition-colors duration-100 outline-none',
         'hover:text-foreground data-[state=active]:text-foreground',
         'disabled:pointer-events-none disabled:opacity-40',
         'group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start',
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}
@@ -117,13 +108,13 @@ function TabsTrigger({
       {active && (
         <motion.span
           layoutId="tab-indicator"
-          transition={spring}
+          transition={springSnap}
           className={cn(
-            'absolute inset-0 -z-0 rounded-full',
-            'group-data-[variant=default]/tabs-list:bg-card group-data-[variant=default]/tabs-list:shadow-card',
-            'group-data-[variant=glass]/tabs-list:bg-card/85 group-data-[variant=glass]/tabs-list:shadow-card',
+            'absolute inset-0 -z-0 rounded-[5px]',
+            'group-data-[variant=default]/tabs-list:bg-control group-data-[variant=default]/tabs-list:shadow-control',
+            'group-data-[variant=glass]/tabs-list:bg-control group-data-[variant=glass]/tabs-list:shadow-control',
             'group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:bg-transparent',
-            'group-data-[variant=line]/tabs-list:border-b-2 group-data-[variant=line]/tabs-list:border-foreground'
+            'group-data-[variant=line]/tabs-list:border-b-2 group-data-[variant=line]/tabs-list:border-tint'
           )}
         />
       )}
