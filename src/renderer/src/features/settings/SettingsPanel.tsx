@@ -1,4 +1,4 @@
-import { Info, Monitor, Moon, Sun } from 'lucide-react'
+import { Crop, Info, Keyboard, Monitor, Moon, Palette, Pin, Power, Sun, Timer, Zap } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import type { Settings } from '@shared/types/item'
 import { Label } from '@/components/ui/label'
@@ -40,9 +40,14 @@ export function SettingsPanel(): React.JSX.Element {
 
   return (
     <ScrollArea className="h-full bg-background">
-      <div className="flex flex-col gap-4 px-3 py-3">
+      <div className="flex flex-col gap-5 px-3 py-3">
         <Group title="Appearance">
-          <Row label="Theme" htmlFor="theme">
+          <Row
+            label="Theme"
+            hint="Light, dark, or whatever the system is set to"
+            htmlFor="theme"
+            icon={<Palette />}
+          >
             <ToggleGroup
               type="single"
               size="sm"
@@ -67,18 +72,26 @@ export function SettingsPanel(): React.JSX.Element {
 
         {acceleratorsAvailable ? (
           <>
-            <Group title="Clipper">
-              <Row label="Clip a region" htmlFor="clipper-shortcut">
+            <Group title="Shortcuts">
+              <Row
+                label="Clip a region"
+                hint="Draw a box on screen and stash it"
+                htmlFor="clipper-shortcut"
+                icon={<Crop />}
+              >
                 <ShortcutInput
                   value={settings.clipperAccelerator}
                   invalid={collides}
                   onChange={(accelerator) => patch({ clipperAccelerator: accelerator })}
                 />
               </Row>
-            </Group>
 
-            <Group title="Stashing">
-              <Row label="Trigger" htmlFor="trigger">
+              <Row
+                label="Trigger"
+                hint="How stashing the selection is set off"
+                htmlFor="trigger"
+                icon={<Zap />}
+              >
                 <Select
                   value={effectiveMode}
                   disabled={!doubleShiftAvailable}
@@ -99,7 +112,12 @@ export function SettingsPanel(): React.JSX.Element {
               <AnimatePresence initial={false}>
                 {effectiveMode === 'accelerator' && (
                   <Reveal key="stash-shortcut">
-                    <Row label="Stash the selection" htmlFor="stash-shortcut">
+                    <Row
+                      label="Stash the selection"
+                      hint="Copies the selection, then stashes it"
+                      htmlFor="stash-shortcut"
+                      icon={<Keyboard />}
+                    >
                       <ShortcutInput
                         value={settings.accelerator}
                         invalid={collides}
@@ -111,7 +129,12 @@ export function SettingsPanel(): React.JSX.Element {
 
                 {effectiveMode === 'double-shift' && (
                   <Reveal key="tap-window">
-                    <Row label="Tap window" htmlFor="tap-window">
+                    <Row
+                      label="Tap window"
+                      hint="How closely the taps must follow"
+                      htmlFor="tap-window"
+                      icon={<Timer />}
+                    >
                       <div className="flex w-40 items-center gap-2.5">
                         <Slider
                           id="tap-window"
@@ -142,24 +165,34 @@ export function SettingsPanel(): React.JSX.Element {
             </AnimatePresence>
           </>
         ) : (
-          <section className="flex flex-col gap-1">
-            <h2 className="px-1 text-sm font-semibold text-muted-foreground">Shortcuts</h2>
+          <section className="flex flex-col gap-1.5">
+            <h2 className="px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Shortcuts
+            </h2>
             {platform && hotkeys && <PortalShortcuts status={hotkeys} platform={platform} />}
           </section>
         )}
 
-        <Group title="Window">
-          <Row label="Always on top" htmlFor="always-on-top">
+        <Group title="Behaviour">
+          <Row
+            label="Always on top"
+            hint="Keep the panel above other windows"
+            htmlFor="always-on-top"
+            icon={<Pin />}
+          >
             <Switch
               id="always-on-top"
               checked={settings.alwaysOnTop}
               onCheckedChange={(checked) => patch({ alwaysOnTop: checked })}
             />
           </Row>
-        </Group>
 
-        <Group title="System">
-          <Row label="Launch on login" htmlFor="launch">
+          <Row
+            label="Launch on login"
+            hint="Start Coffer in the tray when you sign in"
+            htmlFor="launch"
+            icon={<Power />}
+          >
             <Switch
               id="launch"
               checked={settings.launchOnLogin}
@@ -169,7 +202,7 @@ export function SettingsPanel(): React.JSX.Element {
         </Group>
 
         {platform && (
-          <p className="px-1 pb-1 text-2xs text-muted-foreground">
+          <p className="px-2 pb-1 text-center text-2xs text-muted-foreground">
             {sessionLabel(platform.session)}
             {platform.supportsSourceCapture ? '' : ' · source app is not recorded here'}
           </p>
@@ -181,14 +214,13 @@ export function SettingsPanel(): React.JSX.Element {
 
 function Group({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
   return (
-    <section className="flex flex-col gap-1">
-      <h2 className="px-1 text-sm font-semibold text-muted-foreground">{title}</h2>
-      <div
-        className={cn(
-          'overflow-hidden rounded-lg bg-card shadow-card',
-          '[&>*:first-child]:border-t-0'
-        )}
-      >
+    <section className="flex flex-col gap-1.5">
+      <h2 className="px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        {title}
+      </h2>
+      {/* The hairline belongs to the row below it, and the first row in a card
+          has nothing above it to be divided from. */}
+      <div className="overflow-hidden rounded-2xl bg-card shadow-card [&>:first-child_[data-rule]]:hidden">
         {children}
       </div>
     </section>
@@ -219,7 +251,7 @@ function Note({
   return (
     <p
       className={cn(
-        'flex items-start gap-2 rounded-lg px-3 py-2 text-sm',
+        'flex items-start gap-2 rounded-2xl px-3 py-2.5 text-sm',
         variant === 'warning'
           ? 'bg-destructive/10 text-destructive'
           : 'bg-card text-muted-foreground shadow-card'
@@ -233,21 +265,35 @@ function Note({
 
 function Row({
   label,
+  hint,
   htmlFor,
+  icon,
   children
 }: {
   label: string
+  hint?: string
   htmlFor: string
+  icon?: React.ReactNode
   children: React.ReactNode
 }): React.JSX.Element {
   return (
-    <div
-      className={cn(
-        'flex min-h-[34px] items-center justify-between gap-3 px-3 py-1.5',
-        'border-t border-border'
+    <div className="relative flex min-h-[46px] items-center gap-2.5 px-2.5 py-2">
+      <span data-rule className="absolute top-0 right-0 left-[42px] h-px bg-border" />
+
+      {icon && (
+        <span
+          aria-hidden="true"
+          className="flex size-[22px] shrink-0 items-center justify-center text-muted-foreground [&_svg]:size-[17px]"
+        >
+          {icon}
+        </span>
       )}
-    >
-      <Label htmlFor={htmlFor}>{label}</Label>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Label htmlFor={htmlFor}>{label}</Label>
+        {hint && <span className="text-xs text-muted-foreground [text-wrap:pretty]">{hint}</span>}
+      </div>
+
       {children}
     </div>
   )
