@@ -25,6 +25,12 @@ type Props = {
    is one line tall and stay anchored at the foot once it is not. */
 const FIELD = 28
 
+/* Half the resting height, which makes one radius do both shapes: a capsule
+   while the field is one line tall, a rounded box once the text wraps past it.
+   Opening the field to a fixed taller height instead meant animating min-height
+   against the growth field-sizing was already doing, and the two fought. */
+const RADIUS = FIELD / 2
+
 export function Composer({ onSubmit }: Props): React.JSX.Element {
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
@@ -60,45 +66,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
      * (this is chrome, that is content) without spending an edge on it.
      */
     <div className="material relative z-20">
-      <div className="flex items-end gap-2 px-2 py-2">
-        {/*
-          One control rather than a row of them. Three 26px buttons with 36px
-          hit areas overlapped each other by 10px, so the seams between them
-          went to whichever button painted last; they also ate a quarter of the
-          bar's width and pushed the caret that far off the leading edge. The
-          three ways of adding something now share one menu, and the field gets
-          the width back.
-        */}
-        <div className="flex shrink-0 items-center self-end" style={{ height: FIELD }}>
-          <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hit-36" aria-label="Add">
-                    <Plus />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Add to the panel</TooltipContent>
-            </Tooltip>
-
-            <DropdownMenuContent align="start" side="top" className="w-48">
-              <DropdownMenuItem onSelect={() => void coffer.stash.selection()}>
-                <MousePointerSquareDashed />
-                Grab selection
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void coffer.clipper.start()}>
-                <Crop />
-                Clip a region
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
-                <ImagePlus />
-                Add an image…
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
+      <div className="p-1.5">
         {/* One field, shaped like one: a capsule at rest, growing into a rounded
             box as the text wraps. The recess is what says it takes typing —
             on a dark ground a flat panel says nothing. */}
@@ -107,14 +75,57 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           onPointerDown={(event) => {
             if (event.target === event.currentTarget) areaRef.current?.focus()
           }}
-          style={{ minHeight: FIELD }}
+          style={{ minHeight: FIELD, borderRadius: RADIUS }}
           className={cn(
-            'flex flex-1 items-end gap-1 rounded-full py-px pr-px pl-3',
+            'flex items-end gap-1.5 px-px py-px',
             'border border-input-border bg-input shadow-[inset_0_1px_2px_var(--well)]',
             'transition-[border-color,box-shadow] duration-100',
             'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
           )}
         >
+          {/*
+            Inside the field, on the row's own leading edge: what you type
+            lines up with where it lands, and the one control that adds to the
+            panel sits where a row's checkbox does rather than off to the side
+            of the field it belongs to.
+          */}
+          <div className="flex size-[26px] shrink-0 items-center justify-center self-end">
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    {/* Round, because its hover and press fills sit a pixel
+                        inside a capsule — a square one spills past the curve. */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hit-36 rounded-full"
+                      aria-label="Add"
+                    >
+                      <Plus />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Add to the panel</TooltipContent>
+              </Tooltip>
+
+              <DropdownMenuContent align="start" side="top" className="w-48">
+                <DropdownMenuItem onSelect={() => void coffer.stash.selection()}>
+                  <MousePointerSquareDashed />
+                  Grab selection
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void coffer.clipper.start()}>
+                  <Crop />
+                  Clip a region
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
+                  <ImagePlus />
+                  Add an image…
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           <Textarea
             ref={areaRef}
             variant="bare"

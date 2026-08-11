@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ImagePlus } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, Reorder, motion } from 'motion/react'
-import type { Item } from '@shared/types/item'
+import { itemLabel, type Item } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { coffer } from '@/lib/ipc'
@@ -13,26 +13,80 @@ import { usePlatform } from '@/hooks/use-platform'
 import { ItemRow } from './ItemRow'
 import { Composer } from './Composer'
 
-/* The chrome floating at the foot of the list, in px: the composer's 28px field
-   in its 8px bar, and the strip that appears above it once anything is done.
-   The list pads itself by as much as is actually there. */
-const COMPOSER = 44
-const DONE_BAR = 24
-
 export function ItemList(): React.JSX.Element {
   const { items, addText, addImage, toggle, update, remove, clearDone, move } = useItems()
   const platform = usePlatform()
   const { dragging, handlers } = useImageIntake(addImage)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set())
+  /* Where a shift-range measures from. Set by every plain click and every
+     unshifted arrow, left alone while the range is being stretched. */
+  const anchorId = useRef<string | null>(null)
+  /* The end of the selection the keyboard is holding, which is the row a plain
+     arrow steps from and a shift-arrow stretches. */
+  const focusId = useRef<string | null>(null)
   const [copied, setCopied] = useState<{ id: string; what: 'image' | 'text' } | null>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [ordered, setOrdered] = useState<Item[]>(items)
   const reordering = useRef(false)
 
+  /*
+   * Measured rather than assumed. The chrome at the foot of the list changes
+   * height as the composer opens and as the done strip comes and goes, and a
+   * constant written for one of those states hides a row in the others.
+   */
+  const chromeRef = useRef<HTMLDivElement>(null)
+  const [chrome, setChrome] = useState(44)
+
+  useEffect(() => {
+    const el = chromeRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setChrome(entry.contentRect.height)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     if (!reordering.current) setOrdered(items)
   }, [items])
+
+  /*
+   * The three ways a list selects, in the order the platform expects them:
+   * shift stretches a range from the anchor, the platform's own modifier adds
+   * and removes one row, and a plain click starts over.
+   */
+  const select = useCallback(
+    (id: string, modifiers: { shift: boolean; toggle: boolean }) => {
+      setSelectedIds((current) => {
+        if (modifiers.shift && anchorId.current) {
+          const from = ordered.findIndex((item) => item.id === anchorId.current)
+          const to = ordered.findIndex((item) => item.id === id)
+          if (from < 0 || to < 0) return new Set([id])
+          const [start, end] = from < to ? [from, to] : [to, from]
+          return new Set(ordered.slice(start, end + 1).map((item) => item.id))
+        }
+
+        if (modifiers.toggle) {
+          const next = new Set(current)
+          if (next.has(id)) next.delete(id)
+          else next.add(id)
+          anchorId.current = id
+          return next
+        }
+
+        anchorId.current = id
+        return new Set([id])
+      })
+    },
+    [ordered]
+  )
+
+  const clearSelection = useCallback(() => {
+    anchorId.current = null
+    setSelectedIds(new Set())
+  }, [])
 
   const copy = useCallback((item: Item, what: 'image' | 'text') => {
     if (item.kind === 'image' && what === 'image') {
@@ -48,41 +102,94 @@ export function ItemList(): React.JSX.Element {
     copiedTimer.current = setTimeout(() => setCopied(null), 1400)
   }, [])
 
+  const selection = useCallback(
+    (): Item[] => ordered.filter((item) => selectedIds.has(item.id)),
+    [ordered, selectedIds]
+  )
+
+  /*
+   * Plain copy joins the rows with blank lines, the way copying paragraphs
+   * does. As a list, each row becomes one bullet and its own line breaks are
+   * folded into it, so pasting a two-line stash does not silently turn into
+   * two bullets.
+   */
+  const copySelection = useCallback(
+    (asList: boolean) => {
+      const chosen = selection()
+      if (chosen.length === 0) return
+
+      if (chosen.length === 1 && !asList) {
+        const only = chosen[0]
+        if (only) copy(only, only.kind === 'image' ? 'image' : 'text')
+        return
+      }
+
+      const lines = chosen.map((item) => itemLabel(item).trim()).filter(Boolean)
+      if (lines.length === 0) return
+
+      void coffer.clipboard.write(
+        asList ? lines.map((line) => `- ${line.replace(/\n/g, ' ')}`).join('\n') : lines.join('\n\n')
+      )
+
+      const first = chosen[0]
+      if (first) {
+        setCopied({ id: first.id, what: 'text' })
+        if (copiedTimer.current) clearTimeout(copiedTimer.current)
+        copiedTimer.current = setTimeout(() => setCopied(null), 1400)
+      }
+    },
+    [selection, copy]
+  )
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
       if (event.target instanceof HTMLTextAreaElement) return
       if (event.target instanceof HTMLInputElement) return
 
-      const index = ordered.findIndex((item) => item.id === selectedId)
+      /* The cursor end of the selection: the row an arrow moves from and a
+         shift-arrow stretches. A range keeps its far end here. */
+      const cursorId = focusId.current
+      const index = ordered.findIndex((item) => item.id === cursorId)
+      const chosen = ordered.filter((item) => selectedIds.has(item.id))
+
+      function moveTo(next: Item | undefined, extend: boolean): void {
+        if (!next) return
+        focusId.current = next.id
+        if (extend) select(next.id, { shift: true, toggle: false })
+        else select(next.id, { shift: false, toggle: false })
+      }
 
       if (event.key === 'j' || event.key === 'ArrowDown') {
         event.preventDefault()
-        const next = ordered[Math.min(index + 1, ordered.length - 1)] ?? ordered[0]
-        if (next) setSelectedId(next.id)
+        moveTo(ordered[Math.min(index + 1, ordered.length - 1)] ?? ordered[0], event.shiftKey)
       } else if (event.key === 'k' || event.key === 'ArrowUp') {
         event.preventDefault()
-        const prev = ordered[Math.max(index - 1, 0)] ?? ordered[0]
-        if (prev) setSelectedId(prev.id)
-      } else if (event.key === 'Enter' && index >= 0) {
+        moveTo(ordered[Math.max(index - 1, 0)] ?? ordered[0], event.shiftKey)
+      } else if (event.key === 'a' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
-        const item = ordered[index]
-        if (item) copy(item, item.kind === 'image' ? 'image' : 'text')
-      } else if (event.key === ' ' && index >= 0) {
+        setSelectedIds(new Set(ordered.map((item) => item.id)))
+      } else if (event.key.toLowerCase() === 'c' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
-        if (selectedId) toggle(selectedId)
-      } else if ((event.key === 'Backspace' || event.key === 'Delete') && selectedId) {
+        copySelection(event.shiftKey)
+      } else if (event.key === 'Enter' && chosen.length > 0) {
         event.preventDefault()
-        remove(selectedId)
-        setSelectedId(null)
+        copySelection(false)
+      } else if (event.key === ' ' && chosen.length > 0) {
+        event.preventDefault()
+        for (const item of chosen) toggle(item.id)
+      } else if ((event.key === 'Backspace' || event.key === 'Delete') && chosen.length > 0) {
+        event.preventDefault()
+        for (const item of chosen) remove(item.id)
+        clearSelection()
       } else if (event.key === 'Escape') {
-        if (selectedId) setSelectedId(null)
+        if (chosen.length > 0) clearSelection()
         else coffer.window.hideMain()
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [ordered, selectedId, copy, toggle, remove])
+  }, [ordered, selectedIds, select, clearSelection, copySelection, toggle, remove])
 
   function commitOrder(id: string): void {
     reordering.current = false
@@ -113,7 +220,7 @@ export function ItemList(): React.JSX.Element {
           className="min-h-0 flex-1"
           onMouseDown={(event) => {
             if (!(event.target as HTMLElement).closest('[data-slot="item-row"]')) {
-              setSelectedId(null)
+              clearSelection()
             }
           }}
         >
@@ -126,7 +233,7 @@ export function ItemList(): React.JSX.Element {
                 setOrdered(next)
               }}
               className="list-none px-1.5 pt-1.5"
-              style={{ paddingBottom: COMPOSER + (doneCount > 0 ? DONE_BAR : 0) + 6 }}
+              style={{ paddingBottom: chrome + 6 }}
             >
               <AnimatePresence initial={false}>
                 {ordered.map((item, index) => (
@@ -134,15 +241,28 @@ export function ItemList(): React.JSX.Element {
                     key={item.id}
                     item={item}
                     index={index}
-                    selected={item.id === selectedId}
+                    selected={selectedIds.has(item.id)}
                     divider={
                       index < ordered.length - 1 &&
-                      item.id !== selectedId &&
-                      ordered[index + 1]?.id !== selectedId
+                      !selectedIds.has(item.id) &&
+                      !selectedIds.has(ordered[index + 1]?.id ?? '')
                     }
+                    selectionSize={selectedIds.size}
                     copied={copied?.id === item.id ? copied.what : null}
-                    onSelect={() => setSelectedId(item.id)}
+                    onSelect={(modifiers) => {
+                      focusId.current = item.id
+                      select(item.id, modifiers)
+                    }}
+                    onContextMenu={() => {
+                      /* Right-clicking outside the selection moves it here, the
+                         way every file list does; inside it, the selection is
+                         what the menu acts on and must survive the click. */
+                      if (selectedIds.has(item.id)) return
+                      focusId.current = item.id
+                      select(item.id, { shift: false, toggle: false })
+                    }}
                     onCopy={(what) => copy(item, what)}
+                    onCopySelection={copySelection}
                     onToggle={() => toggle(item.id)}
                     onRemove={() => remove(item.id)}
                     onUpdate={(text) => update(item.id, text)}
@@ -161,7 +281,7 @@ export function ItemList(): React.JSX.Element {
         window. The list carries the clearance for it as padding, which is what
         lets the last row scroll clear of it.
       */}
-      <div className="absolute inset-x-0 bottom-0 z-20">
+      <div ref={chromeRef} className="absolute inset-x-0 bottom-0 z-20">
         {/*
           Only here when there is something to clear. As a permanent strip it
           spent almost all of its life reporting a count the list is already
@@ -172,7 +292,7 @@ export function ItemList(): React.JSX.Element {
           {doneCount > 0 && (
             <motion.footer
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: DONE_BAR, opacity: 1 }}
+              animate={{ height: 24, opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={ease}
               className="material flex items-center justify-between overflow-hidden px-3 text-2xs text-muted-foreground tabular-nums"
