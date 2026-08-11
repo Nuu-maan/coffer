@@ -33,11 +33,13 @@
   --tint-hover: #0071eb;
 
   /* A stash row is a cursor position, not a document selection, so it reads as
-     a tinted wash with a tint edge rather than a solid fill. Body text keeps
-     its normal colour and contrast. */
-  --selected: rgb(0 122 255 / 0.1);
-  --selected-foreground: #1c1c1e;
-  --selected-edge: rgb(0 122 255 / 0.3);
+     a neutral wash with a hairline edge rather than a solid fill. Neutral
+     rather than tinted: the blue read as a control the row was not, and it
+     collided with the tint the accessories already use. Body text keeps its
+     normal colour and contrast either way. */
+  --selected: rgb(0 0 0 / 0.07);
+  --selected-foreground: #000000;
+  --selected-edge: rgb(0 0 0 / 0.14);
 
   --border: rgb(0 0 0 / 0.1);
   --border-strong: rgb(0 0 0 / 0.22);
@@ -82,22 +84,22 @@
  * that a raised surface would catch.
  */
 .dark {
-  --background: #191919;
+  --background: #0b0b0c;
   --foreground: #f2f2f5;
 
-  --card: #232326;
+  --card: #161618;
   --card-foreground: #f2f2f5;
-  --popover: #2c2c31;
+  --popover: #1f1f22;
   --popover-foreground: #f2f2f5;
-  --elevated: #313137;
+  --elevated: #26262a;
 
   --primary: #0a84ff;
   --primary-foreground: #ffffff;
-  --secondary: #3a3a40;
+  --secondary: #2a2a2f;
   --secondary-foreground: #f2f2f5;
-  --muted: #232326;
-  --muted-foreground: #9c9ca6;
-  --accent: #2b2b30;
+  --muted: #161618;
+  --muted-foreground: #90909a;
+  --accent: #202024;
   --accent-foreground: #f2f2f5;
   --destructive: #ff453a;
   --destructive-foreground: #ffffff;
@@ -107,32 +109,32 @@
   --tint-soft: rgb(10 132 255 / 0.2);
   --tint-hover: #2b95ff;
 
-  --selected: rgb(10 132 255 / 0.2);
-  --selected-foreground: #f2f2f5;
-  --selected-edge: rgb(10 132 255 / 0.45);
+  --selected: rgb(255 255 255 / 0.1);
+  --selected-foreground: #ffffff;
+  --selected-edge: rgb(255 255 255 / 0.16);
 
   --border: rgb(255 255 255 / 0.09);
   --border-strong: rgb(255 255 255 / 0.22);
-  --input: #131315;
-  --input-border: rgb(255 255 255 / 0.12);
+  --input: #0e0e10;
+  --input-border: rgb(255 255 255 / 0.11);
   --ring: #0a84ff;
 
-  --control: #3a3a40;
+  --control: #2a2a2f;
   --control-foreground: #f2f2f5;
-  --control-active: #48484f;
+  --control-active: #38383e;
   --well: rgb(0 0 0 / 0.32);
 
-  --mat-thin: rgb(52 52 58 / 0.62);
+  --mat-thin: rgb(36 36 41 / 0.62);
   --mat-thin-blur: 20px;
-  --mat-regular: rgb(36 36 40 / 0.76);
+  --mat-regular: rgb(24 24 27 / 0.78);
   --mat-regular-blur: 30px;
-  --mat-thick: rgb(28 28 32 / 0.92);
+  --mat-thick: rgb(18 18 20 / 0.94);
   --mat-thick-blur: 50px;
   --mat-saturate: 170%;
   --mat-edge: rgb(255 255 255 / 0.12);
   --mat-border: rgb(255 255 255 / 0.09);
 
-  --hud: rgb(38 38 43 / 0.88);
+  --hud: rgb(28 28 32 / 0.9);
   --hud-foreground: #ffffff;
   --hud-border: rgb(255 255 255 / 0.16);
 
