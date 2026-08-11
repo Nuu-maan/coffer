@@ -94,7 +94,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       value={value}
       className={cn(
-        'focus-halo relative inline-flex flex-1 items-center justify-center gap-1.5',
+        'focus-halo relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5',
         'rounded-[5px] px-3 py-0.5 text-sm font-medium whitespace-nowrap',
         'text-muted-foreground transition-colors duration-100 outline-none',
         'hover:text-foreground data-[state=active]:text-foreground',

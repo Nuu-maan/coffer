@@ -19,7 +19,7 @@ function Checkbox({
         'border border-input-border bg-control shadow-control outline-none',
         'transition-colors duration-100',
         'hover:border-border-strong',
-        'disabled:cursor-not-allowed disabled:opacity-40',
+        'cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
         'data-[state=checked]:border-tint data-[state=checked]:bg-tint',
         className
       )}
