@@ -38,11 +38,9 @@ function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          // Scales up from the trigger's corner, so the connection between the
-          // control and its explanation is spatial, not just temporal (§7).
-          'materialize material-thick material-edge z-50 w-fit',
+          'materialize material-hud z-50 w-fit',
           'origin-(--radix-tooltip-content-transform-origin)',
-          'rounded-lg px-2.5 py-1.5 text-xs text-balance text-foreground shadow-float',
+          'rounded-md px-2 py-1 text-xs text-balance shadow-float',
           className
         )}
         {...props}

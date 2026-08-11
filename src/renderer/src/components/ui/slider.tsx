@@ -35,15 +35,15 @@ function Slider({
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={cn(
-          'relative grow overflow-hidden rounded-full bg-border',
-          'data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full',
-          'data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1'
+          'relative grow overflow-hidden rounded-full bg-well shadow-[inset_0_0_0_0.5px_var(--border)]',
+          'data-[orientation=horizontal]:h-[3px] data-[orientation=horizontal]:w-full',
+          'data-[orientation=vertical]:h-full data-[orientation=vertical]:w-[3px]'
         )}
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
           className={cn(
-            'absolute bg-foreground',
+            'absolute bg-tint',
             'data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full'
           )}
         />
@@ -54,10 +54,9 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           className={cn(
-            'block size-[18px] shrink-0 rounded-full bg-white shadow-float outline-none',
-            'ring-1 ring-black/[0.06] transition-transform duration-150 ease-[var(--ease-out-quart)]',
-            // The thumb grows under the finger so it stays visible while dragging.
-            'hover:scale-110 focus-visible:scale-110 active:scale-125',
+            'block size-[15px] shrink-0 rounded-full bg-white shadow-control outline-none',
+            'ring-[0.5px] ring-black/10 transition-transform duration-100 ease-[var(--ease-out-quart)]',
+            'active:scale-110',
             'disabled:pointer-events-none'
           )}
         />
