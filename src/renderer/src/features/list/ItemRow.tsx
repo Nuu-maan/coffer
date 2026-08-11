@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, GripVertical, X } from 'lucide-react'
+import { Check, GripVertical, X } from '@/components/icons'
 import { AnimatePresence, Reorder, motion, useDragControls } from 'motion/react'
 import type { Item } from '@shared/types/item'
 import { imageUrl } from '@shared/constants'
@@ -26,7 +26,6 @@ type Props = {
   item: Item
   index: number
   selected: boolean
-  divider: boolean
   /** How many rows the menu's actions would act on, this row included. */
   selectionSize: number
   copied: 'image' | 'text' | null
@@ -44,7 +43,6 @@ export function ItemRow({
   item,
   index,
   selected,
-  divider,
   selectionSize,
   copied,
   onSelect,
@@ -115,19 +113,15 @@ export function ItemRow({
         }
         style={{ position: 'relative' }}
         className={cn(
-          'group list-none rounded-[5px] transition-colors duration-100',
-          dragging && 'z-20 bg-card shadow-float',
-          selected &&
-            !dragging &&
-            'bg-selected text-selected-foreground shadow-[inset_0_0_0_0.5px_var(--selected-edge)]',
-          !selected && !dragging && 'hover:bg-accent'
+          'group list-none rounded-2xl bg-card transition-shadow duration-100',
+          dragging && 'z-20 shadow-float',
+          !dragging && !selected && 'shadow-card',
+          !dragging &&
+            selected &&
+            'shadow-[0_0_0_2.5px_var(--selected-ring),0_1px_3px_rgb(0_0_0/0.06)]'
         )}
       >
-        {divider && !dragging && (
-          <span className="pointer-events-none absolute right-2 bottom-0 left-[46px] h-px bg-border" />
-        )}
-
-        <div className="flex items-stretch gap-2 px-2 py-1.5">
+        <div className="flex items-stretch gap-2 px-2.5 py-2">
           <button
             aria-label="Reorder"
             onPointerDown={(event) => {
@@ -177,7 +171,7 @@ export function ItemRow({
                 aria-label="Copy image"
                 whileTap={{ scale: 0.99 }}
                 transition={springSnap}
-                className="relative overflow-hidden rounded-md bg-well shadow-[inset_0_0_0_0.5px_var(--border)]"
+                className="relative overflow-hidden rounded-xl bg-well shadow-[inset_0_0_0_0.5px_var(--border)]"
               >
                 <img
                   src={imageUrl(item.file)}
