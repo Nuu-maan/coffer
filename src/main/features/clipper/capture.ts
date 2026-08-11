@@ -1,4 +1,7 @@
-import { desktopCapturer, screen, type NativeImage, type Rectangle } from 'electron'
+import type { NativeImage, Rectangle } from 'electron'
+import { isWayland } from '@main/platform/session'
+import { captureWithChromium } from './backends/chromium'
+import { captureLinux } from './backends/linux'
 
 export type DisplayFrame = {
   displayId: number
@@ -7,27 +10,12 @@ export type DisplayFrame = {
 }
 
 export async function captureDisplays(): Promise<DisplayFrame[]> {
-  const displays = screen.getAllDisplays()
+  if (!isWayland()) return captureWithChromium()
 
-  const thumbnailSize = displays.reduce(
-    (largest, display) => ({
-      width: Math.max(largest.width, Math.round(display.size.width * display.scaleFactor)),
-      height: Math.max(largest.height, Math.round(display.size.height * display.scaleFactor))
-    }),
-    { width: 0, height: 0 }
-  )
+  const frames = await captureLinux()
+  if (frames.length > 0) return frames
 
-  const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize })
-
-  return displays
-    .map((display, index) => {
-      const matched =
-        sources.find((source) => source.display_id === String(display.id)) ?? sources[index]
-      if (!matched || matched.thumbnail.isEmpty()) return null
-
-      return { displayId: display.id, bounds: display.bounds, image: matched.thumbnail }
-    })
-    .filter((frame): frame is DisplayFrame => frame !== null)
+  return captureWithChromium()
 }
 
 export function cropFrame(frame: DisplayFrame, region: Rectangle): NativeImage | null {
