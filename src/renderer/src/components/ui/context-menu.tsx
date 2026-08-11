@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils'
 /* The same surface and item as the dropdown menu: a menu is a menu wherever it
    was opened from, and two that differ by a few pixels read as a mistake. */
 const surface =
-  'materialize material-thick material-edge z-50 min-w-[9rem] overflow-hidden rounded-xl p-1 text-popover-foreground shadow-overlay'
+  'materialize material-thick material-edge z-50 min-w-[10rem] overflow-hidden rounded-2xl p-1.5 text-popover-foreground shadow-overlay'
 
 const item = [
-  'relative flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5',
+  'relative flex cursor-pointer items-center gap-2 rounded-[9px] px-2.5 py-[5px]',
   'text-base outline-hidden select-none transition-colors duration-100',
   'focus:bg-tint focus:text-tint-foreground',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
@@ -78,7 +78,7 @@ function ContextMenuSeparator({
   return (
     <ContextMenuPrimitive.Separator
       data-slot="context-menu-separator"
-      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      className={cn('mx-1 my-1.5 h-px bg-border', className)}
       {...props}
     />
   )

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus } from '@/components/icons'
 import { AnimatePresence, LayoutGroup, Reorder, motion } from 'motion/react'
 import { itemLabel, type Item } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
@@ -232,8 +232,8 @@ export function ItemList(): React.JSX.Element {
                 reordering.current = true
                 setOrdered(next)
               }}
-              className="list-none px-1.5 pt-1.5"
-              style={{ paddingBottom: chrome + 6 }}
+              className="flex list-none flex-col gap-1.5 px-2 pt-2"
+              style={{ paddingBottom: chrome + 8 }}
             >
               <AnimatePresence initial={false}>
                 {ordered.map((item, index) => (
@@ -242,11 +242,6 @@ export function ItemList(): React.JSX.Element {
                     item={item}
                     index={index}
                     selected={selectedIds.has(item.id)}
-                    divider={
-                      index < ordered.length - 1 &&
-                      !selectedIds.has(item.id) &&
-                      !selectedIds.has(ordered[index + 1]?.id ?? '')
-                    }
                     selectionSize={selectedIds.size}
                     copied={copied?.id === item.id ? copied.what : null}
                     onSelect={(modifiers) => {
@@ -318,7 +313,7 @@ export function ItemList(): React.JSX.Element {
             transition={ease}
             className={cn(
               'material-thick pointer-events-none absolute inset-1.5 z-30 flex flex-col',
-              'items-center justify-center gap-2 rounded-lg text-base font-medium',
+              'items-center justify-center gap-2 rounded-2xl text-base font-medium',
               'ring-2 ring-tint ring-inset'
             )}
           >

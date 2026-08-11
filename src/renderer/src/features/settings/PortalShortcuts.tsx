@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy } from '@/components/icons'
 import type { HotkeyStatus, PlatformInfo } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'

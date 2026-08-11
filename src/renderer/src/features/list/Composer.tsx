@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ArrowUp, Crop, ImagePlus, MousePointerSquareDashed, Plus } from 'lucide-react'
+import { ArrowUp, Crop, ImagePlus, MousePointerSquareDashed, Plus } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,11 +25,10 @@ type Props = {
    is one line tall and stay anchored at the foot once it is not. */
 const FIELD = 28
 
-/* Half the resting height, which makes one radius do both shapes: a capsule
-   while the field is one line tall, a rounded box once the text wraps past it.
-   Opening the field to a fixed taller height instead meant animating min-height
-   against the growth field-sizing was already doing, and the two fought. */
-const RADIUS = FIELD / 2
+/* The rows' radius rather than half the field's height. The composer is the row
+   the text is about to become, and a capsule under a column of rounded cards
+   read as a different kind of object. */
+const RADIUS = 16
 
 export function Composer({ onSubmit }: Props): React.JSX.Element {
   const [text, setText] = useState('')
