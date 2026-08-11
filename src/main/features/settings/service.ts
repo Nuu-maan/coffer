@@ -3,6 +3,7 @@ import type { Settings, ThemeChoice } from '@shared/types/item'
 import { getStore, setSettings } from '@main/store/store'
 import { setLinuxAutostart } from '@main/platform/autostart'
 import { isLinux } from '@main/platform/session'
+import { getMainWindow } from '@main/windows/main-window'
 
 export function getSettings(): Settings {
   return getStore().settings
@@ -12,7 +13,15 @@ export function applySettings(patch: Partial<Settings>): Settings {
   const next = setSettings(patch)
   syncTheme(next.theme)
   syncLoginItem(next.launchOnLogin)
+  syncAlwaysOnTop(next.alwaysOnTop)
   return next
+}
+
+export function syncAlwaysOnTop(enabled: boolean): void {
+  // 'floating' keeps Coffer above ordinary windows without fighting the
+  // compositor's own overlays, which is what you want for a scratch pad you
+  // keep beside another app.
+  getMainWindow()?.setAlwaysOnTop(enabled, 'floating')
 }
 
 export function syncTheme(theme: ThemeChoice): void {

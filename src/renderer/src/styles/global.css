@@ -1,62 +1,158 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '@fontsource-variable/inter/opsz.css';
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+   Palette
+
+   Warm neutral, built around a single hue (85° — a faint paper warmth) so the
+   greys never read blue. Light mode is a warm chrome with pure white surfaces
+   floating on top. Dark mode is not an inversion: it has its own elevation
+   ladder, where surfaces get *lighter* as they rise, the way real materials do
+   under a light source.
+--------------------------------------------------------------------------- */
+
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
+  --radius: 0.75rem;
+
+  /* Chrome — the window itself. Content floats above it. */
+  --background: oklch(0.964 0.0022 85);
+  --foreground: oklch(0.185 0.004 285);
+
+  /* Raised surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card-foreground: oklch(0.185 0.004 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  --popover-foreground: oklch(0.185 0.004 285);
+
+  /* A second step up, for surfaces resting on a card */
+  --elevated: oklch(0.988 0.0015 85);
+
+  --primary: oklch(0.185 0.004 285);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.945 0.0022 85);
+  --secondary-foreground: oklch(0.225 0.004 285);
+  --muted: oklch(0.948 0.0022 85);
+  --muted-foreground: oklch(0.5 0.006 285);
+  --accent: oklch(0.932 0.0025 85);
+  --accent-foreground: oklch(0.185 0.004 285);
+  --destructive: oklch(0.51 0.19 26);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  /* The app is monochrome: emphasis comes from weight and contrast, never from
+     hue. 'tint' resolves to ink so accents read as black, not as a colour. */
+  --tint: oklch(0.185 0.004 285);
+  --tint-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.885 0.003 85);
+  --border-strong: oklch(0.82 0.004 85);
+  --input: oklch(0.895 0.003 85);
+  --ring: oklch(0.42 0.005 285);
+
+  /* Materials — translucent layers, §12.
+     thin   : chips, small controls sitting on content
+     regular: floating bars, composers, popovers
+     thick  : sheets and modal surfaces that must stay legible over anything */
+  --mat-thin: oklch(1 0 0 / 0.55);
+  --mat-thin-blur: 16px;
+  --mat-regular: oklch(1 0 0 / 0.7);
+  --mat-regular-blur: 28px;
+  --mat-thick: oklch(0.995 0.001 85 / 0.86);
+  --mat-thick-blur: 44px;
+  --mat-saturate: 180%;
+
+  /* A white rim only reads as an edge when the surface behind it is darker
+     than the glass. On a light background it disappears, so in light mode the
+     edge is a dark hairline and the white highlight is kept for the top only. */
+  --mat-edge: oklch(1 0 0 / 0.9);
+  --mat-border: oklch(0.2 0.004 285 / 0.12);
+
+  /* Scrim behind modal surfaces */
+  --scrim: oklch(0.18 0.004 285 / 0.28);
+
+  /* Shadows — layered, soft, warm-tinted. Bigger surfaces read as thicker. */
+  --shadow-hairline: 0 0 0 1px oklch(0.2 0.004 285 / 0.05);
+  --shadow-card: 0 1px 1px oklch(0.2 0.004 285 / 0.035), 0 3px 8px -2px oklch(0.2 0.004 285 / 0.05);
+  --shadow-raised: 0 1px 2px oklch(0.2 0.004 285 / 0.04), 0 6px 18px -4px oklch(0.2 0.004 285 / 0.08);
+  --shadow-float:
+    0 1px 2px oklch(0.2 0.004 285 / 0.06), 0 4px 10px -2px oklch(0.2 0.004 285 / 0.08),
+    0 16px 36px -10px oklch(0.2 0.004 285 / 0.16);
+  --shadow-overlay: 0 4px 8px oklch(0.2 0.004 285 / 0.06), 0 24px 56px -12px oklch(0.2 0.004 285 / 0.2);
+  --shadow-inset-top: inset 0 1px 0 oklch(1 0 0 / 0.6);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --background: oklch(0.115 0.003 285);
+  --foreground: oklch(0.965 0.001 85);
+
+  --card: oklch(0.158 0.0035 285);
+  --card-foreground: oklch(0.965 0.001 85);
+  --popover: oklch(0.178 0.0035 285);
+  --popover-foreground: oklch(0.965 0.001 85);
+
+  --elevated: oklch(0.195 0.004 285);
+
+  --primary: oklch(0.965 0.001 85);
+  --primary-foreground: oklch(0.14 0.004 285);
+  --secondary: oklch(0.215 0.004 285);
+  --secondary-foreground: oklch(0.965 0.001 85);
+  --muted: oklch(0.205 0.004 285);
+  --muted-foreground: oklch(0.66 0.007 285);
+  --accent: oklch(0.235 0.0045 285);
+  --accent-foreground: oklch(0.965 0.001 85);
+  --destructive: oklch(0.62 0.17 24);
+  --destructive-foreground: oklch(0.12 0.004 285);
+
+  /* Ink inverts in the dark: the accent is light, still not a colour. */
+  --tint: oklch(0.965 0.001 85);
+  --tint-foreground: oklch(0.13 0.004 285);
+
+  /* In the dark, separation comes from a light edge, not a dark line. */
+  --border: oklch(1 0 0 / 0.08);
+  --border-strong: oklch(1 0 0 / 0.15);
+  --input: oklch(1 0 0 / 0.11);
+  --ring: oklch(0.78 0.005 285);
+
+  --mat-thin: oklch(0.2 0.004 285 / 0.55);
+  --mat-thin-blur: 16px;
+  --mat-regular: oklch(0.175 0.0035 285 / 0.72);
+  --mat-regular-blur: 28px;
+  --mat-thick: oklch(0.155 0.0035 285 / 0.9);
+  --mat-thick-blur: 44px;
+  --mat-saturate: 160%;
+
+  --mat-edge: oklch(1 0 0 / 0.14);
+  --mat-border: oklch(1 0 0 / 0.1);
+
+  --scrim: oklch(0.08 0.003 285 / 0.55);
+
+  /* Dark shadows go deeper and pair with a top highlight, so surfaces read as
+     lit from above rather than as flat darker rectangles. */
+  --shadow-hairline: 0 0 0 1px oklch(1 0 0 / 0.06);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 0 0 / 0.045);
+  --shadow-raised: 0 2px 6px oklch(0 0 0 / 0.36), 0 0 0 1px oklch(1 0 0 / 0.06);
+  --shadow-float: 0 4px 12px oklch(0 0 0 / 0.42), 0 0 0 1px oklch(1 0 0 / 0.08);
+  --shadow-overlay: 0 12px 40px oklch(0 0 0 / 0.55), 0 0 0 1px oklch(1 0 0 / 0.1);
+  --shadow-inset-top: inset 0 1px 0 oklch(1 0 0 / 0.07);
 }
 
 @theme inline {
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-elevated: var(--elevated);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -66,14 +162,65 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-tint: var(--tint);
+  --color-tint-foreground: var(--tint-foreground);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
+
+  /* One typeface throughout. Inter's tabular figures do the job a monospace
+     was doing for the timestamps and counts, without the change of voice. */
+  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Inter Variable', system-ui, -apple-system, sans-serif;
+
+  /* Type scale — tracking is size-specific (§15). Large text tightens, small
+     text opens up. Leading tightens as size grows. */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 1.4;
+  --text-2xs--letter-spacing: 0.01em;
+  --text-xs: 11px;
+  --text-xs--line-height: 1.45;
+  --text-xs--letter-spacing: 0.006em;
+  --text-sm: 12px;
+  --text-sm--line-height: 1.5;
+  --text-sm--letter-spacing: 0.003em;
+  --text-base: 13px;
+  --text-base--line-height: 1.55;
+  --text-base--letter-spacing: 0em;
+  --text-md: 14px;
+  --text-md--line-height: 1.5;
+  --text-md--letter-spacing: -0.006em;
+  --text-lg: 16px;
+  --text-lg--line-height: 1.4;
+  --text-lg--letter-spacing: -0.011em;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.25;
+  --text-xl--letter-spacing: -0.018em;
+  --text-2xl: 26px;
+  --text-2xl--line-height: 1.15;
+  --text-2xl--letter-spacing: -0.024em;
+
+  --shadow-hairline: var(--shadow-hairline);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-float: var(--shadow-float);
+  --shadow-overlay: var(--shadow-overlay);
+
+  /* CSS-side easings. Anything a user can *grab* uses a real spring from
+     lib/motion.ts instead — these are for state changes that can't be
+     interrupted mid-gesture (colour, opacity, hover). */
+  --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-quart: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.44, 1);
+  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html,
@@ -84,8 +231,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-size: 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-optical-sizing: auto;
+    font-variant-ligatures: contextual;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     overflow: hidden;
     user-select: none;
   }
@@ -98,6 +250,141 @@
   textarea {
     user-select: text;
   }
+
+  /* Numbers should never reflow as they tick. */
+  [class*='tabular'],
+  time,
+  kbd {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus is a soft tinted halo, not a hard outline. */
+  :focus-visible {
+    outline: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Materials
+--------------------------------------------------------------------------- */
+
+@utility material-thin {
+  background-color: var(--mat-thin);
+  backdrop-filter: blur(var(--mat-thin-blur)) saturate(var(--mat-saturate));
+  -webkit-backdrop-filter: blur(var(--mat-thin-blur)) saturate(var(--mat-saturate));
+}
+
+@utility material {
+  background-color: var(--mat-regular);
+  backdrop-filter: blur(var(--mat-regular-blur)) saturate(var(--mat-saturate));
+  -webkit-backdrop-filter: blur(var(--mat-regular-blur)) saturate(var(--mat-saturate));
+}
+
+@utility material-thick {
+  background-color: var(--mat-thick);
+  backdrop-filter: blur(var(--mat-thick-blur)) saturate(var(--mat-saturate));
+  -webkit-backdrop-filter: blur(var(--mat-thick-blur)) saturate(var(--mat-saturate));
+}
+
+/* The lit top edge of a piece of glass. Pair with any material. */
+@utility material-edge {
+  border: 1px solid var(--mat-border);
+  box-shadow: var(--shadow-inset-top);
+}
+
+/* Text on glass needs more weight and a touch more tracking to stay legible
+   over whatever scrolls underneath (§12, vibrancy). */
+@utility vibrant {
+  font-weight: 500;
+  letter-spacing: 0.004em;
+}
+
+/* Fade content into floating chrome instead of cutting it with a divider. */
+@utility scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+}
+
+@utility scroll-fade-top {
+  mask-image: linear-gradient(to top, black calc(100% - 20px), transparent 100%);
+}
+
+/* Glass should arrive as a material, not fade in as a picture of one: the blur
+   and the scale resolve together, from the trigger's own corner (§7, §12). */
+@keyframes materialize-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+    backdrop-filter: blur(0) saturate(100%);
+    -webkit-backdrop-filter: blur(0) saturate(100%);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes materialize-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+    backdrop-filter: blur(0) saturate(100%);
+    -webkit-backdrop-filter: blur(0) saturate(100%);
+  }
+}
+
+@utility materialize {
+  &[data-state='open'] {
+    animation: materialize-in 260ms var(--ease-out-quart);
+  }
+
+  &[data-state='closed'] {
+    animation: materialize-out 160ms var(--ease-in-quart);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Interaction
+--------------------------------------------------------------------------- */
+
+/* Feedback on pointer-down, never on release (§1). */
+@utility press {
+  transition:
+    transform 120ms var(--ease-out-quart),
+    background-color 140ms var(--ease-out-quart),
+    color 140ms var(--ease-out-quart),
+    box-shadow 180ms var(--ease-out-quart),
+    border-color 140ms var(--ease-out-quart);
+
+  &:active:not(:disabled):not([data-disabled]) {
+    transform: scale(0.97);
+    transition-duration: 60ms;
+  }
+}
+
+@utility press-sm {
+  transition:
+    transform 120ms var(--ease-out-quart),
+    background-color 140ms var(--ease-out-quart),
+    color 140ms var(--ease-out-quart),
+    box-shadow 180ms var(--ease-out-quart),
+    border-color 140ms var(--ease-out-quart);
+
+  &:active:not(:disabled):not([data-disabled]) {
+    transform: scale(0.94);
+    transition-duration: 60ms;
+  }
+}
+
+@utility focus-halo {
+  &:focus-visible {
+    box-shadow:
+      0 0 0 1.5px var(--background),
+      0 0 0 4px color-mix(in oklch, var(--ring) 40%, transparent);
+  }
 }
 
 @utility drag-region {
@@ -108,6 +395,7 @@
   -webkit-app-region: no-drag;
 }
 
+/* Pointer targets stay comfortable without the visual growing to match. */
 @utility hit-36 {
   position: relative;
 
@@ -133,5 +421,61 @@
     width: 40px;
     height: 40px;
     translate: -50% -50%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility (§14)
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  .dark {
+    --mat-thin-blur: 0px;
+    --mat-regular-blur: 0px;
+    --mat-thick-blur: 0px;
+  }
+
+  :root {
+    --mat-thin: oklch(1 0 0 / 0.96);
+    --mat-regular: oklch(1 0 0 / 0.98);
+    --mat-thick: oklch(1 0 0);
+  }
+
+  .dark {
+    --mat-thin: oklch(0.19 0.004 285 / 0.96);
+    --mat-regular: oklch(0.17 0.0035 285 / 0.98);
+    --mat-thick: oklch(0.155 0.0035 285);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border: oklch(0.72 0.005 85);
+    --border-strong: oklch(0.55 0.006 285);
+    --muted-foreground: oklch(0.42 0.006 285);
+  }
+
+  .dark {
+    --border: oklch(1 0 0 / 0.28);
+    --border-strong: oklch(1 0 0 / 0.42);
+    --muted-foreground: oklch(0.8 0.006 285);
+  }
+}
+
+/* Reduced motion means gentler feedback, not none: the press scale and the
+   colour changes stay, the travel and the overshoot go. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+
+  .press:active,
+  .press-sm:active {
+    transform: none;
   }
 }

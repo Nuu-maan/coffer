@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { BrowserWindow, nativeTheme, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { MAIN_HEIGHT, MAIN_WIDTH } from '@shared/constants'
+import { getStore } from '@main/store/store'
 import { mainWindowOrigin } from './positioning'
 
 let mainWindow: BrowserWindow | null = null
@@ -23,7 +24,10 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
+    alwaysOnTop: getStore().settings.alwaysOnTop,
+    // Matches the renderer's chrome so the first paint does not flash a
+    // different colour than the app settles on.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#111113' : '#f3f2f0',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,

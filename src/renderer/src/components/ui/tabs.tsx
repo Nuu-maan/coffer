@@ -1,88 +1,145 @@
-"use client"
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { Tabs as TabsPrimitive } from 'radix-ui'
+import { LayoutGroup, motion } from 'motion/react'
 
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Tabs as TabsPrimitive } from "radix-ui"
+import { cn } from '@/lib/utils'
+import { spring } from '@/lib/motion'
 
-import { cn } from "@/lib/utils"
+/**
+ * A segmented control. The selection is a single physical pill that slides
+ * between the options rather than a highlight that blinks out in one place and
+ * in at another — the movement is what tells you the two are the same thing.
+ */
+
+const TabsContext = React.createContext<{ value?: string; id: string }>({ id: 'tabs' })
 
 function Tabs({
   className,
-  orientation = "horizontal",
+  orientation = 'horizontal',
+  value,
+  defaultValue,
+  onValueChange,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: React.ComponentProps<typeof TabsPrimitive.Root>): React.JSX.Element {
+  const id = React.useId()
+  const [internal, setInternal] = React.useState(defaultValue)
+  const current = value ?? internal
+
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      data-orientation={orientation}
-      orientation={orientation}
-      className={cn(
-        "group/tabs flex gap-2 data-[orientation=horizontal]:flex-col",
-        className
-      )}
-      {...props}
-    />
+    <TabsContext.Provider value={{ value: current, id }}>
+      <TabsPrimitive.Root
+        data-slot="tabs"
+        data-orientation={orientation}
+        orientation={orientation}
+        value={value}
+        defaultValue={defaultValue}
+        onValueChange={(next) => {
+          setInternal(next)
+          onValueChange?.(next)
+        }}
+        className={cn(
+          'group/tabs flex gap-2 data-[orientation=horizontal]:flex-col',
+          className
+        )}
+        {...props}
+      />
+    </TabsContext.Provider>
   )
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none",
+  [
+    'group/tabs-list relative inline-flex w-fit items-center justify-center rounded-full p-[3px]',
+    'text-muted-foreground',
+    'group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col'
+  ],
   {
     variants: {
       variant: {
-        default: "bg-muted",
-        line: "gap-1 bg-transparent",
-      },
+        default: 'bg-muted ring-1 ring-border/60',
+        glass: 'material-thin material-edge',
+        line: 'gap-1 rounded-none bg-transparent p-0'
+      }
     },
     defaultVariants: {
-      variant: "default",
-    },
+      variant: 'default'
+    }
   }
 )
 
 function TabsList({
   className,
-  variant = "default",
+  variant = 'default',
+  children,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
-  VariantProps<typeof tabsListVariants>) {
+  VariantProps<typeof tabsListVariants>): React.JSX.Element {
+  const { id } = React.useContext(TabsContext)
+
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
       className={cn(tabsListVariants({ variant }), className)}
       {...props}
-    />
+    >
+      <LayoutGroup id={id}>{children}</LayoutGroup>
+    </TabsPrimitive.List>
   )
 }
 
 function TabsTrigger({
   className,
+  children,
+  value,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+}: React.ComponentProps<typeof TabsPrimitive.Trigger>): React.JSX.Element {
+  const context = React.useContext(TabsContext)
+  const active = context.value === value
+
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
+      value={value}
       className={cn(
-        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent",
-        "data-[state=active]:bg-background data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-[orientation=horizontal]/tabs:after:inset-x-0 group-data-[orientation=horizontal]/tabs:after:bottom-[-5px] group-data-[orientation=horizontal]/tabs:after:h-0.5 group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-[state=active]:after:opacity-100",
+        'focus-halo relative inline-flex flex-1 items-center justify-center gap-1.5',
+        'rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap',
+        'text-muted-foreground transition-colors duration-150 outline-none',
+        'hover:text-foreground data-[state=active]:text-foreground',
+        'disabled:pointer-events-none disabled:opacity-40',
+        'group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start',
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
-    />
+    >
+      {active && (
+        <motion.span
+          layoutId="tab-indicator"
+          transition={spring}
+          className={cn(
+            'absolute inset-0 -z-0 rounded-full',
+            'group-data-[variant=default]/tabs-list:bg-card group-data-[variant=default]/tabs-list:shadow-card',
+            'group-data-[variant=glass]/tabs-list:bg-card/85 group-data-[variant=glass]/tabs-list:shadow-card',
+            'group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:bg-transparent',
+            'group-data-[variant=line]/tabs-list:border-b-2 group-data-[variant=line]/tabs-list:border-foreground'
+          )}
+        />
+      )}
+      <span className="relative z-10 flex items-center gap-1.5">{children}</span>
+    </TabsPrimitive.Trigger>
   )
 }
 
 function TabsContent({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: React.ComponentProps<typeof TabsPrimitive.Content>): React.JSX.Element {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn('flex-1 outline-none', className)}
       {...props}
     />
   )

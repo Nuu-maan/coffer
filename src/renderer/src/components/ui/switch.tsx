@@ -1,33 +1,53 @@
-"use client"
+import * as React from 'react'
+import { Switch as SwitchPrimitive } from 'radix-ui'
+import { motion } from 'motion/react'
 
-import * as React from "react"
-import { Switch as SwitchPrimitive } from "radix-ui"
+import { cn } from '@/lib/utils'
 
-import { cn } from "@/lib/utils"
-
+/**
+ * The iOS switch: a thumb that is thrown across the track. The travel gets the
+ * one spring with real overshoot in the settings panel, because a switch is the
+ * most physical control there — it should feel like something you flicked.
+ */
 function Switch({
   className,
-  size = "default",
+  size = 'default',
   ...props
 }: React.ComponentProps<typeof SwitchPrimitive.Root> & {
-  size?: "sm" | "default"
-}) {
+  size?: 'sm' | 'default'
+}): React.JSX.Element {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-[1.15rem] data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=unchecked]:bg-input/80",
+        'focus-halo peer group/switch relative inline-flex shrink-0 items-center rounded-full',
+        'p-[2px] outline-none transition-colors duration-200 ease-[var(--ease-out-quart)]',
+        'disabled:cursor-not-allowed disabled:opacity-40',
+        'data-[size=default]:h-[26px] data-[size=default]:w-[44px]',
+        'data-[size=sm]:h-[20px] data-[size=sm]:w-[34px]',
+        'data-[state=unchecked]:bg-border-strong data-[state=checked]:bg-tint',
+        'dark:data-[state=unchecked]:bg-input',
         className
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb
-        data-slot="switch-thumb"
-        className={cn(
-          "pointer-events-none block rounded-full bg-background ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0 dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground"
-        )}
-      />
+      <SwitchPrimitive.Thumb asChild>
+        <motion.span
+          data-slot="switch-thumb"
+          layout
+          transition={{ type: 'spring', bounce: 0.22, duration: 0.32 }}
+          className={cn(
+            'pointer-events-none block rounded-full shadow-raised ring-0',
+            'group-data-[size=default]/switch:size-[22px] group-data-[size=sm]/switch:size-4',
+            'group-data-[state=unchecked]/switch:mr-auto group-data-[state=checked]/switch:ml-auto',
+            // In a monochrome app the "on" track is ink, so the thumb has to be
+            // the opposite of whatever the track just became — otherwise the
+            // two are the same colour and the thumb disappears.
+            'bg-white dark:group-data-[state=checked]/switch:bg-tint-foreground'
+          )}
+        />
+      </SwitchPrimitive.Thumb>
     </SwitchPrimitive.Root>
   )
 }

@@ -59,6 +59,7 @@ export type Settings = {
   clipperAccelerator: string
   doubleTapWindowMs: number
   launchOnLogin: boolean
+  alwaysOnTop: boolean
   theme: ThemeChoice
 }
 
@@ -81,6 +82,7 @@ export const DEFAULT_SETTINGS: Settings = {
   clipperAccelerator: 'Control+Shift+Space',
   doubleTapWindowMs: 350,
   launchOnLogin: true,
+  alwaysOnTop: false,
   theme: 'system'
 }
 
