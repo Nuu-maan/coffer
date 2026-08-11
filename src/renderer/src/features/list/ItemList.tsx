@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ImagePlus } from 'lucide-react'
+import { AnimatePresence, LayoutGroup, Reorder, motion } from 'motion/react'
 import type { Item } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
+import { ease, spring } from '@/lib/motion'
 import { useImageIntake } from '@/hooks/use-image-intake'
 import { useItems } from '@/hooks/use-items'
 import { usePlatform } from '@/hooks/use-platform'
@@ -18,8 +19,16 @@ export function ItemList(): React.JSX.Element {
   const { dragging, handlers } = useImageIntake(addImage)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [copied, setCopied] = useState<{ id: string; what: 'image' | 'text' } | null>(null)
-  const dragId = useRef<string | null>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // The list is dragged directly, so the on-screen order has to follow the
+  // pointer immediately and only settle with the store when the drag ends.
+  const [ordered, setOrdered] = useState<Item[]>(items)
+  const reordering = useRef(false)
+
+  useEffect(() => {
+    if (!reordering.current) setOrdered(items)
+  }, [items])
 
   const copy = useCallback((item: Item, what: 'image' | 'text') => {
     if (item.kind === 'image' && what === 'image') {
@@ -32,7 +41,7 @@ export function ItemList(): React.JSX.Element {
 
     setCopied({ id: item.id, what })
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
-    copiedTimer.current = setTimeout(() => setCopied(null), 1200)
+    copiedTimer.current = setTimeout(() => setCopied(null), 1400)
   }, [])
 
   useEffect(() => {
@@ -40,19 +49,19 @@ export function ItemList(): React.JSX.Element {
       if (event.target instanceof HTMLTextAreaElement) return
       if (event.target instanceof HTMLInputElement) return
 
-      const index = items.findIndex((item) => item.id === selectedId)
+      const index = ordered.findIndex((item) => item.id === selectedId)
 
       if (event.key === 'j' || event.key === 'ArrowDown') {
         event.preventDefault()
-        const next = items[Math.min(index + 1, items.length - 1)] ?? items[0]
+        const next = ordered[Math.min(index + 1, ordered.length - 1)] ?? ordered[0]
         if (next) setSelectedId(next.id)
       } else if (event.key === 'k' || event.key === 'ArrowUp') {
         event.preventDefault()
-        const prev = items[Math.max(index - 1, 0)] ?? items[0]
+        const prev = ordered[Math.max(index - 1, 0)] ?? ordered[0]
         if (prev) setSelectedId(prev.id)
       } else if (event.key === 'Enter' && index >= 0) {
         event.preventDefault()
-        const item = items[index]
+        const item = ordered[index]
         if (item) copy(item, item.kind === 'image' ? 'image' : 'text')
       } else if (event.key === ' ' && index >= 0) {
         event.preventDefault()
@@ -68,87 +77,113 @@ export function ItemList(): React.JSX.Element {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [items, selectedId, copy, toggle, remove])
+  }, [ordered, selectedId, copy, toggle, remove])
 
-  function handleDrop(targetId: string): void {
-    const sourceId = dragId.current
-    dragId.current = null
-    if (!sourceId || sourceId === targetId) return
-
-    const targetIndex = items.findIndex((item) => item.id === targetId)
-    const sourceIndex = items.findIndex((item) => item.id === sourceId)
-    if (targetIndex < 0 || sourceIndex < 0) return
-
-    const movingDown = sourceIndex < targetIndex
-    const beforeId = movingDown ? targetId : (items[targetIndex - 1]?.id ?? null)
-    const afterId = movingDown ? (items[targetIndex + 1]?.id ?? null) : targetId
-
-    move(sourceId, beforeId, afterId)
+  function commitOrder(id: string): void {
+    reordering.current = false
+    const index = ordered.findIndex((item) => item.id === id)
+    if (index < 0) return
+    move(id, ordered[index - 1]?.id ?? null, ordered[index + 1]?.id ?? null)
   }
 
-  const pending = items.filter((item) => !item.done).length
-  const doneCount = items.length - pending
+  const pending = ordered.filter((item) => !item.done).length
+  const doneCount = ordered.length - pending
   const trigger = platform?.supportsDoubleShift ? 'tap Shift twice' : 'press Ctrl+Shift+Space'
 
   return (
     <div className="relative flex h-full min-h-0 flex-col" {...handlers}>
-      {items.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-8 text-center">
-          <p className="text-[15px] [text-wrap:balance]">Nothing stashed yet</p>
-          <p className="text-[13px] leading-relaxed text-muted-foreground">
-            Select anything, then {trigger}. Images can be pasted or dropped here.
-          </p>
+      {ordered.length > 0 && (
+        <div className="flex h-9 shrink-0 items-center justify-between px-4">
+          <span className="text-2xs tracking-[0.08em] text-muted-foreground tabular-nums">
+            {pending} open
+            {doneCount > 0 && ` · ${doneCount} done`}
+          </span>
+
+          <AnimatePresence>
+            {doneCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={ease}
+              >
+                <Button variant="ghost" size="xs" onClick={clearDone}>
+                  Clear done
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      ) : (
-        <ScrollArea className="min-h-0 flex-1">
-          <ul className="list-none space-y-1.5 px-3 pb-2 pt-1">
-            {items.map((item) => (
-              <ItemRow
-                key={item.id}
-                item={item}
-                selected={item.id === selectedId}
-                copied={copied?.id === item.id ? copied.what : null}
-                onSelect={() => setSelectedId(item.id)}
-                onCopy={(what) => copy(item, what)}
-                onToggle={() => toggle(item.id)}
-                onRemove={() => remove(item.id)}
-                onUpdate={(text) => update(item.id, text)}
-                onDragStart={() => {
-                  dragId.current = item.id
-                }}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => handleDrop(item.id)}
-              />
-            ))}
-          </ul>
-        </ScrollArea>
       )}
 
-      {items.length > 0 && (
-        <>
-          <Separator />
-          <footer className="flex shrink-0 items-center justify-between px-4 py-1.5 text-[11px] tabular-nums text-muted-foreground">
-            <span>{pending} open</span>
-            {doneCount > 0 && (
-              <Button variant="ghost" size="xs" onClick={clearDone}>
-                Clear {doneCount} done
-              </Button>
-            )}
-          </footer>
-        </>
+      {ordered.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={spring}
+          className="flex flex-1 flex-col items-center justify-center gap-1.5 px-8 pb-16 text-center"
+        >
+          <p className="text-lg font-medium [text-wrap:balance]">Nothing stashed yet</p>
+          <p className="text-base leading-relaxed text-muted-foreground [text-wrap:balance]">
+            Select anything, then {trigger}. Images can be pasted or dropped here.
+          </p>
+        </motion.div>
+      ) : (
+        <ScrollArea className="min-h-0 flex-1 scroll-fade-bottom">
+          <LayoutGroup>
+            <Reorder.Group
+              axis="y"
+              values={ordered}
+              onReorder={(next) => {
+                reordering.current = true
+                setOrdered(next)
+              }}
+              className="list-none px-1.5 pb-20"
+            >
+              {/* Sync, not popLayout: an exiting row must stay in the flow so
+                  the rows below it close the gap instead of snapping up. */}
+              <AnimatePresence initial={false}>
+                {ordered.map((item, index) => (
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    selected={item.id === selectedId}
+                    copied={copied?.id === item.id ? copied.what : null}
+                    onSelect={() => setSelectedId(item.id)}
+                    onCopy={(what) => copy(item, what)}
+                    onToggle={() => toggle(item.id)}
+                    onRemove={() => remove(item.id)}
+                    onUpdate={(text) => update(item.id, text)}
+                    onDragEnd={() => commitOrder(item.id)}
+                  />
+                ))}
+              </AnimatePresence>
+            </Reorder.Group>
+          </LayoutGroup>
+        </ScrollArea>
       )}
 
       <Composer onSubmit={addText} />
 
-      <div
-        className={cn(
-          'pointer-events-none absolute inset-2 z-10 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ring bg-background/85 text-sm transition-opacity',
-          dragging ? 'opacity-100' : 'opacity-0'
+      <AnimatePresence>
+        {dragging && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={spring}
+            className={cn(
+              'material-thick pointer-events-none absolute inset-2 z-30 flex flex-col',
+              'items-center justify-center gap-2 rounded-xl text-base font-medium',
+              'ring-2 ring-tint/40 ring-inset'
+            )}
+          >
+            <ImagePlus className="size-6 text-tint" />
+            Drop to stash the image
+          </motion.div>
         )}
-      >
-        <ImagePlus className="size-6 text-muted-foreground" />
-        Drop to stash the image
-      </div>
+      </AnimatePresence>
     </div>
   )
 }
