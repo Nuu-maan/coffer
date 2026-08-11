@@ -29,7 +29,6 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
     if (!trimmed) return
     onSubmit(trimmed)
     setText('')
-    resize(areaRef.current)
   }
 
   async function grabSelection(): Promise<void> {
@@ -91,17 +90,17 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           placeholder="Type a stash…"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          onChange={(event) => {
-            setText(event.target.value)
-            resize(event.target)
-          }}
+          onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault()
               submit()
             }
           }}
-          className="max-h-28 min-h-[22px] flex-1 self-center py-[3px] leading-snug"
+          /* Grown by field-sizing rather than by measuring: measuring after a
+             submit reads the height of text React has not cleared yet, which
+             is what left the box stuck open at its full height. */
+          className="max-h-28 flex-1 self-center py-[3px] leading-snug"
         />
 
         <Tooltip>
@@ -174,10 +173,4 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
       />
     </div>
   )
-}
-
-function resize(element: HTMLTextAreaElement | null): void {
-  if (!element) return
-  element.style.height = 'auto'
-  element.style.height = `${Math.min(element.scrollHeight, 112)}px`
 }
