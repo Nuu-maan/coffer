@@ -1,14 +1,9 @@
-import { useEffect, useState } from 'react'
 import type { HotkeyStatus } from '@shared/types/item'
 import { coffer } from '@/lib/ipc'
+import { remoteValue } from '@/lib/remote-value'
+
+const status = remoteValue<HotkeyStatus>(() => coffer.hotkeys.status(), coffer.on.hotkeyStatus)
 
 export function useHotkeyStatus(): HotkeyStatus | null {
-  const [status, setStatus] = useState<HotkeyStatus | null>(null)
-
-  useEffect(() => {
-    void coffer.hotkeys.status().then(setStatus)
-    return coffer.on.hotkeyStatus(setStatus)
-  }, [])
-
-  return status
+  return status.use()
 }

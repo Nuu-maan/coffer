@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Info, Monitor, Moon, Sun } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { Settings } from '@shared/types/item'
@@ -14,29 +13,22 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
 import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
 import { useHotkeyStatus } from '@/hooks/use-hotkey-status'
+import { patchSettings, useSettings } from '@/hooks/use-settings'
 import { PortalShortcuts } from './PortalShortcuts'
 import { ShortcutInput } from './ShortcutInput'
 
 export function SettingsPanel(): React.JSX.Element {
-  const [settings, setSettings] = useState<Settings | null>(null)
+  const settings = useSettings()
   const platform = usePlatform()
   const hotkeys = useHotkeyStatus()
 
-  useEffect(() => {
-    void coffer.settings.get().then(setSettings)
-    return coffer.on.settingsChanged(setSettings)
-  }, [])
-
   if (!settings) return <div className="h-full bg-background" />
 
-  function patch(next: Partial<Settings>): void {
-    void coffer.settings.set(next).then(setSettings)
-  }
+  const patch = patchSettings
 
   const doubleShiftAvailable = platform?.supportsDoubleShift ?? true
   const acceleratorsAvailable = platform?.supportsAccelerators ?? true
