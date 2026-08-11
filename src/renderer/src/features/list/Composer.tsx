@@ -7,18 +7,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { coffer } from '@/lib/ipc'
 import { toBytes } from '@/lib/images'
-import { cn } from '@/lib/utils'
-import { ease, spring, springSheet } from '@/lib/motion'
+import { ease, springSnap } from '@/lib/motion'
 
 type Props = {
   onSubmit: (text: string) => void
 }
 
-/**
- * A pill of glass floating over the list, not a panel welded to the bottom of
- * the window. It stays small until you have something to say, then grows to
- * make room — the list keeps scrolling underneath it the whole time.
- */
 export function Composer({ onSubmit }: Props): React.JSX.Element {
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
@@ -59,21 +53,14 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
   }
 
   return (
-    <motion.div
-      layout
-      transition={springSheet}
-      animate={{ borderRadius: expanded ? 20 : 24 }}
-      className={cn(
-        'material material-edge absolute inset-x-3 bottom-3 z-20 overflow-hidden shadow-float'
-      )}
-    >
-      <motion.div layout="position" className="flex items-center gap-1">
+    <div className="material relative z-20 shrink-0 border-t border-border">
+      <div className="flex items-end gap-1 px-1.5 py-1.5">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon-sm"
-              className="hit-40 ml-1.5 shrink-0"
+              className="hit-36 mb-[1px] shrink-0"
               aria-label="Add an image"
               onClick={() => fileRef.current?.click()}
             >
@@ -85,7 +72,6 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
 
         <Textarea
           ref={areaRef}
-          variant="bare"
           rows={1}
           value={text}
           placeholder="Type a stash…"
@@ -101,7 +87,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
               submit()
             }
           }}
-          className="vibrant max-h-32 min-h-0 flex-1 py-3 text-base leading-snug"
+          className="max-h-28 min-h-[24px] flex-1 resize-none py-[3px] leading-snug"
         />
 
         <Tooltip>
@@ -109,7 +95,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="hit-40 shrink-0"
+              className="hit-36 mb-[1px] shrink-0"
               aria-label="Clip a region"
               onClick={() => void coffer.clipper.start()}
             >
@@ -119,26 +105,22 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           <TooltipContent>Clip a region of the screen</TooltipContent>
         </Tooltip>
 
-        {/* The send button only exists once there is something to send, and it
-            arrives with the small bounce of something dropping into place. */}
         <AnimatePresence mode="popLayout">
           {canSubmit && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.6 }}
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              transition={{ type: 'spring', bounce: 0.35, duration: 0.34 }}
-              className="mr-1.5 shrink-0"
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={springSnap}
+              className="mb-[1px] shrink-0"
             >
-              <Button size="icon-sm" aria-label="Add stash" onClick={submit}>
+              <Button variant="tint" size="icon-sm" aria-label="Add stash" onClick={submit}>
                 <ArrowUp />
               </Button>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {!canSubmit && <span className="mr-1.5" />}
-      </motion.div>
+      </div>
 
       <AnimatePresence initial={false}>
         {expanded && (
@@ -146,33 +128,23 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={spring}
+            transition={ease}
             className="overflow-hidden"
           >
-            <div className="flex items-center gap-2 border-t border-white/20 px-2 py-1.5 dark:border-white/[0.06]">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    disabled={stashing}
-                    onClick={() => void grabSelection()}
-                  >
-                    <MousePointerSquareDashed />
-                    {stashing ? 'Grabbing…' : 'Grab selection'}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Copy whatever is selected in the app in front</TooltipContent>
-              </Tooltip>
-
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ ...ease, delay: 0.06 }}
-                className="ml-auto pr-1.5 text-2xs text-muted-foreground"
+            <div className="flex items-center gap-2 border-t border-border px-1.5 py-1">
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={stashing}
+                onClick={() => void grabSelection()}
               >
-                ⏎ to stash · ⇧⏎ for a new line
-              </motion.span>
+                <MousePointerSquareDashed />
+                {stashing ? 'Grabbing…' : 'Grab selection'}
+              </Button>
+
+              <span className="ml-auto pr-1 text-2xs text-muted-foreground">
+                Return to stash · Shift-Return for a new line
+              </span>
             </div>
           </motion.div>
         )}
@@ -186,12 +158,12 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
         hidden
         onChange={(event) => void pickImages(event.target.files)}
       />
-    </motion.div>
+    </div>
   )
 }
 
 function resize(element: HTMLTextAreaElement | null): void {
   if (!element) return
   element.style.height = 'auto'
-  element.style.height = `${Math.min(element.scrollHeight, 128)}px`
+  element.style.height = `${Math.min(element.scrollHeight, 112)}px`
 }
