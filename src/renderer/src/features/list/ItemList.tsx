@@ -13,6 +13,12 @@ import { usePlatform } from '@/hooks/use-platform'
 import { ItemRow } from './ItemRow'
 import { Composer } from './Composer'
 
+/* The chrome floating at the foot of the list, in px: the composer's 28px field
+   in its 8px bar, and the strip that appears above it once anything is done.
+   The list pads itself by as much as is actually there. */
+const COMPOSER = 44
+const DONE_BAR = 24
+
 export function ItemList(): React.JSX.Element {
   const { items, addText, addImage, toggle, update, remove, clearDone, move } = useItems()
   const platform = usePlatform()
@@ -119,7 +125,8 @@ export function ItemList(): React.JSX.Element {
                 reordering.current = true
                 setOrdered(next)
               }}
-              className="list-none px-1.5 py-1.5"
+              className="list-none px-1.5 pt-1.5"
+              style={{ paddingBottom: COMPOSER + (doneCount > 0 ? DONE_BAR : 0) + 6 }}
             >
               <AnimatePresence initial={false}>
                 {ordered.map((item, index) => (
@@ -148,31 +155,39 @@ export function ItemList(): React.JSX.Element {
         </ScrollArea>
       )}
 
-      <Composer onSubmit={addText} />
-
       {/*
-        Only here when there is something to clear. As a permanent strip it
-        spent almost all of its life reporting a count the list is already
-        showing — and it put the control that clears the done items two bars
-        away from them. It arrives with them and leaves with them instead.
+        Floated over the list rather than stacked under it, so the rows pass
+        beneath the composer instead of stopping at a fence drawn across the
+        window. The list carries the clearance for it as padding, which is what
+        lets the last row scroll clear of it.
       */}
-      <AnimatePresence initial={false}>
-        {doneCount > 0 && (
-          <motion.footer
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 24, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={ease}
-            className="flex shrink-0 items-center justify-between overflow-hidden border-t border-border bg-muted px-2.5 text-2xs text-muted-foreground tabular-nums"
-          >
-            <span>{doneCount === 1 ? '1 done' : `${doneCount} done`}</span>
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        {/*
+          Only here when there is something to clear. As a permanent strip it
+          spent almost all of its life reporting a count the list is already
+          showing — and it put the control that clears the done items two bars
+          away from them. It arrives with them and leaves with them instead.
+        */}
+        <AnimatePresence initial={false}>
+          {doneCount > 0 && (
+            <motion.footer
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: DONE_BAR, opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={ease}
+              className="material flex items-center justify-between overflow-hidden px-3 text-2xs text-muted-foreground tabular-nums"
+            >
+              <span>{doneCount === 1 ? '1 done' : `${doneCount} done`}</span>
 
-            <Button variant="ghost" size="xs" className="h-[16px] px-1.5" onClick={clearDone}>
-              Clear
-            </Button>
-          </motion.footer>
-        )}
-      </AnimatePresence>
+              <Button variant="ghost" size="xs" className="h-[16px] px-1.5" onClick={clearDone}>
+                Clear
+              </Button>
+            </motion.footer>
+          )}
+        </AnimatePresence>
+
+        <Composer onSubmit={addText} />
+      </div>
 
       <AnimatePresence>
         {dragging && (

@@ -53,8 +53,14 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
   }
 
   return (
-    <div className="material relative z-20 shrink-0 border-t border-border">
-      <div className="flex items-end gap-1.5 p-1.5">
+    /*
+     * A layer over the list rather than a strip cut out of it. The hairline it
+     * used to sit behind fenced the bottom of a small window into bands • a
+     * translucent layer with the rows passing under it says the same thing
+     * (this is chrome, that is content) without spending an edge on it.
+     */
+    <div className="material relative z-20">
+      <div className="flex items-end gap-2 px-2 py-2">
         {/*
           One control rather than a row of them. Three 26px buttons with 36px
           hit areas overlapped each other by 10px, so the seams between them
@@ -103,7 +109,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           }}
           style={{ minHeight: FIELD }}
           className={cn(
-            'flex flex-1 items-end gap-1 rounded-[14px] py-px pr-px pl-2.5',
+            'flex flex-1 items-end gap-1 rounded-full py-px pr-px pl-3',
             'border border-input-border bg-input shadow-[inset_0_1px_2px_var(--well)]',
             'transition-[border-color,box-shadow] duration-100',
             'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
@@ -147,6 +153,9 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
                       <Button
                         variant="tint"
                         size="icon-sm"
+                        /* Round, like the capsule holding it. A rounded square
+                           inside a capsule reads as two different systems. */
+                        className="rounded-full"
                         aria-label="Add stash"
                         onClick={submit}
                       >
