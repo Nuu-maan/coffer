@@ -9,11 +9,20 @@ export function getSettings(): Settings {
   return getStore().settings
 }
 
+/*
+ * Only what moved is re-applied. Each of these reaches outside the app — the
+ * theme repaints every window, always-on-top restacks the window, and the login
+ * item rewrites a file on disk — so running all three on every change made
+ * flipping one switch look like the app reloading itself.
+ */
 export function applySettings(patch: Partial<Settings>): Settings {
+  const previous = getSettings()
   const next = setSettings(patch)
-  syncTheme(next.theme)
-  syncLoginItem(next.launchOnLogin)
-  syncAlwaysOnTop(next.alwaysOnTop)
+
+  if (next.theme !== previous.theme) syncTheme(next.theme)
+  if (next.alwaysOnTop !== previous.alwaysOnTop) syncAlwaysOnTop(next.alwaysOnTop)
+  if (next.launchOnLogin !== previous.launchOnLogin) syncLoginItem(next.launchOnLogin)
+
   return next
 }
 

@@ -19,6 +19,16 @@ export type HotkeyManager = {
 
 const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [] }
 
+/** Everything the bindings are built from, and nothing else. */
+function bindingKey(settings: Settings): string {
+  return [
+    settings.hotkeyMode,
+    settings.accelerator,
+    settings.clipperAccelerator,
+    settings.doubleTapWindowMs
+  ].join('|')
+}
+
 export function createHotkeyManager(
   triggers: HotkeyTriggers,
   onStatusChange: (status: HotkeyStatus) => void = () => undefined
@@ -28,6 +38,7 @@ export function createHotkeyManager(
   let clipAccelerator: FallbackHandle | null = null
   let portal: PortalHandle | null = null
   let current: HotkeyStatus = IDLE
+  let appliedKey: string | null = null
 
   // Portal binding is asynchronous, so a settings change that lands mid-flight
   // must be able to discard the work it started.
@@ -120,6 +131,13 @@ export function createHotkeyManager(
   }
 
   function apply(settings: Settings): void {
+    // Rebinding is expensive and, on the portal path, visible — the compositor
+    // drops and re-announces the shortcuts. Settings that have nothing to do
+    // with the bindings (the theme, always on top) must not pay for it.
+    const next = bindingKey(settings)
+    if (next === appliedKey) return
+    appliedKey = next
+
     teardown()
 
     const platform = platformInfo()
@@ -156,6 +174,7 @@ export function createHotkeyManager(
     apply,
     dispose() {
       teardown()
+      appliedKey = null
       current = IDLE
     },
     status: () => current
