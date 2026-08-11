@@ -7,36 +7,36 @@ import { cn } from '@/lib/utils'
 const buttonVariants = cva(
   [
     'press focus-halo relative inline-flex shrink-0 items-center justify-center gap-1.5',
-    'rounded-full font-medium whitespace-nowrap outline-none select-none',
+    'rounded-md font-medium whitespace-nowrap outline-none select-none',
     'disabled:pointer-events-none disabled:opacity-40',
-    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5"
   ],
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow-card hover:bg-primary/90',
-        tint: 'bg-tint text-tint-foreground shadow-card hover:brightness-110',
-        destructive: 'bg-destructive text-destructive-foreground shadow-card hover:brightness-110',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-accent',
-        outline:
-          'border border-border-strong bg-card text-foreground shadow-card hover:bg-accent/60',
+        default: [
+          'bg-control text-control-foreground shadow-control',
+          'hover:bg-control-active active:bg-control-active'
+        ],
+        tint: 'bg-tint text-tint-foreground shadow-control hover:bg-tint-hover',
+        primary: 'bg-tint text-tint-foreground shadow-control hover:bg-tint-hover',
+        destructive: 'bg-destructive text-destructive-foreground shadow-control',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-control-active',
+        outline: 'border border-border-strong bg-transparent text-foreground hover:bg-accent',
         ghost: 'text-muted-foreground hover:bg-accent hover:text-foreground',
-        // Glass. Sits on top of content and lets it show through — reserve it
-        // for controls that float over the list rather than sit in a panel.
-        glass: 'material-thin material-edge vibrant text-foreground shadow-card hover:brightness-[1.06]',
-        glassProminent:
-          'material material-edge vibrant text-foreground shadow-raised hover:brightness-[1.06]',
-        link: 'text-tint underline-offset-4 hover:underline'
+        glass: 'material-thin material-edge vibrant text-foreground shadow-control',
+        glassProminent: 'material material-edge vibrant text-foreground shadow-card',
+        link: 'text-tint underline-offset-2 hover:underline'
       },
       size: {
-        default: "h-9 px-4 text-base has-[>svg]:px-3.5",
-        xs: "h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3 has-[>svg]:px-2",
-        sm: 'h-8 px-3.5 text-sm has-[>svg]:px-3',
-        lg: 'h-11 px-6 text-md has-[>svg]:px-5',
-        icon: 'size-9',
-        'icon-xs': "size-6 [&_svg:not([class*='size-'])]:size-3",
-        'icon-sm': 'size-8',
-        'icon-lg': 'size-11'
+        default: 'h-[26px] px-3 text-base has-[>svg]:px-2.5',
+        xs: "h-[18px] gap-1 px-2 text-xs [&_svg:not([class*='size-'])]:size-3 has-[>svg]:px-1.5",
+        sm: 'h-[22px] px-2.5 text-sm has-[>svg]:px-2',
+        lg: 'h-8 px-4 text-md has-[>svg]:px-3.5',
+        icon: 'size-[26px]',
+        'icon-xs': "size-[18px] [&_svg:not([class*='size-'])]:size-3",
+        'icon-sm': 'size-[22px]',
+        'icon-lg': 'size-8'
       }
     },
     defaultVariants: {
