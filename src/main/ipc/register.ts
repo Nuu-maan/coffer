@@ -7,7 +7,7 @@ import type {
   ClipRegion,
   ReorderInput
 } from '@shared/ipc/contract'
-import type { Settings } from '@shared/types/item'
+import type { HotkeyStatus, Settings } from '@shared/types/item'
 import {
   addImage,
   addItem,
@@ -37,9 +37,12 @@ import { platformInfo } from '@main/platform/session'
 import { hideMainWindow, showMainWindow } from '@main/windows/main-window'
 import { broadcast, broadcastItems } from './broadcast'
 
-type OnSettingsChanged = (settings: Settings) => void
+type IpcHooks = {
+  onSettingsChanged: (settings: Settings) => void
+  hotkeyStatus: () => HotkeyStatus
+}
 
-export function registerIpc(onSettingsChanged: OnSettingsChanged): void {
+export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void {
   ipcMain.handle(CH.ITEMS_LIST, () => listItems())
   ipcMain.handle(CH.ITEMS_ADD, (_event, input: AddItemInput) => broadcastItems(addItem(input)))
   ipcMain.handle(CH.ITEMS_ADD_IMAGE, async (_event, input: AddImageInput) => {
@@ -104,6 +107,7 @@ export function registerIpc(onSettingsChanged: OnSettingsChanged): void {
   })
 
   ipcMain.handle(CH.PLATFORM_INFO, () => platformInfo())
+  ipcMain.handle(CH.HOTKEY_STATUS, () => hotkeyStatus())
 
   ipcMain.handle(CH.SETTINGS_GET, () => getSettings())
   ipcMain.handle(CH.SETTINGS_SET, (_event, patch: Partial<Settings>) => {

@@ -1,4 +1,11 @@
-import type { ClipDraft, Item, ItemSource, PlatformInfo, Settings } from '../types/item'
+import type {
+  ClipDraft,
+  HotkeyStatus,
+  Item,
+  ItemSource,
+  PlatformInfo,
+  Settings
+} from '../types/item'
 
 export type OverlayFrame = {
   url: string
@@ -64,6 +71,9 @@ export interface CofferApi {
   platform: {
     info(): Promise<PlatformInfo>
   }
+  hotkeys: {
+    status(): Promise<HotkeyStatus>
+  }
   settings: {
     get(): Promise<Settings>
     set(patch: Partial<Settings>): Promise<Settings>
@@ -77,5 +87,6 @@ export interface CofferApi {
     clipperFrame(callback: (frame: OverlayFrame) => void): Unsubscribe
     itemsChanged(callback: (items: Item[]) => void): Unsubscribe
     settingsChanged(callback: (settings: Settings) => void): Unsubscribe
+    hotkeyStatus(callback: (status: HotkeyStatus) => void): Unsubscribe
   }
 }

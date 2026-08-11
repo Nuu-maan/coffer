@@ -32,10 +32,14 @@
   --tint-soft: rgb(0 122 255 / 0.12);
   --tint-hover: #0071eb;
 
-  --selected: #007aff;
-  --selected-foreground: #ffffff;
-  --selected-idle: #dcdcdf;
-  --selected-idle-foreground: #1c1c1e;
+  /* A stash row is a cursor position, not a document selection, so it reads as
+     a neutral wash with a hairline edge rather than a solid fill. Neutral
+     rather than tinted: the blue read as a control the row was not, and it
+     collided with the tint the accessories already use. Body text keeps its
+     normal colour and contrast either way. */
+  --selected: rgb(0 0 0 / 0.07);
+  --selected-foreground: #000000;
+  --selected-edge: rgb(0 0 0 / 0.14);
 
   --border: rgb(0 0 0 / 0.1);
   --border-strong: rgb(0 0 0 / 0.22);
@@ -73,71 +77,81 @@
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.7);
 }
 
+/*
+ * Dark is built the way macOS builds it: a cool near-black base, surfaces that
+ * separate by getting *lighter* rather than by casting shadows (a shadow on a
+ * dark ground is invisible), and a top edge highlight standing in for the light
+ * that a raised surface would catch.
+ */
 .dark {
-  --background: #1e1e1e;
-  --foreground: #ededed;
+  --background: #0b0b0c;
+  --foreground: #f2f2f5;
 
-  --card: #262626;
-  --card-foreground: #ededed;
-  --popover: #2d2d2d;
-  --popover-foreground: #ededed;
-  --elevated: #303030;
+  --card: #161618;
+  --card-foreground: #f2f2f5;
+  --popover: #1f1f22;
+  --popover-foreground: #f2f2f5;
+  --elevated: #26262a;
 
   --primary: #0a84ff;
   --primary-foreground: #ffffff;
-  --secondary: #3a3a3c;
-  --secondary-foreground: #ededed;
-  --muted: #2c2c2e;
-  --muted-foreground: #98989d;
-  --accent: #333335;
-  --accent-foreground: #ededed;
+  --secondary: #2a2a2f;
+  --secondary-foreground: #f2f2f5;
+  --muted: #161618;
+  --muted-foreground: #90909a;
+  --accent: #202024;
+  --accent-foreground: #f2f2f5;
   --destructive: #ff453a;
   --destructive-foreground: #ffffff;
 
   --tint: #0a84ff;
   --tint-foreground: #ffffff;
-  --tint-soft: rgb(10 132 255 / 0.22);
-  --tint-hover: #1a8fff;
+  --tint-soft: rgb(10 132 255 / 0.2);
+  --tint-hover: #2b95ff;
 
-  --selected: #0a84ff;
+  --selected: rgb(255 255 255 / 0.1);
   --selected-foreground: #ffffff;
-  --selected-idle: #3f3f41;
-  --selected-idle-foreground: #ededed;
+  --selected-edge: rgb(255 255 255 / 0.16);
 
-  --border: rgb(255 255 255 / 0.12);
-  --border-strong: rgb(255 255 255 / 0.24);
-  --input: #1a1a1a;
-  --input-border: rgb(255 255 255 / 0.16);
+  --border: rgb(255 255 255 / 0.09);
+  --border-strong: rgb(255 255 255 / 0.22);
+  --input: #0e0e10;
+  --input-border: rgb(255 255 255 / 0.14);
   --ring: #0a84ff;
 
-  --control: #3a3a3c;
-  --control-foreground: #ededed;
-  --control-active: #4a4a4c;
-  --well: rgb(0 0 0 / 0.28);
+  --control: #2a2a2f;
+  --control-foreground: #f2f2f5;
+  --control-active: #38383e;
+  --well: rgb(0 0 0 / 0.32);
 
-  --mat-thin: rgb(48 48 48 / 0.6);
+  --mat-thin: rgb(36 36 41 / 0.62);
   --mat-thin-blur: 20px;
-  --mat-regular: rgb(38 38 38 / 0.74);
+  --mat-regular: rgb(24 24 27 / 0.78);
   --mat-regular-blur: 30px;
-  --mat-thick: rgb(32 32 32 / 0.9);
+  --mat-thick: rgb(18 18 20 / 0.94);
   --mat-thick-blur: 50px;
-  --mat-saturate: 160%;
-  --mat-edge: rgb(255 255 255 / 0.14);
-  --mat-border: rgb(255 255 255 / 0.1);
+  --mat-saturate: 170%;
+  --mat-edge: rgb(255 255 255 / 0.12);
+  --mat-border: rgb(255 255 255 / 0.09);
 
-  --hud: rgb(28 28 28 / 0.86);
+  --hud: rgb(28 28 32 / 0.9);
   --hud-foreground: #ffffff;
-  --hud-border: rgb(255 255 255 / 0.14);
+  --hud-border: rgb(255 255 255 / 0.16);
 
-  --scrim: rgb(0 0 0 / 0.5);
+  --scrim: rgb(0 0 0 / 0.55);
 
-  --shadow-hairline: 0 0 0 0.5px rgb(255 255 255 / 0.12);
-  --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.4), 0 0 0 0.5px rgb(255 255 255 / 0.08);
-  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 3px rgb(0 0 0 / 0.35);
-  --shadow-raised: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 2px 8px rgb(0 0 0 / 0.4);
-  --shadow-float: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 8px 24px rgb(0 0 0 / 0.5);
-  --shadow-overlay: 0 0 0 0.5px rgb(255 255 255 / 0.12), 0 16px 48px rgb(0 0 0 / 0.6);
-  --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.09);
+  --shadow-hairline: 0 0 0 0.5px rgb(255 255 255 / 0.1);
+  --shadow-control: inset 0 0.5px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.45),
+    0 0 0 0.5px rgb(0 0 0 / 0.6);
+  --shadow-card: inset 0 0.5px 0 rgb(255 255 255 / 0.06), 0 1px 4px rgb(0 0 0 / 0.4),
+    0 0 0 0.5px rgb(0 0 0 / 0.5);
+  --shadow-raised: inset 0 0.5px 0 rgb(255 255 255 / 0.08), 0 3px 10px rgb(0 0 0 / 0.45),
+    0 0 0 0.5px rgb(0 0 0 / 0.55);
+  --shadow-float: inset 0 0.5px 0 rgb(255 255 255 / 0.1), 0 10px 28px rgb(0 0 0 / 0.55),
+    0 0 0 0.5px rgb(0 0 0 / 0.6);
+  --shadow-overlay: inset 0 0.5px 0 rgb(255 255 255 / 0.12), 0 20px 56px rgb(0 0 0 / 0.65),
+    0 0 0 0.5px rgb(0 0 0 / 0.7);
+  --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.1);
 }
 
 @theme inline {
@@ -171,8 +185,7 @@
   --color-tint-hover: var(--tint-hover);
   --color-selected: var(--selected);
   --color-selected-foreground: var(--selected-foreground);
-  --color-selected-idle: var(--selected-idle);
-  --color-selected-idle-foreground: var(--selected-idle-foreground);
+  --color-selected-edge: var(--selected-edge);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
@@ -262,6 +275,43 @@
 
   :focus-visible {
     outline: none;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--tint) 28%, transparent);
+    color: var(--foreground);
+  }
+
+  /* Chromium's default scrollbar is a Windows-looking strip with steppers.
+     Overlay-style bars sit inside the padding box and only show on hover. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  :hover::-webkit-scrollbar-thumb,
+  :focus-within::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
   }
 }
 

@@ -46,9 +46,29 @@ export type SessionKind = 'windows' | 'x11' | 'wayland' | 'unknown'
 export type PlatformInfo = {
   platform: string
   session: SessionKind
+  /** XDG_CURRENT_DESKTOP, lowercased. '' anywhere it is not reported. */
+  desktop: string
+  /** How to invoke Coffer again, for users who bind a command instead. */
+  executable: string
   supportsDoubleShift: boolean
+  supportsAccelerators: boolean
   supportsLoginItem: boolean
   supportsSourceCapture: boolean
+}
+
+/** A shortcut the desktop portal has accepted, as the compositor names it. */
+export type PortalShortcut = {
+  id: string
+  description: string
+  /** What the shortcut is bound to, or '' when the user has not bound it yet. */
+  trigger: string
+}
+
+export type HotkeyStatus = {
+  mode: 'double-shift' | 'accelerator' | 'portal' | 'none'
+  /** Set when the accelerator could not be claimed, or the portal turned us down. */
+  error: string | null
+  portalShortcuts: PortalShortcut[]
 }
 
 export type ThemeChoice = 'system' | 'light' | 'dark'

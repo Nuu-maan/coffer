@@ -77,7 +77,7 @@ export function ClipForm(): React.JSX.Element {
               commit()
             }
           }}
-          className="max-h-20 min-h-[38px] resize-none"
+          className="max-h-20 min-h-[38px]"
         />
 
         <div className="flex items-center justify-end gap-2">

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
   [
-    'press focus-halo relative inline-flex shrink-0 items-center justify-center gap-1.5',
+    'press focus-halo relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5',
     'rounded-md font-medium whitespace-nowrap outline-none select-none',
     'disabled:pointer-events-none disabled:opacity-40',
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5"

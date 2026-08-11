@@ -8,7 +8,7 @@ const surface =
   'materialize material-thick material-edge z-50 min-w-[8rem] overflow-hidden rounded-xl p-1 text-popover-foreground shadow-overlay'
 
 const item = [
-  'relative flex cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5',
+  'relative flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5',
   'text-base outline-hidden select-none transition-colors duration-100',
   'focus:bg-tint focus:text-tint-foreground',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
