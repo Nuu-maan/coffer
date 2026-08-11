@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/context-menu'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { usePlatform } from '@/hooks/use-platform'
 import { STAGGER, spring, springSnap } from '@/lib/motion'
 
 const LONG_TEXT = 320
@@ -64,6 +65,13 @@ export function ItemRow({
   const [draft, setDraft] = useState(label)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const controls = useDragControls()
+
+  /* macOS is the only place ⌘ and ⌫ mean anything. Everywhere else the menu has
+     to say the keys that are actually on the keyboard. */
+  const mac = usePlatform()?.platform === 'darwin'
+  const keys = mac
+    ? { copy: '⌘C', copyList: '⇧⌘C', remove: '⌫' }
+    : { copy: 'Ctrl C', copyList: 'Ctrl Shift C', remove: 'Del' }
 
   const canCopyText = !editing && label.trim().length > 0
   const copyTextLabel = item.kind === 'image' ? 'Copy caption' : 'Copy text'
@@ -297,12 +305,12 @@ export function ItemRow({
       <ContextMenuContent>
         <ContextMenuItem onSelect={() => onCopySelection(false)}>
           {selectionSize > 1 ? `Copy ${selectionSize} stashes` : copyTextLabel}
-          <ContextMenuShortcut>{'\u2318C'}</ContextMenuShortcut>
+          <ContextMenuShortcut>{keys.copy}</ContextMenuShortcut>
         </ContextMenuItem>
 
         <ContextMenuItem disabled={selectionSize < 2} onSelect={() => onCopySelection(true)}>
           Copy as list
-          <ContextMenuShortcut>{'\u21E7\u2318C'}</ContextMenuShortcut>
+          <ContextMenuShortcut>{keys.copyList}</ContextMenuShortcut>
         </ContextMenuItem>
 
         {item.kind === 'image' && (
@@ -328,7 +336,7 @@ export function ItemRow({
 
         <ContextMenuItem variant="destructive" onSelect={onRemove}>
           Delete
-          <ContextMenuShortcut>{'\u232B'}</ContextMenuShortcut>
+          <ContextMenuShortcut>{keys.remove}</ContextMenuShortcut>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

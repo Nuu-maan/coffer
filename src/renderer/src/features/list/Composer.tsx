@@ -25,11 +25,11 @@ type Props = {
    is one line tall and stay anchored at the foot once it is not. */
 const FIELD = 28
 
-/* What it opens to once there is something to write. A capsule is the right
-   shape for a one-line prompt and the wrong one for a paragraph • at this
-   height the field is the row it is about to become, so what you are typing is
-   shaped like where it lands. */
-const FIELD_OPEN = 56
+/* Half the resting height, which makes one radius do both shapes: a capsule
+   while the field is one line tall, a rounded box once the text wraps past it.
+   Opening the field to a fixed taller height instead meant animating min-height
+   against the growth field-sizing was already doing, and the two fought. */
+const RADIUS = FIELD / 2
 
 export function Composer({ onSubmit }: Props): React.JSX.Element {
   const [text, setText] = useState('')
@@ -38,7 +38,6 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const canSubmit = text.trim().length > 0
-  const open = focused || text.length > 0
 
   function submit(): void {
     const trimmed = text.trim()
@@ -76,13 +75,11 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
           onPointerDown={(event) => {
             if (event.target === event.currentTarget) areaRef.current?.focus()
           }}
-          data-open={open || undefined}
-          style={{ minHeight: open ? FIELD_OPEN : FIELD }}
+          style={{ minHeight: FIELD, borderRadius: RADIUS }}
           className={cn(
-            'flex items-end gap-1.5 rounded-full px-px py-px',
+            'flex items-end gap-1.5 px-px py-px',
             'border border-input-border bg-input shadow-[inset_0_1px_2px_var(--well)]',
-            'transition-[min-height,border-radius,border-color,box-shadow] duration-150 ease-out',
-            'data-[open]:rounded-[14px]',
+            'transition-[border-color,box-shadow] duration-100',
             'data-[focused]:border-ring data-[focused]:ring-[3px] data-[focused]:ring-ring/30'
           )}
         >
@@ -92,20 +89,19 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             panel sits where a row's checkbox does rather than off to the side
             of the field it belongs to.
           */}
-          <div
-            className={cn(
-              'flex size-[26px] shrink-0 items-center justify-center',
-              /* Level with the first line once the field opens, so the control
-                 and the text it belongs to share a line rather than the button
-                 sinking to the foot of a 56px box. */
-              open ? 'self-start' : 'self-center'
-            )}
-          >
+          <div className="flex size-[26px] shrink-0 items-center justify-center self-end">
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hit-36" aria-label="Add">
+                    {/* Round, because its hover and press fills sit a pixel
+                        inside a capsule — a square one spills past the curve. */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hit-36 rounded-full"
+                      aria-label="Add"
+                    >
                       <Plus />
                     </Button>
                   </DropdownMenuTrigger>
@@ -148,12 +144,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
             /* Grown by field-sizing rather than by measuring: measuring after a
                submit reads the height of text React has not cleared yet, which
                is what left the box stuck open at its full height. */
-            className={cn(
-              'max-h-28 flex-1 leading-snug',
-              /* Centred in the capsule, top-aligned once it opens: text that
-                 starts halfway down a 56px box reads as a caption. */
-              open ? 'self-start py-[7px]' : 'self-center py-[4px]'
-            )}
+            className="max-h-28 flex-1 self-center py-[4px] leading-snug"
           />
 
           {/* The slot is held open whether or not the button is in it, so the

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { usePlatform } from '@/hooks/use-platform'
 
 type Props = {
   value: string
@@ -11,6 +12,7 @@ type Props = {
 
 export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.Element {
   const [recording, setRecording] = useState(false)
+  const mac = usePlatform()?.platform === 'darwin'
 
   useEffect(() => {
     if (!recording) return
@@ -58,7 +60,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
         </>
       ) : (
         <span className="flex items-center gap-1">
-          {parts(value).map((part, index) => (
+          {parts(value, mac).map((part, index) => (
             <kbd
               key={`${part}-${index}`}
               className="rounded-[4px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground shadow-[inset_0_0_0_0.5px_var(--border)]"
@@ -123,13 +125,16 @@ function keyName(code: string): string | null {
   return named[code] ?? null
 }
 
-function parts(accelerator: string): string[] {
+/* The Mac glyphs are Mac keys. Off macOS the same modifier is a differently
+   named, differently placed key, and printing ⌘ for it names a key the
+   keyboard does not have. */
+function parts(accelerator: string, mac: boolean): string[] {
   return accelerator.split('+').map((part) => {
-    if (part === 'Control') return 'Ctrl'
-    if (part === 'Super') return '⌘'
-    if (part === 'Shift') return '⇧'
-    if (part === 'Alt') return '⌥'
-    if (part === 'Return') return '⏎'
+    if (part === 'Control') return mac ? '⌃' : 'Ctrl'
+    if (part === 'Super') return mac ? '⌘' : 'Super'
+    if (part === 'Shift') return mac ? '⇧' : 'Shift'
+    if (part === 'Alt') return mac ? '⌥' : 'Alt'
+    if (part === 'Return') return mac ? '⏎' : 'Enter'
     return part
   })
 }
