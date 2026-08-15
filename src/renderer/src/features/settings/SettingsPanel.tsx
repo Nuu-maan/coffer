@@ -218,9 +218,15 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
       <h2 className="px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
       </h2>
-      {/* The hairline belongs to the row below it, and the first row in a card
-          has nothing above it to be divided from. */}
-      <div className="overflow-hidden rounded-2xl bg-card shadow-card [&>:first-child_[data-rule]]:hidden">
+      {/*
+        The hairline belongs to the row below it, and the first row in a card
+        has nothing above it to be divided from.
+
+        The radius is pinned rather than taken from the scale: settings is a
+        dense column of rows and small controls where the app's larger radii
+        round the cards off faster than the 46px rows inside them can bear.
+      */}
+      <div className="overflow-hidden rounded-[14px] bg-card shadow-card [&>:first-child_[data-rule]]:hidden">
         {children}
       </div>
     </section>
@@ -251,7 +257,8 @@ function Note({
   return (
     <p
       className={cn(
-        'flex items-start gap-2 rounded-2xl px-3 py-2.5 text-sm',
+        /* Pinned to match the cards it sits between. See Group. */
+        'flex items-start gap-2 rounded-[14px] px-3 py-2.5 text-sm',
         variant === 'warning'
           ? 'bg-destructive/10 text-destructive'
           : 'bg-card text-muted-foreground shadow-card'
