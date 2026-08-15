@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Minus, X } from '@/components/icons'
+import { Logo, Minus, X } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -19,7 +19,10 @@ export function App(): React.JSX.Element {
     <TooltipProvider delayDuration={500}>
       <div className="flex h-full min-h-0 flex-col bg-card">
         <header className="drag-region relative z-20 flex h-[38px] shrink-0 items-center border-b border-border px-2.5">
-          <span className="text-sm font-semibold text-muted-foreground select-none">Coffer</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground select-none">
+            <Logo className="size-4" />
+            Coffer
+          </span>
 
           <div className="no-drag absolute left-1/2 -translate-x-1/2">
             <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>

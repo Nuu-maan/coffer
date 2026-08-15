@@ -83,3 +83,33 @@ export const TriangleAlertIcon = icon(Warning, 'fill')
 export function CircleIcon({ className }: { className?: string }): React.JSX.Element {
   return <span className={`block size-2 rounded-full bg-current ${className ?? ''}`} />
 }
+
+/*
+ * The mark, kept in step with resources/logo-mark.svg — the duotone chest, its
+ * domed lid, the seam cut either side of the lock plate. Inline rather than an
+ * <img> so it takes currentColor and dims with the label beside it. Two tones
+ * and no plane over another: two 25% fills meeting would darken where they
+ * overlap, which at this size reads as a mistake rather than as depth.
+ */
+const HULL =
+  'M184 84H328A144 144 0 0 1 472 228V384A44 44 0 0 1 428 428H84A44 44 0 0 1 40 384V228A144 144 0 0 1 184 84Z'
+
+export function Logo({ className }: { className?: string }): React.JSX.Element {
+  return (
+    <svg viewBox="22 66 468 380" aria-hidden="true" className={className}>
+      <path d={HULL} fill="currentColor" fillOpacity={0.25} />
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={36}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d={HULL} />
+        <path d="M62 228H172" />
+        <path d="M340 228H450" />
+        <rect x="190" y="162" width="132" height="132" rx="34" />
+      </g>
+    </svg>
+  )
+}

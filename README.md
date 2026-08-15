@@ -1,3 +1,5 @@
+<img src="resources/icon.png" alt="" width="80">
+
 # Coffer
 
 A capture buffer and prompt queue for AI-assisted work. Windows and Linux.
