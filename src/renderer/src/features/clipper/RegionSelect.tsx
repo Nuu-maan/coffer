@@ -141,7 +141,7 @@ export function RegionSelect(): React.JSX.Element {
               {HANDLES.map(({ key, className }) => (
                 <span
                   key={key}
-                  className={`absolute size-[7px] rounded-[1px] bg-white shadow-[0_0_2px_rgb(0_0_0/0.5)] ${className}`}
+                  className={`absolute size-[7px] rounded-[2px] bg-white shadow-[0_0_2px_rgb(0_0_0/0.5)] ${className}`}
                 />
               ))}
             </div>

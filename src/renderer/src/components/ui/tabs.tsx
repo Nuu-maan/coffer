@@ -41,7 +41,9 @@ function Tabs({
 
 const tabsListVariants = cva(
   [
-    'group/tabs-list relative inline-flex w-fit items-center justify-center rounded-[7px] p-[2px]',
+    /* A capsule track holding capsule segments: a 2px inset off a capsule is
+       still a capsule, so the indicator and its well stay concentric. */
+    'group/tabs-list relative inline-flex w-fit items-center justify-center rounded-full p-[2px]',
     'text-muted-foreground',
     'group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col'
   ],
@@ -95,7 +97,7 @@ function TabsTrigger({
       value={value}
       className={cn(
         'focus-halo relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5',
-        'rounded-[5px] px-3 py-0.5 text-sm font-medium whitespace-nowrap',
+        'rounded-full px-3 py-0.5 text-sm font-medium whitespace-nowrap',
         'text-muted-foreground transition-colors duration-100 outline-none',
         'hover:text-foreground data-[state=active]:text-foreground',
         'disabled:pointer-events-none disabled:opacity-40',
@@ -110,7 +112,7 @@ function TabsTrigger({
           layoutId="tab-indicator"
           transition={springSnap}
           className={cn(
-            'absolute inset-0 -z-0 rounded-[5px]',
+            'absolute inset-0 -z-0 rounded-full',
             'group-data-[variant=default]/tabs-list:bg-control group-data-[variant=default]/tabs-list:shadow-control',
             'group-data-[variant=glass]/tabs-list:bg-control group-data-[variant=glass]/tabs-list:shadow-control',
             'group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:bg-transparent',

@@ -28,7 +28,7 @@ const FIELD = 28
 /* The rows' radius rather than half the field's height. The composer is the row
    the text is about to become, and a capsule under a column of rounded cards
    read as a different kind of object. */
-const RADIUS = 16
+const RADIUS = 20
 
 export function Composer({ onSubmit }: Props): React.JSX.Element {
   const [text, setText] = useState('')
@@ -93,14 +93,7 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    {/* Round, because its hover and press fills sit a pixel
-                        inside a capsule — a square one spills past the curve. */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hit-36 rounded-full"
-                      aria-label="Add"
-                    >
+                    <Button variant="ghost" size="icon" className="hit-36" aria-label="Add">
                       <Plus />
                     </Button>
                   </DropdownMenuTrigger>
@@ -163,9 +156,6 @@ export function Composer({ onSubmit }: Props): React.JSX.Element {
                       <Button
                         variant="tint"
                         size="icon-sm"
-                        /* Round, like the capsule holding it. A rounded square
-                           inside a capsule reads as two different systems. */
-                        className="rounded-full"
                         aria-label="Add stash"
                         onClick={submit}
                       >

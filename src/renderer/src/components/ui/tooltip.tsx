@@ -40,7 +40,7 @@ function TooltipContent({
         className={cn(
           'materialize material-hud z-50 w-fit',
           'origin-(--radix-tooltip-content-transform-origin)',
-          'rounded-md px-2 py-1 text-xs text-balance shadow-float',
+          'rounded-lg px-2 py-1 text-xs text-balance shadow-float',
           className
         )}
         {...props}
