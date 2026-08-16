@@ -15,6 +15,9 @@ type Props = {
  * to those names, so this panel shows the names and the config line that binds
  * them.
  */
+/* The radii here are pinned rather than taken from the scale, for the reason
+   given on Group in SettingsPanel: settings keeps the tighter corners the app
+   had before the rounding pass. */
 export function PortalShortcuts({ status, platform }: Props): React.JSX.Element {
   const [copied, setCopied] = useState(false)
   const config = configFor(platform.desktop, status, quote(platform.executable))
@@ -28,7 +31,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   if (status.error) {
     return (
-      <div className="flex flex-col gap-1.5 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+      <div className="flex flex-col gap-1.5 rounded-[8px] bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
         <span className="font-medium">The desktop portal would not register Coffer.</span>
         <span className="text-destructive/80">{status.error}</span>
       </div>
@@ -37,7 +40,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   if (status.portalShortcuts.length === 0) {
     return (
-      <p className="rounded-lg bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-card">
+      <p className="rounded-[8px] bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-card">
         Asking the desktop portal for shortcuts…
       </p>
     )
@@ -45,7 +48,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="overflow-hidden rounded-lg bg-card shadow-card">
+      <div className="overflow-hidden rounded-[8px] bg-card shadow-card">
         {status.portalShortcuts.map((shortcut, index) => (
           <div
             key={shortcut.id}
@@ -72,10 +75,10 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
         ))}
       </div>
 
-      <div className="flex flex-col gap-2 rounded-lg bg-card px-3 py-2.5 shadow-card">
+      <div className="flex flex-col gap-2 rounded-[8px] bg-card px-3 py-2.5 shadow-card">
         <p className="text-sm text-muted-foreground">{config.hint}</p>
 
-        <pre className="overflow-x-auto rounded-md bg-well px-2.5 py-2 font-mono text-2xs leading-5 text-foreground">
+        <pre className="overflow-x-auto rounded-[6px] bg-well px-2.5 py-2 font-mono text-2xs leading-5 text-foreground">
           {config.snippet}
         </pre>
 

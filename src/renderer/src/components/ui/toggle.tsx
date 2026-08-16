@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 const toggleVariants = cva(
   [
-    'press focus-halo inline-flex items-center justify-center gap-1.5 rounded-[5px]',
+    'press focus-halo inline-flex items-center justify-center gap-1.5 rounded-full',
     'text-sm font-medium whitespace-nowrap outline-none',
     'text-muted-foreground hover:text-foreground',
     'disabled:pointer-events-none disabled:opacity-40',

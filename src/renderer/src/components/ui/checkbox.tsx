@@ -15,7 +15,7 @@ function Checkbox({
       data-slot="checkbox"
       checked={checked}
       className={cn(
-        'press-sm focus-halo peer relative size-[14px] shrink-0 rounded-[3.5px]',
+        'press-sm focus-halo peer relative size-[14px] shrink-0 rounded-[4.5px]',
         'border border-input-border bg-control shadow-control outline-none',
         'transition-colors duration-100',
         'hover:border-border-strong',

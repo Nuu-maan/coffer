@@ -171,7 +171,7 @@ export function ItemRow({
                 aria-label="Copy image"
                 whileTap={{ scale: 0.99 }}
                 transition={springSnap}
-                className="relative overflow-hidden rounded-xl bg-well shadow-[inset_0_0_0_0.5px_var(--border)]"
+                className="relative overflow-hidden rounded-[14px] bg-well shadow-[inset_0_0_0_0.5px_var(--border)]"
               >
                 <img
                   src={imageUrl(item.file)}

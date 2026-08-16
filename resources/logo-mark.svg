@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="22 66 468 380" width="468" height="380" role="img" aria-label="Coffer">
+  <title>Coffer</title>
+
+  <!--
+    The mark: the chest from resources/logo.svg, duotone, with the tile off it
+    and everything in currentColor so it takes the colour it is set in.
+
+    Two tones only, and no plane laid over another. The tint is a single fill of
+    the hull; the lock plate is drawn as an outline over it rather than a filled
+    shape, and the seam is cut into two segments that stop either side. Stacking
+    two 25% fills would make a darker square wherever they met, which at this
+    size reads as a mistake rather than as depth.
+
+    The stroke is heavier than the app icon's, and the straps and the keyhole
+    are gone. At the 16px a title bar asks for, the icon's own weight has to
+    come up and its detail has to come down, or it renders as grey fuzz.
+  -->
+
+  <path
+    fill="currentColor"
+    fill-opacity="0.25"
+    d="M184 84H328A144 144 0 0 1 472 228V384A44 44 0 0 1 428 428H84A44 44 0 0 1 40 384V228A144 144 0 0 1 184 84Z"
+  />
+
+  <g
+    fill="none"
+    stroke="currentColor"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M184 84H328A144 144 0 0 1 472 228V384A44 44 0 0 1 428 428H84A44 44 0 0 1 40 384V228A144 144 0 0 1 184 84Z" />
+    <path d="M62 228H172" />
+    <path d="M340 228H450" />
+    <rect x="190" y="162" width="132" height="132" rx="34" />
+  </g>
+</svg>

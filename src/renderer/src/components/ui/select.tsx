@@ -33,7 +33,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        'press focus-halo group flex w-fit items-center justify-between gap-1.5 rounded-md',
+        'press focus-halo group flex w-fit items-center justify-between gap-1.5 rounded-full',
         'bg-control px-2.5 text-base whitespace-nowrap shadow-control outline-none',
         'hover:bg-control-active',
         'cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
@@ -67,7 +67,7 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          'materialize material-thick material-edge relative z-50 min-w-[8rem] overflow-hidden rounded-lg p-1',
+          'materialize material-thick material-edge relative z-50 min-w-[8rem] overflow-hidden rounded-2xl p-1',
           'max-h-(--radix-select-content-available-height)',
           'origin-(--radix-select-content-transform-origin) text-popover-foreground shadow-overlay',
           className
@@ -117,7 +117,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'relative flex w-full cursor-pointer items-center gap-2 rounded-[4px] py-1 pr-7 pl-2',
+        'relative flex w-full cursor-pointer items-center gap-2 rounded-[14px] py-1 pr-7 pl-2',
         'text-base outline-hidden select-none',
         'focus:bg-tint focus:text-tint-foreground',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',

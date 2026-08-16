@@ -39,7 +39,7 @@ export function ClipForm(): React.JSX.Element {
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={springSheet}
-      className="material-thick material-edge flex h-full flex-col overflow-hidden rounded-xl text-foreground shadow-overlay"
+      className="material-thick material-edge flex h-full flex-col overflow-hidden rounded-2xl text-foreground shadow-overlay"
     >
       <div className="drag-region relative flex h-[30px] shrink-0 items-center justify-center border-b border-border px-2">
         <span className="text-sm font-semibold">New Clip</span>
@@ -59,7 +59,7 @@ export function ClipForm(): React.JSX.Element {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={spring}
-            className="max-h-full max-w-full rounded-[3px] object-contain shadow-card"
+            className="max-h-full max-w-full rounded-md object-contain shadow-card"
           />
         )}
       </div>

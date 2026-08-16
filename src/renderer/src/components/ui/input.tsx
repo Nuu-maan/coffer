@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
  */
 const inputVariants = cva(
   [
-    'flex w-full min-w-0 rounded-md text-base outline-none',
+    'flex w-full min-w-0 rounded-lg text-base outline-none',
     'border border-input-border bg-input text-foreground',
     'placeholder:text-muted-foreground/70',
     'transition-[color,background-color,border-color,box-shadow] duration-100',

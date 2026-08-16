@@ -35,7 +35,7 @@ function ToggleGroup({
       data-variant={variant}
       data-size={size}
       className={cn(
-        'group/toggle-group relative flex w-fit items-center rounded-[7px]',
+        'group/toggle-group relative flex w-fit items-center rounded-full',
         variant === 'segment' && 'gap-0 bg-well p-[2px] shadow-[inset_0_0_0_0.5px_var(--border)]',
         variant === 'outline' && 'gap-1',
         variant === 'default' && 'gap-1',
@@ -81,7 +81,7 @@ function ToggleGroupItem({
         <motion.span
           layoutId="segment-indicator"
           transition={springSnap}
-          className="absolute inset-0 rounded-[5px] bg-control shadow-control"
+          className="absolute inset-0 rounded-full bg-control shadow-control"
         />
       )}
       <span className="relative z-10 flex items-center gap-1.5">{children}</span>

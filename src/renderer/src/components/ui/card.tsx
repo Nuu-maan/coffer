@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-const cardVariants = cva('flex flex-col rounded-lg text-card-foreground', {
+const cardVariants = cva('flex flex-col rounded-2xl text-card-foreground', {
   variants: {
     variant: {
       default: 'bg-card shadow-card',
