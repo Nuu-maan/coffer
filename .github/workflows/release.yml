@@ -6,10 +6,17 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
+    # One at a time. Both jobs publish into the same draft release, and two
+    # runners creating it at once is a race with nothing to gain: the whole
+    # matrix is a few minutes and the minutes are free on a public repository.
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - os: windows-latest
@@ -33,16 +40,23 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Package
-        run: npm run ${{ matrix.target }}
+      - name: Package and upload to the draft release
+        run: npm run ${{ matrix.target }} -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coffer-${{ matrix.os }}
-          path: |
-            release/*.exe
-            release/*.AppImage
-            release/*.deb
-          if-no-files-found: error
+  # Nothing is public until every platform has landed its artefacts, so a
+  # release is never half a release.
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish the draft
+        run: gh release edit "$TAG" --draft=false --latest --repo "$GITHUB_REPOSITORY"
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
