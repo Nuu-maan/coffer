@@ -34,6 +34,17 @@ jobs:
           node-version: 22
           cache: npm
 
+      # uiohook-napi has no prebuild for Linux, so postinstall compiles
+      # libuiohook from source and it wants the X11 headers. A bare runner has
+      # none of them, which is where the first tag stopped.
+      - name: Install the X11 headers libuiohook compiles against
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libx11-dev libxtst-dev libxt-dev libxinerama-dev \
+            libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libxkbfile-dev
+
       - name: Install
         run: npm ci
 
