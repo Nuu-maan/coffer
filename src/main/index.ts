@@ -7,7 +7,8 @@ import { broadcast } from './ipc/broadcast'
 import { registerIpc } from './ipc/register'
 import { applyLinuxCommandLineFlags } from './platform/linux-flags'
 import { registerCofferScheme, serveCofferScheme } from './protocol/coffer'
-import { flushStore, loadStore } from './store/store'
+import { flushStore, loadStore, storeIntact } from './store/store'
+import { pruneOrphans } from './features/images/store'
 import { createTray, destroyTray } from './tray'
 import { showMainWindow } from './windows/main-window'
 import { destroyOverlays, primeOverlays } from './windows/clipper-overlay'
@@ -62,6 +63,15 @@ async function boot(): Promise<void> {
   syncTheme(store.settings.theme)
   syncLoginItem(store.settings.launchOnLogin)
 
+  if (storeIntact()) {
+    const kept = new Set(
+      store.items.filter((item) => item.kind === 'image').map((item) => item.file)
+    )
+    void pruneOrphans(kept).then((count) => {
+      if (count > 0) console.log(`[images] reclaimed ${count} orphaned file(s)`)
+    })
+  }
+
   primeOverlays()
   screen.on('display-added', () => primeOverlays())
   screen.on('display-removed', () => primeOverlays())
@@ -74,12 +84,24 @@ async function boot(): Promise<void> {
   if (process.argv.includes('--stash')) void stashSelection()
   if (process.argv.includes('--clip')) void startClip()
 
+  /* Quitting is held open just long enough to finish the debounced write. A
+     failed write must not hold it open forever, so the exit is in the finally
+     and not after the await. */
+  let quitting = false
   app.on('before-quit', async (event) => {
+    if (quitting) return
+    quitting = true
     event.preventDefault()
-    hotkeys.dispose()
-    destroyOverlays()
-    destroyTray()
-    await flushStore()
-    app.exit(0)
+
+    try {
+      hotkeys.dispose()
+      destroyOverlays()
+      destroyTray()
+      await flushStore()
+    } catch (error) {
+      console.error('[app] shutdown failed', error)
+    } finally {
+      app.exit(0)
+    }
   })
 }

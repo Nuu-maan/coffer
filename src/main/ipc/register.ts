@@ -89,14 +89,6 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
     const window = BrowserWindow.fromWebContents(event.sender)
     if (window) markOverlayPainted(window)
   })
-  ipcMain.on(CH.CLIPPER_MOUNTED, (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender)
-    if (window) markOverlayMounted(window)
-  })
-  ipcMain.on(CH.CLIPPER_PAINTED, (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender)
-    if (window) markOverlayPainted(window)
-  })
   ipcMain.handle(CH.CLIPPER_COMMIT, (_event, caption: string) => commitClip(caption))
   ipcMain.on(CH.CLIPPER_CANCEL, () => cancelClip())
   ipcMain.on(CH.CLIPPER_REGION, (event, region: ClipRegion) => {
