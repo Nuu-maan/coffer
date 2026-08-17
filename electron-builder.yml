@@ -9,6 +9,12 @@ files:
   - package.json
 asarUnpack:
   - '**/*.node'
+afterPack: build/after-pack.mjs
+publish:
+  provider: github
+  owner: Nuu-maan
+  repo: coffer
+  releaseType: draft
 win:
   icon: resources/icon.png
   target:
