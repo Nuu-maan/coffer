@@ -15,6 +15,7 @@ import { destroyOverlays, primeOverlays } from './windows/clipper-overlay'
 import { stashSelection } from './features/stash/capture-flow'
 import { startClip } from './features/clipper'
 import { syncLoginItem, syncTheme } from './features/settings/service'
+import { startUpdateChecks, stopUpdateChecks } from './features/updates'
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -72,6 +73,8 @@ async function boot(): Promise<void> {
     })
   }
 
+  startUpdateChecks()
+
   primeOverlays()
   screen.on('display-added', () => primeOverlays())
   screen.on('display-removed', () => primeOverlays())
@@ -95,6 +98,7 @@ async function boot(): Promise<void> {
 
     try {
       hotkeys.dispose()
+      stopUpdateChecks()
       destroyOverlays()
       destroyTray()
       await flushStore()
