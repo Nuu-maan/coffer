@@ -42,8 +42,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libx11-dev libxtst-dev libxt-dev libxinerama-dev \
-            libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libxkbfile-dev
+            libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev libxi-dev \
+            libxinerama-dev libxkbcommon-dev libxkbcommon-x11-dev libxkbfile-dev \
+            libxrandr-dev libxrender-dev libxss-dev libxt-dev libxtst-dev
 
       - name: Install
         run: npm ci
@@ -51,8 +52,13 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Package and upload to the draft release
-        run: npm run ${{ matrix.target }} -- --publish always
+      # A tag publishes. Anything else — a manual run to check the matrix still
+      # builds — packages and throws the result away, so verifying the Linux
+      # half never costs a tag or leaves a stray draft behind.
+      - name: Package
+        run: >
+          npm run ${{ matrix.target }} --
+          --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
