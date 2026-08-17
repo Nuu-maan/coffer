@@ -6,3 +6,9 @@ release/
 .DS_Store
 .vite/
 *.tsbuildinfo
+
+# Local agent tooling, not part of the app
+.agents/
+.claude/
+skills-lock.json
+TODO
