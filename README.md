@@ -59,6 +59,13 @@ sudo apt install ./Coffer.deb
 first improves selection capture on X11, the second gives a tray icon on
 desktops that need one.
 
+### Updates
+
+The Windows installer and the AppImage check quietly in the background and
+apply the update the next time you quit — you are never interrupted mid-session
+to be told about a version. The `.deb` updates through your package manager
+instead, as it should.
+
 ## Using it
 
 Coffer lives in the tray. These work anywhere on your desktop:
