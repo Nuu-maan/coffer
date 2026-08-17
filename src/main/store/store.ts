@@ -16,12 +16,24 @@ function storePath(): string {
   return join(app.getPath('userData'), STORE_FILE)
 }
 
+/* Whether the empty store in memory is the truth or the fallback. A store file
+   that is missing means a fresh install; one that is present and unreadable
+   means the items are still on disk, and nothing may be reclaimed on the
+   strength of a list we failed to read. */
+let intact = true
+
+export function storeIntact(): boolean {
+  return intact
+}
+
 export async function loadStore(): Promise<Store> {
   try {
     const raw = await readFile(storePath(), 'utf8')
     state = migrate(JSON.parse(raw))
-  } catch {
+    intact = true
+  } catch (error) {
     state = structuredClone(EMPTY_STORE)
+    intact = (error as NodeJS.ErrnoException).code === 'ENOENT'
   }
   return state
 }
