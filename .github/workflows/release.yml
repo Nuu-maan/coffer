@@ -88,32 +88,50 @@ jobs:
         run: |
           rm -rf /tmp/CofferTest.app
           cp -R release/mac-arm64/Coffer.app /tmp/CofferTest.app
-          codesign --force --deep --sign -             --options runtime             --entitlements build/entitlements.test.plist             /tmp/CofferTest.app
-          codesign -d --entitlements :- /tmp/CofferTest.app 2>/dev/null | grep -q get-task-allow             && echo "the copy is debuggable"             || { echo "re-signing did not take"; exit 1; }
+          codesign --force --deep --sign - --options runtime --entitlements build/entitlements.test.plist /tmp/CofferTest.app
+          if codesign -d --entitlements :- /tmp/CofferTest.app 2>/dev/null | grep -q get-task-allow; then
+            echo "the copy is debuggable"
+          else
+            echo "re-signing did not take"
+            exit 1
+          fi
 
-      # Runs on its own first. A launch timeout says only that nothing became
-      # ready; what the process printed on the way there is the part worth
-      # reading, and whether it was even still alive is worth knowing too.
-      - name: What the app says on startup
+      # Runs on its own first. The last three runs produced a process that was
+      # alive, silent, and had opened no debugging port — which is what Electron
+      # looks like when the main script fails to load and it puts up an error
+      # dialog nobody is there to see. sample() reads the stack of the live
+      # process, and the unified log has whatever macOS thought of it.
+      - name: Ask macOS what the app is doing
         if: runner.os == 'macOS'
         env:
           COFFER_TRACE: '1'
           ELECTRON_ENABLE_LOGGING: '1'
         run: |
           set +e
+          started=$(date +%s)
           /tmp/CofferTest.app/Contents/MacOS/Coffer --remote-debugging-port=9223 > boot.log 2>&1 &
           pid=$!
-          sleep 20
-          if kill -0 "$pid" 2>/dev/null; then
-            echo "still running after 20s"
-          else
-            echo "exited on its own"
-          fi
-          kill "$pid" 2>/dev/null
-          echo "── $(wc -c < boot.log) bytes of output ──"
+          sleep 15
+
+          echo "── $(wc -c < boot.log) bytes of its own output ──"
           cat boot.log
-          echo "── does Chromium open a debugging port? ──"
-          grep 'DevTools listening' boot.log || echo "no, it never printed one"
+
+          if kill -0 "$pid" 2>/dev/null; then
+            echo "── still alive: where is it stuck? ──"
+            sample "$pid" 2 -file sample.txt >/dev/null 2>&1
+            # The leaf frames are the answer; the whole sample is far too long.
+            grep -E 'Thread_|NSAlert|RunLoop|dyld|node::|electron::|uv_' sample.txt | head -40
+            echo "── main thread, top frames ──"
+            sed -n '/Call graph/,/Binary Images/p' sample.txt | head -45
+          else
+            echo "── it exited on its own ──"
+          fi
+
+          kill "$pid" 2>/dev/null
+
+          echo "── what macOS logged about it ──"
+          since="$(date -r "$started" '+%Y-%m-%d %H:%M:%S')"
+          log show --predicate 'process == "Coffer"' --style compact --start "$since" 2>/dev/null | head -40
           exit 0
 
       - name: Smoke test the packaged app
