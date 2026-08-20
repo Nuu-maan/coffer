@@ -63,6 +63,11 @@ mac:
     - '!node_modules/uiohook-napi/build/**'
     - '!node_modules/uiohook-napi/prebuilds/win32-*/**'
     - '!node_modules/uiohook-napi/prebuilds/linux-*/**'
+    # The D-Bus client and its tree exist for the Wayland portal. Both call
+    # sites are dynamic imports on a path macOS never takes, so leaving them
+    # out cannot break a load.
+    - '!node_modules/@homebridge/dbus-native/**'
+    - '!node_modules/{event-stream,hexy,long,xml2js,xmlbuilder,sax}/**'
   extendInfo:
     NSAppleEventsUsageDescription: >-
       Coffer sends a Copy command to the app you are using so it can stash your
