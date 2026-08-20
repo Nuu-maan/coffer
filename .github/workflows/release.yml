@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    # One at a time. Both jobs publish into the same draft release, and two
+    # One at a time. Every job publishes into the same draft release, and
     # runners creating it at once is a race with nothing to gain: the whole
     # matrix is a few minutes and the minutes are free on a public repository.
     strategy:
@@ -23,6 +23,12 @@ jobs:
             target: dist:win
           - os: ubuntu-latest
             target: dist:linux
+          # Pinned, not macos-latest. That label moved from macOS 15 to 26
+          # mid-2026 and will move again, and this runner is the only Mac the
+          # project has — an unannounced OS bump is an unannounced change to
+          # the entire macOS test surface.
+          - os: macos-15
+            target: dist:mac
 
     runs-on: ${{ matrix.os }}
 
@@ -34,9 +40,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      # uiohook-napi has no prebuild for Linux, so postinstall compiles
-      # libuiohook from source and it wants the X11 headers. A bare runner has
-      # none of them, which is where the first tag stopped.
+      # uiohook-napi ships a linux-x64 prebuild, but the postinstall rebuild
+      # compiles libuiohook from source here anyway and it wants the X11
+      # headers. A bare runner has none of them, which is where the first tag
+      # stopped. Do not remove this on the strength of the prebuild existing.
       - name: Install the X11 headers libuiohook compiles against
         if: runner.os == 'Linux'
         run: |
@@ -53,14 +60,40 @@ jobs:
         run: npm test
 
       # A tag publishes. Anything else — a manual run to check the matrix still
-      # builds — packages and throws the result away, so verifying the Linux
-      # half never costs a tag or leaves a stray draft behind.
+      # builds — packages and throws the result away, so verifying a platform
+      # never costs a tag or leaves a stray draft behind.
       - name: Package
         run: >
           npm run ${{ matrix.target }} --
           --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The signing identity is pinned to ad-hoc in electron-builder.yml.
+          # Without this electron-builder also hunts the runner keychain, and on
+          # a hosted Mac that search is noise at best.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      # Everything below here is macOS only, and exists because none of it can
+      # be checked from the machine this was written on.
+      - name: Check the bundle
+        if: runner.os == 'macOS'
+        run: bash scripts/check-mac-bundle.sh
+
+      - name: Smoke test the packaged app
+        if: runner.os == 'macOS'
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: |
+          npm i --no-save playwright-core
+          node scripts/smoke-mac.mjs release/mac-arm64/Coffer.app/Contents/MacOS/Coffer
+
+      - name: Keep what the smoke test saw
+        if: runner.os == 'macOS' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-mac
+          path: smoke-mac.png
+          if-no-files-found: warn
 
   # Nothing is public until every platform has landed its artefacts, so a
   # release is never half a release.
