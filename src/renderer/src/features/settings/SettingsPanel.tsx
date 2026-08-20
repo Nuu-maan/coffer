@@ -114,6 +114,25 @@ export function SettingsPanel(): React.JSX.Element {
               </Row>
 
               <AnimatePresence initial={false}>
+                {mac && !doubleShiftAvailable && (
+                  <Reveal key="needs-accessibility">
+                    <Row
+                      label="Double tap Shift is unavailable"
+                      hint="Reading Shift anywhere on the desktop needs Accessibility access"
+                      icon={<Hand />}
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-40"
+                        onClick={() => void requestPermission('accessibility')}
+                      >
+                        Grant…
+                      </Button>
+                    </Row>
+                  </Reveal>
+                )}
+
                 {effectiveMode === 'accelerator' && (
                   <Reveal key="stash-shortcut">
                     <Row
