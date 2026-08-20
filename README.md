@@ -161,6 +161,7 @@ you can open:
 | Platform | Location |
 | --- | --- |
 | Windows | `%APPDATA%\coffer\` |
+| macOS | `~/Library/Application Support/coffer/` |
 | Linux | `~/.config/coffer/` |
 
 Delete the folder and Coffer is gone. Nothing is uploaded, and the app makes no
@@ -171,7 +172,8 @@ outbound requests.
 - An [Omarchy](https://omarchyplugins.com) plugin — a bar widget and panel for
   stashing and reviewing without opening the window.
 - Code signing on Windows, to retire the SmartScreen warning.
-- macOS.
+- An Apple Developer ID, which would retire the Gatekeeper detour, keep macOS
+  permissions across updates, and let macOS auto-update like the other two.
 
 ## Development
 
@@ -189,9 +191,14 @@ npm run dev
 | `npm test` | Unit tests |
 | `npm run typecheck` | Node and web tsconfigs |
 | `npm run dist:win` | NSIS installer into `release/` |
+| `npm run dist:mac` | Both architectures into `release/` — must run on macOS |
 | `npm run dist:linux` | AppImage and `.deb` into `release/` — must run on Linux |
+| `npm run icons` | Redraws the macOS icons from the SVGs in `resources/` |
 
-Linux artefacts cannot be cross-built from Windows; CI builds both on a tag push.
+macOS and Linux artefacts cannot be cross-built from Windows; CI builds all
+three on a tag push, and the macOS job additionally reads the finished bundle
+back — architecture, signature, entitlements, `Info.plist` — and drives the
+packaged app to check the paths a machine with no permissions granted takes.
 
 Three processes with a hard boundary: the renderer has no filesystem, clipboard,
 or hook access, and everything crosses through a typed bridge. The internals —
