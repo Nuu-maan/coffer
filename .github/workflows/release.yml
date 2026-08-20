@@ -96,43 +96,46 @@ jobs:
             exit 1
           fi
 
-      # Runs on its own first. The last three runs produced a process that was
-      # alive, silent, and had opened no debugging port — which is what Electron
-      # looks like when the main script fails to load and it puts up an error
-      # dialog nobody is there to see. sample() reads the stack of the live
-      # process, and the unified log has whatever macOS thought of it.
-      - name: Ask macOS what the app is doing
+      # A gate, not a diagnostic. Four runs built Windows and Linux green while
+      # startup was broken on all three platforms, because building an app and
+      # running one are different questions and CI was only asking the first.
+      #
+      # This needs no debugger and no driver: the app says how far it got, and
+      # reaching the end is the assertion.
+      - name: The app has to start
         if: runner.os == 'macOS'
         env:
           COFFER_TRACE: '1'
           ELECTRON_ENABLE_LOGGING: '1'
         run: |
           set +e
-          started=$(date +%s)
-          /tmp/CofferTest.app/Contents/MacOS/Coffer --remote-debugging-port=9223 > boot.log 2>&1 &
+          /tmp/CofferTest.app/Contents/MacOS/Coffer > boot.log 2>&1 &
           pid=$!
-          sleep 15
 
-          echo "── $(wc -c < boot.log) bytes of its own output ──"
+          for _ in $(seq 1 40); do
+            grep -q '\[boot\] booted' boot.log && break
+            sleep 1
+          done
+
+          alive=no
+          kill -0 "$pid" 2>/dev/null && alive=yes
+
+          echo "── $(wc -c < boot.log) bytes, still running: ${alive} ──"
           cat boot.log
 
-          if kill -0 "$pid" 2>/dev/null; then
-            echo "── still alive: where is it stuck? ──"
-            sample "$pid" 2 -file sample.txt >/dev/null 2>&1
-            # The leaf frames are the answer; the whole sample is far too long.
-            grep -E 'Thread_|NSAlert|RunLoop|dyld|node::|electron::|uv_' sample.txt | head -40
-            echo "── main thread, top frames ──"
-            sed -n '/Call graph/,/Binary Images/p' sample.txt | head -45
-          else
-            echo "── it exited on its own ──"
+          if grep -q '\[boot\] booted' boot.log; then
+            kill "$pid" 2>/dev/null
+            echo "started cleanly"
+            exit 0
           fi
 
+          echo "── it never finished starting. where is it? ──"
+          if [ "$alive" = yes ]; then
+            sample "$pid" 2 -file sample.txt >/dev/null 2>&1
+            sed -n '/Call graph/,/Binary Images/p' sample.txt | head -40
+          fi
           kill "$pid" 2>/dev/null
-
-          echo "── what macOS logged about it ──"
-          since="$(date -r "$started" '+%Y-%m-%d %H:%M:%S')"
-          log show --predicate 'process == "Coffer"' --style compact --start "$since" 2>/dev/null | head -40
-          exit 0
+          exit 1
 
       - name: Smoke test the packaged app
         if: runner.os == 'macOS'
