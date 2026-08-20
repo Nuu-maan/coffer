@@ -1,4 +1,4 @@
-import { Crop, Info, Keyboard, Monitor, Moon, Palette, Pin, Power, Sun, Timer, Zap } from '@/components/icons'
+import { CircleCheckIcon, Crop, Hand, Info, Keyboard, Monitor, Moon, Palette, Pin, Power, Sun, Timer, Zap } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
 import type { Settings } from '@shared/types/item'
 import { Label } from '@/components/ui/label'
@@ -13,9 +13,11 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
+import { requestPermission, usePermissions } from '@/hooks/use-permissions'
 import { useHotkeyStatus } from '@/hooks/use-hotkey-status'
 import { patchSettings, useSettings } from '@/hooks/use-settings'
 import { PortalShortcuts } from './PortalShortcuts'
@@ -25,6 +27,7 @@ export function SettingsPanel(): React.JSX.Element {
   const settings = useSettings()
   const platform = usePlatform()
   const hotkeys = useHotkeyStatus()
+  const access = usePermissions()
 
   if (!settings) return <div className="h-full bg-background" />
 
@@ -174,6 +177,40 @@ export function SettingsPanel(): React.JSX.Element {
           </section>
         )}
 
+        {mac && access && (
+          <Group title="Permissions">
+            <Row
+              label="Accessibility"
+              hint="Lets Coffer copy the selection out of another app"
+              icon={<Hand />}
+            >
+              <Access
+                granted={access.accessibility}
+                onGrant={() => void requestPermission('accessibility')}
+              />
+            </Row>
+
+            <Row
+              label="Screen Recording"
+              hint="Lets Clip read the screen it is freezing"
+              icon={<Crop />}
+            >
+              <Access
+                granted={access.screen === 'granted'}
+                onGrant={() => void requestPermission('screen')}
+              />
+            </Row>
+          </Group>
+        )}
+
+        {mac && access?.needsRestart && (
+          <Note variant="warning">
+            macOS keeps its answer for as long as Coffer is running, so a
+            permission you have just granted only takes effect once you quit and
+            reopen it.
+          </Note>
+        )}
+
         <Group title="Behaviour">
           <Row
             label="Always on top"
@@ -210,6 +247,32 @@ export function SettingsPanel(): React.JSX.Element {
         )}
       </div>
     </ScrollArea>
+  )
+}
+
+/* Granted is a dead end rather than a toggle: nothing in an app can take a TCC
+   consent back, and offering a control that looks like it might would be a lie.
+   Revoking is System Settings' job. */
+function Access({
+  granted,
+  onGrant
+}: {
+  granted: boolean
+  onGrant: () => void
+}): React.JSX.Element {
+  if (granted) {
+    return (
+      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <CircleCheckIcon className="size-4 text-tint" />
+        Granted
+      </span>
+    )
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={onGrant} className="w-40">
+      Grant…
+    </Button>
   )
 }
 
@@ -280,7 +343,8 @@ function Row({
 }: {
   label: string
   hint?: string
-  htmlFor: string
+  /** Omitted where the row holds something that is not a labelled control. */
+  htmlFor?: string
   icon?: React.ReactNode
   children: React.ReactNode
 }): React.JSX.Element {
