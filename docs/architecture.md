@@ -63,6 +63,7 @@ is testable without a keyboard.
 | Session | Trigger | Reading the selection |
 | --- | --- | --- |
 | Windows | `uiohook-napi` low-level hook, or accelerator | Synthesize `Ctrl+C`, poll the clipboard, restore it on failure |
+| macOS | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
 | Linux / X11 | Same hook, or accelerator | Read the PRIMARY selection directly — no keystroke needed |
 | Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
 
@@ -70,6 +71,17 @@ The double-tap trigger needs to watch the keyboard, which Wayland does not
 permit. Neither does it permit `globalShortcut`, which reports success there and
 then never fires. Coffer detects the session and takes the portal route instead
 of pretending an accelerator was registered.
+
+macOS permits both, but only after the user has said so, and it says no by
+staying quiet rather than by failing. `hook_post_event` is declared `void` and
+its darwin backend discards what `CGEventPost` returns, so an ungranted
+`keyTap` reports success and sends nothing — which is why selection capture
+asks `AXIsProcessTrusted` before it clears the clipboard rather than relying on
+a `try`/`catch` that will never fire. The screen is the same shape of problem:
+there is no request API (`askForMediaAccess` parses only camera and microphone),
+so the request is a one-pixel capture, and the status that comes back is cached
+for the life of the process — a grant made at that prompt still reads as denied
+until Coffer restarts.
 
 ## Wayland shortcuts
 
@@ -123,6 +135,18 @@ through the single-instance lock.
   process. Every renderer then just follows `prefers-color-scheme`, so the
   overlay and the clip form stay in sync with the list window for free.
 - `source` (foreground app and window title) is recorded on Windows and X11.
-  Wayland does not expose it to applications at all.
+  macOS records the app only, read from `lsappinfo`, which needs no consent; the
+  window title is the part macOS gates behind Screen Recording, and it is not
+  worth a permission prompt for a field that only annotates a stash. Wayland
+  does not expose either to applications at all.
 - Renaming the app means editing `src/shared/constants.ts` plus `name` in
-  `package.json` and `appId`/`productName` in `electron-builder.yml`.
+  `package.json` and `appId`/`productName` in `electron-builder.yml`. On macOS
+  that reaches further than it looks: `productName` becomes `CFBundleName`, and
+  the userData folder is derived from the app name — so a rename moves where
+  every existing user's stash lives and needs a migration, not just an edit.
+- macOS ships signed ad-hoc rather than with a Developer ID. That is what makes
+  Gatekeeper stop the first launch, what makes both permissions need granting
+  again after each update (TCC keys a grant to the code identity, which for an
+  ad-hoc bundle is a hash that changes every build), and why the updater is off
+  there — Squirrel.Mac verifies the signature, and it does so only after
+  downloading the whole update.
