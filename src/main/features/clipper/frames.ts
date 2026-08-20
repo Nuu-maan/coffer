@@ -54,7 +54,15 @@ export function frameFor(displayId: number): OverlayFrame | null {
     url: frameUrl(displayId, token),
     width: size.width,
     height: size.height,
-    scaleFactor: display?.scaleFactor ?? size.width / frame.bounds.width
+    /* The measured ratio wins over the display's reported scale factor,
+       because the crop is taken at the measured one. The two agree on Windows
+       and on X11; on macOS they do not, since the capture is sized by fitting
+       the display's aspect ratio into the requested box and a scaled HiDPI
+       mode gives a non-integer result. Laying the frozen frame out at one
+       scale and cropping it at another offsets the result from the rectangle
+       the user actually drew. */
+    scaleFactor:
+      frame.bounds.width > 0 ? size.width / frame.bounds.width : (display?.scaleFactor ?? 1)
   }
 }
 
