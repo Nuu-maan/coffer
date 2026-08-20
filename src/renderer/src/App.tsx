@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Logo, Minus, X } from '@/components/icons'
 import { usePlatform } from '@/hooks/use-platform'
 import { AnimatePresence, motion } from 'motion/react'
@@ -21,6 +21,9 @@ export function App(): React.JSX.Element {
      is where they end; everywhere else it is not defined and the fallback is the
      ordinary padding. */
   const mac = usePlatform()?.platform === 'darwin'
+
+  // macOS opens preferences from its own menu, on ⌘, — the tab has to follow.
+  useEffect(() => coffer.on.showSettings(() => setTab('settings')), [])
 
   return (
     <TooltipProvider delayDuration={500}>

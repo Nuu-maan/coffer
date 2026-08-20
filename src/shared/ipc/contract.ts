@@ -88,5 +88,6 @@ export interface CofferApi {
     itemsChanged(callback: (items: Item[]) => void): Unsubscribe
     settingsChanged(callback: (settings: Settings) => void): Unsubscribe
     hotkeyStatus(callback: (status: HotkeyStatus) => void): Unsubscribe
+    showSettings(callback: () => void): Unsubscribe
   }
 }

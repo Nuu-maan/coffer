@@ -65,7 +65,8 @@ const api: CofferApi = {
     clipperFrame: (callback) => subscribe<OverlayFrame>(CH.ON_CLIPPER_FRAME, callback),
     itemsChanged: (callback) => subscribe<Item[]>(CH.ON_ITEMS_CHANGED, callback),
     settingsChanged: (callback) => subscribe<Settings>(CH.ON_SETTINGS_CHANGED, callback),
-    hotkeyStatus: (callback) => subscribe<HotkeyStatus>(CH.ON_HOTKEY_STATUS, callback)
+    hotkeyStatus: (callback) => subscribe<HotkeyStatus>(CH.ON_HOTKEY_STATUS, callback),
+    showSettings: (callback) => subscribe<void>(CH.ON_SHOW_SETTINGS, callback)
   }
 }
 

@@ -35,7 +35,8 @@ export const CH = {
   ON_CLIPPER_FRAME: 'on:clipperFrame',
   ON_ITEMS_CHANGED: 'on:itemsChanged',
   ON_SETTINGS_CHANGED: 'on:settingsChanged',
-  ON_HOTKEY_STATUS: 'on:hotkeyStatus'
+  ON_HOTKEY_STATUS: 'on:hotkeyStatus',
+  ON_SHOW_SETTINGS: 'on:showSettings'
 } as const
 
 export type Channel = (typeof CH)[keyof typeof CH]

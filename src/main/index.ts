@@ -5,8 +5,10 @@ import { CH } from '@shared/ipc/channels'
 import { createHotkeyManager } from './hotkey'
 import { broadcast } from './ipc/broadcast'
 import { registerIpc } from './ipc/register'
+import { installMenu, watchActivation } from './menu'
 import { applyLinuxCommandLineFlags } from './platform/linux-flags'
 import { registerCofferScheme, serveCofferScheme } from './protocol/coffer'
+import { isMac } from './platform/session'
 import { flushStore, loadStore, storeIntact } from './store/store'
 import { pruneOrphans } from './features/images/store'
 import { createTray, destroyTray } from './tray'
@@ -27,6 +29,17 @@ if (!app.requestSingleInstanceLock()) {
 
 function isForwardedAction(argv: string[]): boolean {
   return argv.includes('--stash') || argv.includes('--clip')
+}
+
+/*
+ * Launching at login should leave Coffer in the tray, not put a window in front
+ * of whatever the user opened their machine to do. Windows and Linux are told
+ * to pass --hidden; macOS ignores extra arguments on a login item entirely and
+ * reports the same fact its own way.
+ */
+function startedHidden(): boolean {
+  if (isMac()) return app.getLoginItemSettings().wasOpenedAtLogin
+  return process.argv.includes('--hidden')
 }
 
 async function boot(): Promise<void> {
@@ -59,6 +72,7 @@ async function boot(): Promise<void> {
     hotkeyStatus: () => hotkeys.status()
   })
 
+  installMenu()
   createTray()
   hotkeys.apply(store.settings)
   syncTheme(store.settings.theme)
@@ -80,8 +94,9 @@ async function boot(): Promise<void> {
   screen.on('display-removed', () => primeOverlays())
   screen.on('display-metrics-changed', () => primeOverlays())
 
-  if (!process.argv.includes('--hidden') && !isForwardedAction(process.argv)) showMainWindow()
+  if (!startedHidden() && !isForwardedAction(process.argv)) showMainWindow()
 
+  watchActivation()
   app.on('window-all-closed', () => undefined)
 
   if (process.argv.includes('--stash')) void stashSelection()
