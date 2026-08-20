@@ -11,13 +11,31 @@ let timer: NodeJS.Timeout | null = null
  * mid-session: this is a window you leave open beside your work, and an app
  * that interrupts that to talk about itself has misjudged what it is.
  *
- * Only where an update can actually be applied. A .deb belongs to the system
- * package manager and electron-updater cannot touch it, so on Linux this runs
- * for the AppImage alone — which is what the APPIMAGE variable identifies.
+ * An allow-list, not a deny-list, because the cost of getting this wrong is
+ * paid in the user's bandwidth. Only two packagings can actually apply an
+ * update:
+ *
+ *   Windows, through NSIS.
+ *   The Linux AppImage, which is what the APPIMAGE variable identifies. A .deb
+ *   belongs to apt and electron-updater cannot touch it.
+ *
+ * macOS is absent on purpose. Updating there means Squirrel.Mac, which verifies
+ * the bundle carries a Developer ID before it will do anything — and Coffer's
+ * macOS build is signed ad-hoc. The failure is not a clean refusal either: the
+ * signature is checked when the feed URL is set, and that happens only after
+ * the whole update has been downloaded. Left running, this would fetch a
+ * hundred-odd megabytes every six hours, log one warning, and wait forever on a
+ * promise nothing settles.
  */
+function canApplyUpdates(): boolean {
+  if (process.platform === 'win32') return true
+  if (process.platform === 'linux') return !!process.env['APPIMAGE']
+  return false
+}
+
 export function startUpdateChecks(): void {
   if (!app.isPackaged) return
-  if (process.platform === 'linux' && !process.env['APPIMAGE']) return
+  if (!canApplyUpdates()) return
 
   const { autoUpdater } = electronUpdater
   autoUpdater.autoDownload = true
