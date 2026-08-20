@@ -1,7 +1,8 @@
 import { clipboard } from 'electron'
-import { isLinux, isWayland } from '@main/platform/session'
+import { isLinux, isMac, isWayland } from '@main/platform/session'
+import { hasAccessibility } from '@main/platform/permissions'
 import { readClipboard, restoreClipboard, snapshotClipboard } from './clipboard'
-import { sendCopyKeystroke } from './copy-key'
+import { sendCopyKeystroke, sendCopyViaShell } from './copy-key'
 import type { Capture } from './types'
 
 export type { Capture } from './types'
@@ -26,11 +27,18 @@ async function readSelectionLinux(): Promise<Capture> {
 }
 
 async function readSelectionRoundTrip(): Promise<Capture> {
+  /* Checked before anything is touched, because the failure is invisible from
+     here otherwise. libuiohook declares hook_post_event as void and its darwin
+     backend discards what CGEventPost returns, so an ungranted keyTap reports
+     success, sends nothing, and leaves the clipboard cleared and the user
+     reading 'Nothing selected' forever. */
+  if (isMac() && !hasAccessibility()) return { ok: false, reason: 'no-permission' }
+
   const previous = snapshotClipboard()
 
   clipboard.clear()
 
-  if (!sendCopyKeystroke()) {
+  if (!(await sendCopy())) {
     restoreClipboard(previous)
     return { ok: false, reason: 'failed' }
   }
@@ -43,6 +51,10 @@ async function readSelectionRoundTrip(): Promise<Capture> {
   }
 
   return captured
+}
+
+async function sendCopy(): Promise<boolean> {
+  return sendCopyKeystroke() ? true : sendCopyViaShell()
 }
 
 async function waitForClipboard(): Promise<Capture> {

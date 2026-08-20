@@ -2,7 +2,7 @@ import { Notification } from 'electron'
 import { APP_NAME } from '@shared/constants'
 import { addImage, addItem } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
-import { readSelection } from '@main/features/selection-capture'
+import { readSelection, type Capture } from '@main/features/selection-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
 
 let running = false
@@ -39,9 +39,12 @@ export async function stashSelection(): Promise<void> {
   }
 }
 
-function reasonMessage(reason: 'empty' | 'failed' | 'unsupported'): string {
+function reasonMessage(reason: Exclude<Capture, { ok: true }>['reason']): string {
   if (reason === 'empty') return 'Nothing selected'
   if (reason === 'unsupported') return 'Selection capture is not available in this session'
+  if (reason === 'no-permission') {
+    return 'Coffer needs Accessibility access to copy from other apps'
+  }
   return 'Could not read the selection'
 }
 
