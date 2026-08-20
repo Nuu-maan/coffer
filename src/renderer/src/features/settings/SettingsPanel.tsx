@@ -30,6 +30,7 @@ export function SettingsPanel(): React.JSX.Element {
 
   const patch = patchSettings
 
+  const mac = platform?.platform === 'darwin'
   const doubleShiftAvailable = platform?.supportsDoubleShift ?? true
   const acceleratorsAvailable = platform?.supportsAccelerators ?? true
   const effectiveMode = doubleShiftAvailable ? settings.hotkeyMode : 'accelerator'
@@ -189,7 +190,7 @@ export function SettingsPanel(): React.JSX.Element {
 
           <Row
             label="Launch on login"
-            hint="Start Coffer in the tray when you sign in"
+            hint={`Start Coffer in the ${mac ? 'menu bar' : 'tray'} when you sign in`}
             htmlFor="launch"
             icon={<Power />}
           >
