@@ -63,11 +63,17 @@ mac:
     - '!node_modules/uiohook-napi/build/**'
     - '!node_modules/uiohook-napi/prebuilds/win32-*/**'
     - '!node_modules/uiohook-napi/prebuilds/linux-*/**'
-    # The D-Bus client and its tree exist for the Wayland portal. Both call
-    # sites are dynamic imports on a path macOS never takes, so leaving them
-    # out cannot break a load.
+    # The D-Bus client exists for the Wayland portal, and both of its call
+    # sites are dynamic imports on a path macOS never takes.
+    #
+    # Its transitive dependencies are deliberately NOT listed here. Naming them
+    # by hand is guesswork about a graph that changes underneath you: sax was on
+    # that list, and sax is also reached by electron-updater through
+    # builder-util-runtime, which the main bundle imports statically. Excluding
+    # it produced a macOS app that could not load its own main script — alive,
+    # silent, and showing an error dialog on a machine with nobody to see it.
+    # The whole tree is about 140KB of a 110MB download.
     - '!node_modules/@homebridge/dbus-native/**'
-    - '!node_modules/{event-stream,hexy,long,xml2js,xmlbuilder,sax}/**'
   extendInfo:
     NSAppleEventsUsageDescription: >-
       Coffer sends a Copy command to the app you are using so it can stash your
