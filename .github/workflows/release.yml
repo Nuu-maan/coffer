@@ -79,6 +79,21 @@ jobs:
         if: runner.os == 'macOS'
         run: bash scripts/check-mac-bundle.sh
 
+      # Runs the app on its own first. If it cannot start, the smoke test only
+      # ever reports a launch timeout, and what the process printed on its way
+      # to failing is the part worth reading.
+      - name: What the app says on startup
+        if: runner.os == 'macOS'
+        run: |
+          set +e
+          "release/mac-arm64/Coffer.app/Contents/MacOS/Coffer" --hidden > boot.log 2>&1 &
+          pid=$!
+          sleep 25
+          kill "$pid" 2>/dev/null
+          echo "── stdout and stderr ──"
+          cat boot.log
+          exit 0
+
       - name: Smoke test the packaged app
         if: runner.os == 'macOS'
         env:

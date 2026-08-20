@@ -39,7 +39,13 @@ if (!existsSync(APP)) {
 /* Deliberately not given a --user-data-dir: where Electron puts userData on a
    packaged macOS bundle is one of the things this run exists to find out, and
    overriding it would answer a question nobody asked. */
-const app = await electron.launch({ executablePath: APP, timeout: 60_000 })
+const app = await electron.launch({ executablePath: APP, timeout: 120_000 }).catch((error) => {
+  console.error(
+    'the app never became ready. The startup log from the step before this one is ' +
+      'where the reason will be, if it printed one.'
+  )
+  throw error
+})
 
 const pageErrors = []
 app.on('window', (page) => {

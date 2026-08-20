@@ -25,7 +25,14 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   applyLinuxCommandLineFlags()
   registerCofferScheme()
-  void boot()
+
+  /* Anything that escapes boot() leaves a process that is running, has a
+     debugger port, and will never show a window — which looks like a hang and
+     is impossible to diagnose from the outside. Say what happened and stop. */
+  boot().catch((error) => {
+    console.error('[app] failed to start', error)
+    app.exit(1)
+  })
 }
 
 function isForwardedAction(argv: string[]): boolean {
@@ -39,8 +46,16 @@ function isForwardedAction(argv: string[]): boolean {
  * reports the same fact its own way.
  */
 function startedHidden(): boolean {
-  if (isMac()) return app.getLoginItemSettings().wasOpenedAtLogin
-  return process.argv.includes('--hidden')
+  if (!isMac()) return process.argv.includes('--hidden')
+
+  // SMAppService throws rather than answering for a bundle it does not consider
+  // installed. Not knowing means showing the window, which is the safe way to
+  // be wrong.
+  try {
+    return app.getLoginItemSettings().wasOpenedAtLogin
+  } catch {
+    return false
+  }
 }
 
 async function boot(): Promise<void> {
