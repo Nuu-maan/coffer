@@ -79,9 +79,21 @@ jobs:
         if: runner.os == 'macOS'
         run: bash scripts/check-mac-bundle.sh
 
-      # Runs the app on its own first. If it cannot start, the smoke test only
-      # ever reports a launch timeout, and what the process printed on its way
-      # to failing is the part worth reading.
+      # The hardened runtime refuses to let anything attach to the process, and
+      # the smoke test drives the app through exactly that. Rather than weaken
+      # what users download, a throwaway copy is re-signed as debuggable. It is
+      # the same bits otherwise, and it never leaves the runner.
+      - name: Sign a debuggable copy to test
+        if: runner.os == 'macOS'
+        run: |
+          rm -rf /tmp/CofferTest.app
+          cp -R release/mac-arm64/Coffer.app /tmp/CofferTest.app
+          codesign --force --deep --sign -             --options runtime             --entitlements build/entitlements.test.plist             /tmp/CofferTest.app
+          codesign -d --entitlements :- /tmp/CofferTest.app 2>/dev/null | grep -q get-task-allow             && echo "the copy is debuggable"             || { echo "re-signing did not take"; exit 1; }
+
+      # Runs on its own first. A launch timeout says only that nothing became
+      # ready; what the process printed on the way there is the part worth
+      # reading, and whether it was even still alive is worth knowing too.
       - name: What the app says on startup
         if: runner.os == 'macOS'
         env:
@@ -89,12 +101,19 @@ jobs:
           ELECTRON_ENABLE_LOGGING: '1'
         run: |
           set +e
-          "release/mac-arm64/Coffer.app/Contents/MacOS/Coffer" > boot.log 2>&1 &
+          /tmp/CofferTest.app/Contents/MacOS/Coffer --remote-debugging-port=9223 > boot.log 2>&1 &
           pid=$!
-          sleep 25
+          sleep 20
+          if kill -0 "$pid" 2>/dev/null; then
+            echo "still running after 20s"
+          else
+            echo "exited on its own"
+          fi
           kill "$pid" 2>/dev/null
-          echo "── stdout and stderr ──"
+          echo "── $(wc -c < boot.log) bytes of output ──"
           cat boot.log
+          echo "── does Chromium open a debugging port? ──"
+          grep 'DevTools listening' boot.log || echo "no, it never printed one"
           exit 0
 
       - name: Smoke test the packaged app
@@ -106,7 +125,7 @@ jobs:
           DEBUG: 'pw:electron*,pw:browser*'
         run: |
           npm i --no-save playwright-core
-          node scripts/smoke-mac.mjs release/mac-arm64/Coffer.app/Contents/MacOS/Coffer
+          node scripts/smoke-mac.mjs /tmp/CofferTest.app/Contents/MacOS/Coffer
 
       - name: Keep what the smoke test saw
         if: runner.os == 'macOS' && always()

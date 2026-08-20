@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- V8 compiles as it runs, which the hardened runtime forbids by default. -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+
+  <!-- uiohook-napi is a prebuilt binary carrying its own signature, not one
+       chained to this app's. Library validation would refuse to load it. -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+
+  <!-- The fallback path for the copy keystroke drives System Events through
+       osascript. Under the hardened runtime that is an Apple event. -->
+  <key>com.apple.security.automation.apple-events</key>
+  <true/>
+
+  <!-- CI only, and never in a shipped build. The hardened runtime refuses to
+       let anything attach to the process, which includes the remote debugging
+       port the smoke test drives it through. A throwaway copy of the app is
+       re-signed with this so it can be inspected; the artifact users download
+       is signed with the file next to this one and cannot be. -->
+  <key>com.apple.security.get-task-allow</key>
+  <true/>
+</dict>
+</plist>
