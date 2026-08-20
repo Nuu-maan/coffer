@@ -35,6 +35,12 @@ if (!app.requestSingleInstanceLock()) {
   })
 }
 
+/* Startup is the one place a failure leaves nothing behind to look at: no
+   window, no log, and a process that is still running. Off unless asked for. */
+const trace = process.env['COFFER_TRACE']
+  ? (step: string): void => console.log(`[boot] ${step}`)
+  : (): void => undefined
+
 function isForwardedAction(argv: string[]): boolean {
   return argv.includes('--stash') || argv.includes('--clip')
 }
@@ -59,7 +65,9 @@ function startedHidden(): boolean {
 }
 
 async function boot(): Promise<void> {
+  trace('start')
   const store = await loadStore()
+  trace('store loaded')
 
   const hotkeys = createHotkeyManager(
     {
@@ -77,7 +85,9 @@ async function boot(): Promise<void> {
     showMainWindow()
   })
 
+  trace('waiting for ready')
   await app.whenReady()
+  trace('ready')
 
   electronApp.setAppUserModelId(APP_ID)
   app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window))
@@ -89,10 +99,14 @@ async function boot(): Promise<void> {
   })
 
   installMenu()
+  trace('menu installed')
   createTray()
+  trace('tray created')
   hotkeys.apply(store.settings)
+  trace('hotkeys applied')
   syncTheme(store.settings.theme)
   syncLoginItem(store.settings.launchOnLogin)
+  trace('login item synced')
 
   if (storeIntact()) {
     const kept = new Set(
@@ -106,6 +120,7 @@ async function boot(): Promise<void> {
   startUpdateChecks()
 
   primeOverlays()
+  trace('overlays primed')
   screen.on('display-added', () => primeOverlays())
   screen.on('display-removed', () => primeOverlays())
   screen.on('display-metrics-changed', () => primeOverlays())
@@ -115,6 +130,7 @@ async function boot(): Promise<void> {
   if (!startedHidden() && !isForwardedAction(process.argv)) showMainWindow()
   else setWindowVisible(false)
 
+  trace('window decided')
   watchActivation()
   app.on('window-all-closed', () => undefined)
 
@@ -142,4 +158,6 @@ async function boot(): Promise<void> {
       app.exit(0)
     }
   })
+
+  trace('booted')
 }

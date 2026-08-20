@@ -84,9 +84,12 @@ jobs:
       # to failing is the part worth reading.
       - name: What the app says on startup
         if: runner.os == 'macOS'
+        env:
+          COFFER_TRACE: '1'
+          ELECTRON_ENABLE_LOGGING: '1'
         run: |
           set +e
-          "release/mac-arm64/Coffer.app/Contents/MacOS/Coffer" --hidden > boot.log 2>&1 &
+          "release/mac-arm64/Coffer.app/Contents/MacOS/Coffer" > boot.log 2>&1 &
           pid=$!
           sleep 25
           kill "$pid" 2>/dev/null
@@ -98,6 +101,9 @@ jobs:
         if: runner.os == 'macOS'
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+          COFFER_TRACE: '1'
+          # Says what Playwright is waiting for, which a launch timeout does not.
+          DEBUG: 'pw:electron*,pw:browser*'
         run: |
           npm i --no-save playwright-core
           node scripts/smoke-mac.mjs release/mac-arm64/Coffer.app/Contents/MacOS/Coffer
