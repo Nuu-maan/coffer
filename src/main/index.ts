@@ -20,6 +20,12 @@ import { startClip } from './features/clipper'
 import { syncLoginItem, syncTheme } from './features/settings/service'
 import { startUpdateChecks, stopUpdateChecks } from './features/updates'
 
+/* Startup is the one place a failure leaves nothing behind to look at: no
+   window, no log, and a process that is still running. Off unless asked for. */
+const trace = process.env['COFFER_TRACE']
+  ? (step: string): void => console.log(`[boot] ${step}`)
+  : (): void => undefined
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -34,12 +40,6 @@ if (!app.requestSingleInstanceLock()) {
     app.exit(1)
   })
 }
-
-/* Startup is the one place a failure leaves nothing behind to look at: no
-   window, no log, and a process that is still running. Off unless asked for. */
-const trace = process.env['COFFER_TRACE']
-  ? (step: string): void => console.log(`[boot] ${step}`)
-  : (): void => undefined
 
 function isForwardedAction(argv: string[]): boolean {
   return argv.includes('--stash') || argv.includes('--clip')
