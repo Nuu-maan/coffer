@@ -8,6 +8,7 @@ import { registerIpc } from './ipc/register'
 import { installMenu, watchActivation } from './menu'
 import { applyLinuxCommandLineFlags } from './platform/linux-flags'
 import { registerCofferScheme, serveCofferScheme } from './protocol/coffer'
+import { setWindowVisible } from './platform/activation'
 import { isMac } from './platform/session'
 import { flushStore, loadStore, storeIntact } from './store/store'
 import { pruneOrphans } from './features/images/store'
@@ -94,7 +95,10 @@ async function boot(): Promise<void> {
   screen.on('display-removed', () => primeOverlays())
   screen.on('display-metrics-changed', () => primeOverlays())
 
+  // Launched into the menu bar rather than onto the screen: no window, so on
+  // macOS no Dock tile either until there is one.
   if (!startedHidden() && !isForwardedAction(process.argv)) showMainWindow()
+  else setWindowVisible(false)
 
   watchActivation()
   app.on('window-all-closed', () => undefined)

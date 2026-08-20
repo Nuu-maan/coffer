@@ -3,6 +3,7 @@ import { BrowserWindow, nativeTheme, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { HEADER_HEIGHT, MAIN_HEIGHT, MAIN_WIDTH } from '@shared/constants'
 import { getStore } from '@main/store/store'
+import { setWindowVisible } from '@main/platform/activation'
 import { mainWindowOrigin } from './positioning'
 
 let mainWindow: BrowserWindow | null = null
@@ -50,6 +51,7 @@ export function createMainWindow(): BrowserWindow {
   window.on('ready-to-show', () => window.show())
   window.on('closed', () => {
     mainWindow = null
+    setWindowVisible(false)
   })
 
   window.webContents.setWindowOpenHandler(({ url }) => {
@@ -69,6 +71,7 @@ export function createMainWindow(): BrowserWindow {
 
 export function showMainWindow(): void {
   const window = mainWindow ?? createMainWindow()
+  setWindowVisible(true)
   if (window.isMinimized()) window.restore()
   window.show()
   window.focus()
@@ -76,4 +79,5 @@ export function showMainWindow(): void {
 
 export function hideMainWindow(): void {
   mainWindow?.hide()
+  setWindowVisible(false)
 }

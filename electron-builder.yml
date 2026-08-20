@@ -7,6 +7,10 @@ files:
   - out/**
   - resources/**
   - package.json
+  # The marks and the app icons are build inputs. Only the tray bitmaps are
+  # read at runtime, so the rest has no reason to be inside the app.
+  - '!resources/icon*.png'
+  - '!resources/logo*.svg'
 asarUnpack:
   - '**/*.node'
 afterPack: build/after-pack.mjs
@@ -27,6 +31,55 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   shortcutName: Coffer
+mac:
+  icon: resources/icon-mac.png
+  category: public.app-category.productivity
+  # Measured from what the shipped uiohook prebuild declares, not assumed. CI
+  # reads it back off the binary in the bundle and fails if the two drift.
+  minimumSystemVersion: '13.5.0'
+  darkModeSupport: true
+  # Ad-hoc. Apple Silicon refuses to run a bundle with no signature at all, and
+  # electron-builder does not fall back to ad-hoc on its own — with no identity
+  # it skips signing entirely. Swapping this for a Developer ID is the only
+  # change needed here if the app is ever notarised.
+  identity: '-'
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  notarize: false
+  # A stale build/Release wins over prebuilds/ in node-gyp-build's own resolution
+  # order, so a binary left behind by a rebuild would be loaded in preference to
+  # the right one. The foreign prebuilds matter for a different reason: the
+  # signer walks the bundle looking for binaries rather than for extensions, and
+  # hands every ELF and PE file it finds to codesign.
+  files:
+    - '!node_modules/uiohook-napi/build/**'
+    - '!node_modules/uiohook-napi/prebuilds/win32-*/**'
+    - '!node_modules/uiohook-napi/prebuilds/linux-*/**'
+  extendInfo:
+    NSAppleEventsUsageDescription: >-
+      Coffer sends a Copy command to the app you are using so it can stash your
+      selection.
+  # Not LSUIElement. It would hide the Dock icon from launch, and an app with no
+  # menu bar has no NSMenu key equivalents — which on macOS is how ⌘C and ⌘V
+  # reach a text field at all. The policy is switched at runtime instead.
+  publish:
+    - provider: github
+      owner: Nuu-maan
+      repo: coffer
+      releaseType: draft
+      # Squirrel.Mac will not update a bundle without a Developer ID, so there
+      # is no point advertising a channel nothing can consume.
+      publishAutoUpdate: false
+  artifactName: ${productName}-${arch}.${ext}
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+dmg:
+  artifactName: ${productName}-${arch}.${ext}
 linux:
   icon: resources/icon.png
   category: Utility
