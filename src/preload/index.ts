@@ -9,7 +9,7 @@ import type {
   ReorderInput,
   Unsubscribe
 } from '@shared/ipc/contract'
-import type { HotkeyStatus, Item, Settings } from '@shared/types/item'
+import type { HotkeyStatus, Item, PermissionKind, Settings } from '@shared/types/item'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): Unsubscribe {
   const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
@@ -48,6 +48,10 @@ const api: CofferApi = {
   },
   platform: {
     info: () => ipcRenderer.invoke(CH.PLATFORM_INFO)
+  },
+  permissions: {
+    status: () => ipcRenderer.invoke(CH.PERMISSIONS_STATUS),
+    request: (kind: PermissionKind) => ipcRenderer.invoke(CH.PERMISSIONS_REQUEST, kind)
   },
   hotkeys: {
     status: () => ipcRenderer.invoke(CH.HOTKEY_STATUS)

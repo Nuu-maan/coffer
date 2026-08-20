@@ -23,6 +23,8 @@ export const CH = {
   CLIPPER_PAINTED: 'clipper:painted',
 
   PLATFORM_INFO: 'platform:info',
+  PERMISSIONS_STATUS: 'permissions:status',
+  PERMISSIONS_REQUEST: 'permissions:request',
   HOTKEY_STATUS: 'hotkey:status',
 
   SETTINGS_GET: 'settings:get',

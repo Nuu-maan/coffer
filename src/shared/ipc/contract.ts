@@ -3,6 +3,8 @@ import type {
   HotkeyStatus,
   Item,
   ItemSource,
+  PermissionKind,
+  Permissions,
   PlatformInfo,
   Settings
 } from '../types/item'
@@ -70,6 +72,12 @@ export interface CofferApi {
   }
   platform: {
     info(): Promise<PlatformInfo>
+  }
+  permissions: {
+    status(): Promise<Permissions>
+    /* Raises the system's own prompt where there is one, then opens the
+       Privacy pane if the answer is still no. */
+    request(kind: PermissionKind): Promise<Permissions>
   }
   hotkeys: {
     status(): Promise<HotkeyStatus>

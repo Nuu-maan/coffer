@@ -71,6 +71,21 @@ export type HotkeyStatus = {
   portalShortcuts: PortalShortcut[]
 }
 
+/** What macOS has been asked for, and what it said. Everywhere else: granted. */
+export type PermissionKind = 'accessibility' | 'screen'
+
+export type ScreenAccess = 'granted' | 'denied' | 'restricted' | 'not-determined' | 'unknown'
+
+export type Permissions = {
+  /** False only on macOS, and only until the user grants it. */
+  accessibility: boolean
+  screen: ScreenAccess
+  /* Both reads are cached for the life of the process, so a grant made while
+     Coffer is running does not show up until it restarts. The UI has to say
+     that rather than invite another attempt. */
+  needsRestart: boolean
+}
+
 export type ThemeChoice = 'system' | 'light' | 'dark'
 
 export type Settings = {
