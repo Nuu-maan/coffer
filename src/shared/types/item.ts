@@ -106,8 +106,27 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system'
 }
 
-export const EMPTY_STORE: Store = {
-  version: 2,
-  items: [],
-  settings: DEFAULT_SETTINGS
+/*
+ * Electron's Control is the Control key itself, not ⌘, so the defaults above
+ * reach macOS as ^⌥Space and ^⇧Space — and ^Space and ^⌥Space are how macOS
+ * switches input source out of the box, enabled on a clean install. Registering
+ * over them fails silently, which reads as the feature being broken.
+ *
+ * Control+Command is the one prefix macOS leaves almost entirely alone; it
+ * reserves ^⌘Space for the Character Viewer, ^⌘F for full screen, ^⌘Q for the
+ * lock screen and ^⌘D for looking a word up, and none of those are these.
+ */
+const MAC_SETTINGS: Partial<Settings> = {
+  accelerator: 'Control+Command+S',
+  clipperAccelerator: 'Control+Command+R'
+}
+
+/* Takes the platform rather than reading it, so this module stays loadable in
+   the renderer, where there is no process to ask. */
+export function defaultSettings(platform: string): Settings {
+  return platform === 'darwin' ? { ...DEFAULT_SETTINGS, ...MAC_SETTINGS } : DEFAULT_SETTINGS
+}
+
+export function emptyStore(platform: string): Store {
+  return { version: 2, items: [], settings: defaultSettings(platform) }
 }

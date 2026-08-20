@@ -1,7 +1,7 @@
-import { DEFAULT_SETTINGS, EMPTY_STORE, type Item, type Store } from '@shared/types/item'
+import { defaultSettings, emptyStore, type Item, type Store } from '@shared/types/item'
 
 export function migrate(raw: unknown): Store {
-  if (!isRecord(raw)) return { ...EMPTY_STORE, items: [] }
+  if (!isRecord(raw)) return emptyStore(process.platform)
 
   const items = Array.isArray(raw.items)
     ? raw.items.map(toItem).filter((item): item is Item => item !== null)
@@ -11,7 +11,7 @@ export function migrate(raw: unknown): Store {
   return {
     version: 2,
     items,
-    settings: { ...DEFAULT_SETTINGS, ...settings }
+    settings: { ...defaultSettings(process.platform), ...settings }
   }
 }
 
