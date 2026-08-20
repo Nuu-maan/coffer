@@ -29,6 +29,10 @@ export function openClipForm(draft: ClipDraft): void {
     alwaysOnTop: true,
     transparent: true,
     backgroundColor: '#00000000',
+    /* The form draws its own rounded card and its own shadow. A system shadow
+       on a transparent window traces the square frame instead of the card,
+       which on macOS reads as a grey box behind it. */
+    hasShadow: false,
     webPreferences: {
       preload: preloadPath(),
       sandbox: false,

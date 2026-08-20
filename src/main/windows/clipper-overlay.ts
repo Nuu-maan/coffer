@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, type Rectangle } from 'electron'
+import { BrowserWindow, app, screen, type Rectangle } from 'electron'
 import { CH } from '@shared/ipc/channels'
 import type { OverlayFrame } from '@shared/ipc/contract'
 import type { DisplayFrame } from '@main/features/clipper/capture'
@@ -61,6 +61,16 @@ function create(displayId: number, bounds: Rectangle): Overlay {
     acceptFirstMouse: true,
     alwaysOnTop: true,
     ...(process.platform === 'win32' ? { type: 'toolbar' as const } : {}),
+    /* AppKit shrinks any frame that would cover the menu bar unless a window
+       opts out of that constraint, and Electron only bypasses the override when
+       this is set. Without it the overlay stops short of the top of the screen
+       and the frozen frame no longer lines up with what is behind it.
+
+       Not type:'panel': that forces a non-activating panel, so the app never
+       becomes active and macOS ignores the crosshair cursor, and it joins every
+       Space, so the frozen frame follows the user somewhere it does not
+       describe. */
+    ...(process.platform === 'darwin' ? { enableLargerThanScreen: true } : {}),
     webPreferences: {
       preload: preloadPath(),
       sandbox: false,
@@ -71,7 +81,10 @@ function create(displayId: number, bounds: Rectangle): Overlay {
   })
 
   window.setAlwaysOnTop(true, 'screen-saver')
-  window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+  window.setVisibleOnAllWorkspaces(true, {
+    visibleOnFullScreen: true,
+    skipTransformProcessType: true
+  })
   window.on('closed', () => overlays.delete(displayId))
 
   loadPage(window, 'clipper.html')
@@ -137,7 +150,15 @@ function reveal(): void {
   }
 
   const primary = overlays.get(nearest) ?? overlays.values().next().value
-  if (primary && !primary.window.isDestroyed()) primary.window.focus()
+  if (!primary || primary.window.isDestroyed()) return
+
+  /* Focusing a window on macOS does not activate the app — Electron asks AppKit
+     not to steal from other apps — and an inactive app's cursor requests are
+     ignored, so the region select would show an arrow instead of a crosshair.
+     Clip is a deliberate, user-initiated takeover of the screen, which is one
+     of the few times stealing focus is the correct thing to do. */
+  if (process.platform === 'darwin') app.focus({ steal: true })
+  primary.window.focus()
 }
 
 export function overlaysOpen(): boolean {
