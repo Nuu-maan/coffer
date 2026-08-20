@@ -196,6 +196,14 @@ export function SettingsPanel(): React.JSX.Element {
           </section>
         )}
 
+        {mac && (
+          <Note>
+            macOS support is still early. It is built and tested on every change,
+            but it has not been through a real Mac in daily use — if something
+            here behaves oddly, that is worth reporting.
+          </Note>
+        )}
+
         {mac && access && (
           <Group title="Permissions">
             <Row
