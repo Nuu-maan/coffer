@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { app } from 'electron'
-import { EMPTY_STORE, type Settings, type Store } from '@shared/types/item'
+import { emptyStore, type Settings, type Store } from '@shared/types/item'
 import { STORE_FILE } from '@shared/constants'
 import { atomicWriteJson } from './atomic-write'
 import { migrate } from './migrations'
 
 const SAVE_DEBOUNCE_MS = 250
 
-let state: Store = structuredClone(EMPTY_STORE)
+let state: Store = emptyStore(process.platform)
 let saveTimer: NodeJS.Timeout | null = null
 let pendingSave: Promise<void> = Promise.resolve()
 
@@ -32,7 +32,7 @@ export async function loadStore(): Promise<Store> {
     state = migrate(JSON.parse(raw))
     intact = true
   } catch (error) {
-    state = structuredClone(EMPTY_STORE)
+    state = emptyStore(process.platform)
     intact = (error as NodeJS.ErrnoException).code === 'ENOENT'
   }
   return state

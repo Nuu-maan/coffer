@@ -2,7 +2,7 @@ import { app, nativeTheme } from 'electron'
 import type { Settings, ThemeChoice } from '@shared/types/item'
 import { getStore, setSettings } from '@main/store/store'
 import { setLinuxAutostart } from '@main/platform/autostart'
-import { isLinux } from '@main/platform/session'
+import { isLinux, isMac } from '@main/platform/session'
 import { getMainWindow } from '@main/windows/main-window'
 
 export function getSettings(): Settings {
@@ -44,6 +44,20 @@ export function syncLoginItem(enabled: boolean): void {
     void setLinuxAutostart(enabled).catch((error) => {
       console.error('[settings] could not write autostart entry', error)
     })
+    return
+  }
+
+  /* args and openAsHidden are Windows-only — macOS ignores both, and Electron
+     routes macOS 13 and later through SMAppService, which can land the app in
+     'requires-approval' with the user still to enable it in System Settings.
+     Reporting that as success is how a login item silently never happens. */
+  if (isMac()) {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+
+    const { status } = app.getLoginItemSettings()
+    if (enabled && status === 'requires-approval') {
+      console.warn('[settings] the login item needs approving in System Settings')
+    }
     return
   }
 

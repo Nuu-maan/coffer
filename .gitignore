@@ -12,3 +12,6 @@ release/
 .claude/
 skills-lock.json
 TODO
+
+# What the macOS smoke test saw. CI keeps it as an artifact.
+smoke-mac.png

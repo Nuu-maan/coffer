@@ -109,7 +109,11 @@ export function ItemRow({
         data-slot="item-row"
         data-selected={selected || undefined}
         onMouseDown={(event) =>
-          onSelect({ shift: event.shiftKey, toggle: event.metaKey || event.ctrlKey })
+          /* Ctrl-click is how macOS opens a context menu, and this row is a
+             context menu trigger — so accepting it as the multi-select modifier
+             there would add to the selection the menu is about to act on. ⌘ is
+             the modifier on a Mac anyway. */
+          onSelect({ shift: event.shiftKey, toggle: mac ? event.metaKey : event.ctrlKey })
         }
         style={{ position: 'relative' }}
         className={cn(

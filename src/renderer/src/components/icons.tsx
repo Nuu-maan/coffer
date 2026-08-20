@@ -9,6 +9,7 @@ import {
   Copy as CopyIcon,
   Crop as CropIcon,
   DotsSixVertical,
+  HandPointing,
   ImageSquare,
   Info as InfoGlyph,
   Keyboard as KeyboardIcon,
@@ -56,6 +57,7 @@ export const ChevronUpIcon = icon(CaretUp, 'bold')
 export const Copy = icon(CopyIcon)
 export const Crop = icon(CropIcon)
 export const GripVertical = icon(DotsSixVertical, 'bold')
+export const Hand = icon(HandPointing)
 export const ImagePlus = icon(ImageSquare)
 export const Info = icon(InfoGlyph)
 export const Keyboard = icon(KeyboardIcon)

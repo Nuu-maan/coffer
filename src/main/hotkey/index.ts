@@ -2,7 +2,7 @@ import type { HotkeyStatus, Settings } from '@shared/types/item'
 import { platformInfo } from '@main/platform/session'
 import { ensureDesktopEntry } from '@main/platform/desktop-entry'
 import { startAcceleratorHotkey, type FallbackHandle } from './fallback'
-import { startDoubleShiftHook, type HookHandle } from './hook'
+import { AX_DENIED, startDoubleShiftHook, type HookHandle } from './hook'
 import { bindPortalShortcuts, type PortalHandle } from './portal'
 import { toPortalTrigger } from './trigger'
 
@@ -39,6 +39,7 @@ export function createHotkeyManager(
   let portal: PortalHandle | null = null
   let current: HotkeyStatus = IDLE
   let appliedKey: string | null = null
+  let deniedAccessibility = false
 
   // Portal binding is asynchronous, so a settings change that lands mid-flight
   // must be able to discard the work it started.
@@ -124,8 +125,10 @@ export function createHotkeyManager(
     publish({
       mode: stashAccelerator ? 'accelerator' : 'none',
       error: refused.length
-        ? `Another application already owns ${refused.join(' and ')}.`
-        : null,
+        ? `The system or another application already owns ${refused.join(' and ')}.`
+        : deniedAccessibility
+          ? 'Double-tap Shift needs Accessibility access. Coffer is using the keyboard shortcut instead.'
+          : null,
       portalShortcuts: []
     })
   }
@@ -137,6 +140,7 @@ export function createHotkeyManager(
     const next = bindingKey(settings)
     if (next === appliedKey) return
     appliedKey = next
+    deniedAccessibility = false
 
     teardown()
 
@@ -162,6 +166,7 @@ export function createHotkeyManager(
         return
       } catch (error) {
         console.error('[hotkey] the low level hook is unavailable, falling back', error)
+        deniedAccessibility = (error as NodeJS.ErrnoException).code === AX_DENIED
       }
     }
 

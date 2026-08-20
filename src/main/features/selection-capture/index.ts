@@ -1,12 +1,17 @@
 import { clipboard } from 'electron'
-import { isLinux, isWayland } from '@main/platform/session'
+import { isLinux, isMac, isWayland } from '@main/platform/session'
+import { hasAccessibility } from '@main/platform/permissions'
 import { readClipboard, restoreClipboard, snapshotClipboard } from './clipboard'
-import { sendCopyKeystroke } from './copy-key'
+import { sendCopyKeystroke, sendCopyViaShell } from './copy-key'
 import type { Capture } from './types'
 
 export type { Capture } from './types'
 
-const SETTLE_POLL_MS = 25
+/* Finer than it needs to be on Windows, and about right for the macOS
+   pasteboard, which settles in single-digit milliseconds after a synthesised
+   ⌘C. The cost of polling more often is nothing; the cost of polling less
+   often is latency on every stash. */
+const SETTLE_POLL_MS = 10
 const SETTLE_TIMEOUT_MS = 500
 
 export async function readSelection(): Promise<Capture> {
@@ -26,23 +31,38 @@ async function readSelectionLinux(): Promise<Capture> {
 }
 
 async function readSelectionRoundTrip(): Promise<Capture> {
+  /* Checked before anything is touched, because the failure is invisible from
+     here otherwise. libuiohook declares hook_post_event as void and its darwin
+     backend discards what CGEventPost returns, so an ungranted keyTap reports
+     success, sends nothing, and leaves the clipboard cleared and the user
+     reading 'Nothing selected' forever. */
+  if (isMac() && !hasAccessibility()) return { ok: false, reason: 'no-permission' }
+
   const previous = snapshotClipboard()
 
   clipboard.clear()
 
-  if (!sendCopyKeystroke()) {
+  if (!(await sendCopy())) {
     restoreClipboard(previous)
     return { ok: false, reason: 'failed' }
   }
 
   const captured = await waitForClipboard()
+  if (captured.ok) return captured
 
-  if (!captured.ok) {
-    restoreClipboard(previous)
-    return { ok: false, reason: 'empty' }
-  }
+  /* Restoring is the destructive half of this, so it only happens if the
+     clipboard is still the empty one we left. An app slower than the timeout
+     writes after we have given up, and putting the old contents back over that
+     would throw away the copy the user actually asked for. */
+  const late = readClipboard('clipboard')
+  if (late.ok) return late
 
-  return captured
+  restoreClipboard(previous)
+  return { ok: false, reason: 'empty' }
+}
+
+async function sendCopy(): Promise<boolean> {
+  return sendCopyKeystroke() ? true : sendCopyViaShell()
 }
 
 async function waitForClipboard(): Promise<Capture> {

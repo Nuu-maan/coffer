@@ -41,7 +41,7 @@ export function itemLabel(item: Item): string {
 
 export type HotkeyMode = 'double-shift' | 'accelerator'
 
-export type SessionKind = 'windows' | 'x11' | 'wayland' | 'unknown'
+export type SessionKind = 'windows' | 'macos' | 'x11' | 'wayland' | 'unknown'
 
 export type PlatformInfo = {
   platform: string
@@ -69,6 +69,21 @@ export type HotkeyStatus = {
   /** Set when the accelerator could not be claimed, or the portal turned us down. */
   error: string | null
   portalShortcuts: PortalShortcut[]
+}
+
+/** What macOS has been asked for, and what it said. Everywhere else: granted. */
+export type PermissionKind = 'accessibility' | 'screen'
+
+export type ScreenAccess = 'granted' | 'denied' | 'restricted' | 'not-determined' | 'unknown'
+
+export type Permissions = {
+  /** False only on macOS, and only until the user grants it. */
+  accessibility: boolean
+  screen: ScreenAccess
+  /* Both reads are cached for the life of the process, so a grant made while
+     Coffer is running does not show up until it restarts. The UI has to say
+     that rather than invite another attempt. */
+  needsRestart: boolean
 }
 
 export type ThemeChoice = 'system' | 'light' | 'dark'
@@ -106,8 +121,27 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system'
 }
 
-export const EMPTY_STORE: Store = {
-  version: 2,
-  items: [],
-  settings: DEFAULT_SETTINGS
+/*
+ * Electron's Control is the Control key itself, not ⌘, so the defaults above
+ * reach macOS as ^⌥Space and ^⇧Space — and ^Space and ^⌥Space are how macOS
+ * switches input source out of the box, enabled on a clean install. Registering
+ * over them fails silently, which reads as the feature being broken.
+ *
+ * Control+Command is the one prefix macOS leaves almost entirely alone; it
+ * reserves ^⌘Space for the Character Viewer, ^⌘F for full screen, ^⌘Q for the
+ * lock screen and ^⌘D for looking a word up, and none of those are these.
+ */
+const MAC_SETTINGS: Partial<Settings> = {
+  accelerator: 'Control+Command+S',
+  clipperAccelerator: 'Control+Command+R'
+}
+
+/* Takes the platform rather than reading it, so this module stays loadable in
+   the renderer, where there is no process to ask. */
+export function defaultSettings(platform: string): Settings {
+  return platform === 'darwin' ? { ...DEFAULT_SETTINGS, ...MAC_SETTINGS } : DEFAULT_SETTINGS
+}
+
+export function emptyStore(platform: string): Store {
+  return { version: 2, items: [], settings: defaultSettings(platform) }
 }

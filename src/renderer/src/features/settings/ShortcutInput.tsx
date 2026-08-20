@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { format, isReservedByMacOS, parts } from '@/lib/accelerator'
 import { usePlatform } from '@/hooks/use-platform'
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.Element {
   const [recording, setRecording] = useState(false)
+  const [rejected, setRejected] = useState<string | null>(null)
   const mac = usePlatform()?.platform === 'darwin'
 
   useEffect(() => {
@@ -26,8 +28,16 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
         return
       }
 
-      const accelerator = toAccelerator(event)
+      const accelerator = toAccelerator(event, mac)
       if (!accelerator) return
+
+      /* Registering over one of these fails silently, and the user is left with
+         a shortcut that looks bound and never fires. Better to ignore the
+         keystroke and let them keep pressing. */
+      if (mac && isReservedByMacOS(accelerator)) {
+        setRejected(accelerator)
+        return
+      }
 
       onChange(accelerator)
       setRecording(false)
@@ -35,7 +45,11 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
 
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [recording, onChange])
+  }, [recording, onChange, mac])
+
+  useEffect(() => {
+    if (!recording) setRejected(null)
+  }, [recording])
 
   return (
     <Button
@@ -56,7 +70,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
             transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="size-1.5 rounded-full bg-tint"
           />
-          Press keys…
+          {rejected ? `${format(rejected, mac)} is taken by macOS` : 'Press keys…'}
         </>
       ) : (
         <span className="flex items-center gap-1">
@@ -74,7 +88,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
   )
 }
 
-function toAccelerator(event: KeyboardEvent): string | null {
+function toAccelerator(event: KeyboardEvent, mac: boolean): string | null {
   const key = keyName(event.code)
   if (!key) return null
 
@@ -82,7 +96,8 @@ function toAccelerator(event: KeyboardEvent): string | null {
   if (event.ctrlKey) modifiers.push('Control')
   if (event.altKey) modifiers.push('Alt')
   if (event.shiftKey) modifiers.push('Shift')
-  if (event.metaKey) modifiers.push('Super')
+  // Electron takes either for the same key; macOS calls it Command.
+  if (event.metaKey) modifiers.push(mac ? 'Command' : 'Super')
 
   const isFunctionKey = /^F\d{1,2}$/.test(key)
   if (modifiers.length === 0 && !isFunctionKey) return null
@@ -123,18 +138,4 @@ function keyName(code: string): string | null {
   }
 
   return named[code] ?? null
-}
-
-/* The Mac glyphs are Mac keys. Off macOS the same modifier is a differently
-   named, differently placed key, and printing ⌘ for it names a key the
-   keyboard does not have. */
-function parts(accelerator: string, mac: boolean): string[] {
-  return accelerator.split('+').map((part) => {
-    if (part === 'Control') return mac ? '⌃' : 'Ctrl'
-    if (part === 'Super') return mac ? '⌘' : 'Super'
-    if (part === 'Shift') return mac ? '⇧' : 'Shift'
-    if (part === 'Alt') return mac ? '⌥' : 'Alt'
-    if (part === 'Return') return mac ? '⏎' : 'Enter'
-    return part
-  })
 }

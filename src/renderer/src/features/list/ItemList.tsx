@@ -10,12 +10,15 @@ import { ease } from '@/lib/motion'
 import { useImageIntake } from '@/hooks/use-image-intake'
 import { useItems } from '@/hooks/use-items'
 import { usePlatform } from '@/hooks/use-platform'
+import { useSettings } from '@/hooks/use-settings'
+import { format } from '@/lib/accelerator'
 import { ItemRow } from './ItemRow'
 import { Composer } from './Composer'
 
 export function ItemList(): React.JSX.Element {
   const { items, addText, addImage, toggle, update, remove, clearDone, move } = useItems()
   const platform = usePlatform()
+  const settings = useSettings()
   const { dragging, handlers } = useImageIntake(addImage)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set())
   /* Where a shift-range measures from. Set by every plain click and every
@@ -199,7 +202,15 @@ export function ItemList(): React.JSX.Element {
   }
 
   const doneCount = ordered.filter((item) => item.done).length
-  const trigger = platform?.supportsDoubleShift ? 'tap Shift twice' : 'press Ctrl+Shift+Space'
+
+  /* Read from the live setting rather than written down. The literal here
+     named the clipper's shortcut for an instruction about stashing, went stale
+     the moment either was rebound, and printed a key macOS does not use. */
+  const trigger = platform?.supportsDoubleShift
+    ? 'tap Shift twice'
+    : settings
+      ? `press ${format(settings.accelerator, platform?.platform === 'darwin')}`
+      : 'use your stash shortcut'
 
   return (
     <div className="relative flex h-full min-h-0 flex-col" {...handlers}>
