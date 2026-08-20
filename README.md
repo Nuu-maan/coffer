@@ -9,7 +9,7 @@
 Grab anything off your screen, keep it in one list, and work it down.
 
 [![License](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-black)](#install)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-black)](#install)
 [![Local only](https://img.shields.io/badge/data-local%20only-black)](#your-data)
 
 <img src="docs/media/list-light.png#gh-light-mode-only" alt="Coffer" width="420">
@@ -40,6 +40,44 @@ Download the latest build from the [releases page](https://github.com/Nuu-maan/c
 Run `Coffer-Setup.exe`. The installer is not code-signed yet, so SmartScreen
 will warn on first run — choose **More info → Run anyway**.
 
+### macOS
+
+Take `Coffer-arm64.dmg` on Apple silicon, or `Coffer-x64.dmg` on an Intel Mac.
+Requires macOS 13.5 or newer.
+
+The build is signed, but not with an Apple Developer ID, so it is not notarised
+and Gatekeeper will stop the first launch. macOS 15 removed the old
+Control-click shortcut, so the route is:
+
+1. Open Coffer. You will be told macOS "could not verify" it — click **Done**,
+   not *Move to Trash*.
+2. **System Settings → Privacy & Security**, scroll to **Security**, and click
+   **Open Anyway** beside Coffer.
+3. Confirm, and authenticate.
+
+Or, in one line:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Coffer.app
+```
+
+Coffer then asks for two permissions, and Settings shows the state of both:
+
+| Permission | What stops working without it |
+| --- | --- |
+| Accessibility | Stash — copying the selection out of another app |
+| Screen & System Audio Recording | Clip — reading the screen it freezes |
+
+Both take effect only after Coffer is restarted, and macOS 15 and newer will
+re-confirm screen recording every month or so. That is Apple's behaviour, not
+Coffer's.
+
+Two things to know before you rely on it. Because the build is not signed with
+a Developer ID, macOS identifies it by a hash that changes with every release —
+so **both permissions must be granted again after each update**. And for the
+same reason **macOS does not auto-update**; new versions come from this page.
+Both go away if the project ever gets a Developer ID certificate.
+
 ### Linux
 
 **AppImage** — works on any distribution, nothing to install.
@@ -64,7 +102,7 @@ desktops that need one.
 The Windows installer and the AppImage check quietly in the background and
 apply the update the next time you quit — you are never interrupted mid-session
 to be told about a version. The `.deb` updates through your package manager
-instead, as it should.
+instead, as it should. macOS does not update itself yet, for the reason above.
 
 ## Using it
 
