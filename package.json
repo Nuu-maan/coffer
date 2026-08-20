@@ -19,7 +19,8 @@
     "postinstall": "electron-builder install-app-deps",
     "dist": "npm run build && electron-builder --config electron-builder.yml",
     "dist:win": "npm run build && electron-builder --win --config electron-builder.yml",
-    "dist:linux": "npm run build && electron-builder --linux --config electron-builder.yml"
+    "dist:linux": "npm run build && electron-builder --linux --config electron-builder.yml",
+    "icons": "electron build/make-icons.cjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
