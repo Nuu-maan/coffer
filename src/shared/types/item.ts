@@ -41,7 +41,7 @@ export function itemLabel(item: Item): string {
 
 export type HotkeyMode = 'double-shift' | 'accelerator'
 
-export type SessionKind = 'windows' | 'x11' | 'wayland' | 'unknown'
+export type SessionKind = 'windows' | 'macos' | 'x11' | 'wayland' | 'unknown'
 
 export type PlatformInfo = {
   platform: string

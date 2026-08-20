@@ -308,6 +308,7 @@ function Row({
 
 function sessionLabel(session: string): string {
   if (session === 'windows') return 'Windows'
+  if (session === 'macos') return 'macOS'
   if (session === 'x11') return 'Linux · X11'
   if (session === 'wayland') return 'Linux · Wayland'
   return 'Unknown session'
