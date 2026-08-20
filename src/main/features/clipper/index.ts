@@ -1,8 +1,7 @@
-import { Notification, desktopCapturer, type NativeImage, type Rectangle } from 'electron'
+import { Notification, type NativeImage, type Rectangle } from 'electron'
 import { APP_NAME } from '@shared/constants'
 import type { ClipDraft, ItemSource } from '@shared/types/item'
-import { RESTART_NOTE, openPrivacyPane, screenAccess } from '@main/platform/permissions'
-import { isMac } from '@main/platform/session'
+import { RESTART_NOTE, openPrivacyPane, requestScreen } from '@main/platform/permissions'
 import { addImage } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
@@ -55,29 +54,12 @@ export async function startClip(): Promise<void> {
   }
 }
 
-/*
- * macOS has no API for requesting the screen — askForMediaAccess knows only the
- * camera and the microphone — so the request is a capture. One throwaway pixel
- * raises the system prompt, and the answer is read back afterwards.
- *
- * A 'denied' here is not the last word: the status comes from
- * CGPreflightScreenCaptureAccess, which caches for the life of the process, so
- * a grant given in response to this prompt still reads as denied until Coffer
- * restarts. That is what the message has to say.
- */
+/* The prompt, the pane and the caching quirk all live in the permissions
+   module now, because Settings raises the same request. */
 async function ensureScreenAccess(): Promise<boolean> {
-  if (!isMac() || screenAccess() === 'granted') return true
-
-  try {
-    await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1, height: 1 } })
-  } catch {
-    // The prompt is the point. Whether this particular call succeeded is not.
-  }
-
-  if (screenAccess() === 'granted') return true
+  if (await requestScreen()) return true
 
   notify(`Coffer needs Screen Recording access to clip. ${RESTART_NOTE}`)
-  openPrivacyPane('screen')
   return false
 }
 

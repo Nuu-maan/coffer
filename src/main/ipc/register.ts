@@ -7,7 +7,7 @@ import type {
   ClipRegion,
   ReorderInput
 } from '@shared/ipc/contract'
-import type { HotkeyStatus, Settings } from '@shared/types/item'
+import type { HotkeyStatus, PermissionKind, Settings } from '@shared/types/item'
 import {
   addImage,
   addItem,
@@ -34,6 +34,7 @@ import {
   overlayDisplayId
 } from '@main/windows/clipper-overlay'
 import { platformInfo } from '@main/platform/session'
+import { permissions, requestPermission } from '@main/platform/permissions'
 import { hideMainWindow, showMainWindow } from '@main/windows/main-window'
 import { broadcast, broadcastItems } from './broadcast'
 
@@ -99,6 +100,11 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
   })
 
   ipcMain.handle(CH.PLATFORM_INFO, () => platformInfo())
+
+  ipcMain.handle(CH.PERMISSIONS_STATUS, () => permissions())
+  ipcMain.handle(CH.PERMISSIONS_REQUEST, (_event, kind: PermissionKind) =>
+    requestPermission(kind)
+  )
   ipcMain.handle(CH.HOTKEY_STATUS, () => hotkeyStatus())
 
   ipcMain.handle(CH.SETTINGS_GET, () => getSettings())
