@@ -252,11 +252,19 @@ await check('userData lands where the store expects it', async () => {
     userData: app.getPath('userData'),
     name: app.getName()
   }))
-  // Recorded rather than pinned to a literal: this is the value that must not
-  // change once macOS users exist, so the log is the record of what it is.
   console.log(`\n  userData = ${paths.userData}\n  app.getName() = ${paths.name}\n`)
-  assert.ok(paths.userData.includes('Application Support'), paths.userData)
-  assert.equal(paths.userData, userDataDir, 'the --user-data-dir override did not take')
+
+  /* Pinned, because this is the one value here that cannot be changed once Mac
+     users exist — moving it orphans their stash. It resolves from the package
+     name rather than from CFBundleName, which is why it is lowercase and why
+     adding a productName to package.json would move it on every platform at
+     once. If this ever fails, the README's data table is wrong too. */
+  assert.match(
+    paths.userData,
+    /[/\\]Application Support[/\\]coffer$/,
+    `userData moved to ${paths.userData}`
+  )
+  assert.equal(paths.name, 'coffer', `app.getName() became ${paths.name}`)
   return paths.userData
 })
 
