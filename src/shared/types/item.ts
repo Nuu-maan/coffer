@@ -9,6 +9,17 @@ type ItemBase = {
   order: number
   createdAt: number
   source?: ItemSource
+  /*
+   * The section this stash is filed under: the section's own name, matched
+   * case-insensitively. A name rather than an id because the name is what the
+   * user typed and what they see — an id would buy a free rename and cost a
+   * store nobody could read.
+   *
+   * Absent, rather than '', on an item the user has not filed. Absent is also
+   * what an item gets when its section is deleted; sections and items are kept
+   * in step by [[Store]]'s own writers rather than by either side alone.
+   */
+  tag?: string
 }
 
 export type TextItem = ItemBase & {
@@ -37,6 +48,43 @@ export function isImageItem(item: Item): item is ImageItem {
 
 export function itemLabel(item: Item): string {
   return item.kind === 'text' ? item.text : item.caption
+}
+
+/** What a tag is stored as: trimmed, collapsed, and never ''. */
+export function normaliseTag(raw: string): string | undefined {
+  const tag = raw.trim().replace(/\s+/g, ' ')
+  return tag.length > 0 ? tag : undefined
+}
+
+/* Case-insensitively, so "Research" and "research" are one section rather than
+   two that look identical in a list of captions. */
+export function sameTag(a: string | undefined, b: string | undefined): boolean {
+  return (a ?? '').toLocaleLowerCase() === (b ?? '').toLocaleLowerCase()
+}
+
+/*
+ * A section, stored in its own right rather than derived from the items in it.
+ *
+ * It used to be derived: the sections were `new Set(items.map(i => i.tag))` and
+ * a section sat wherever its first member did. That is the smaller model and it
+ * held for as long as a section was only ever a side effect of filing a stash.
+ * It cannot express the two things asked of a section now — an empty one, made
+ * before there is anything to put in it, and an order of its own, so a section
+ * can be dragged past another without its items having to be renumbered to say
+ * so.
+ *
+ * The name is still the identity an item's `tag` points at, matched
+ * case-insensitively. Renaming rewrites both sides in one go.
+ */
+export type Section = {
+  name: string
+  order: number
+}
+
+/** What every mutation hands back: the list, and the sections it is cut into. */
+export type Snapshot = {
+  items: Item[]
+  sections: Section[]
 }
 
 export type HotkeyMode = 'double-shift' | 'accelerator'
@@ -96,7 +144,22 @@ export type Settings = {
   launchOnLogin: boolean
   alwaysOnTop: boolean
   theme: ThemeChoice
+  /*
+   * The panel's corner radius, in pixels, and the root every other radius in
+   * the window is derived from — a card is this less the gutter it sits in, a
+   * control is this less its own padding, so the curves stay parallel however
+   * far this is pushed.
+   *
+   * A setting because the right answer is the compositor's, not ours: this
+   * window is a transparent sheet the renderer draws the corners of, and it
+   * sits next to whatever rounding the desktop already uses. Matching that is
+   * something only the person looking at it can do.
+   */
+  windowRadius: number
 }
+
+/** What the radius slider will accept. Zero is square, and square is allowed. */
+export const WINDOW_RADIUS = { min: 0, max: 28, step: 2, default: 20 } as const
 
 export type ClipDraft = {
   url: string
@@ -106,8 +169,9 @@ export type ClipDraft = {
 }
 
 export type Store = {
-  version: 2
+  version: 3
   items: Item[]
+  sections: Section[]
   settings: Settings
 }
 
@@ -118,7 +182,8 @@ export const DEFAULT_SETTINGS: Settings = {
   doubleTapWindowMs: 350,
   launchOnLogin: true,
   alwaysOnTop: false,
-  theme: 'system'
+  theme: 'system',
+  windowRadius: WINDOW_RADIUS.default
 }
 
 /*
@@ -143,5 +208,5 @@ export function defaultSettings(platform: string): Settings {
 }
 
 export function emptyStore(platform: string): Store {
-  return { version: 2, items: [], settings: defaultSettings(platform) }
+  return { version: 3, items: [], sections: [], settings: defaultSettings(platform) }
 }

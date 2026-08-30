@@ -2,15 +2,15 @@
   <title>Coffer</title>
 
   <!--
-    The app icon: a coffer, drawn duotone. One hue throughout — #A96A21 — and
-    the depth comes from stacking tones of it rather than from a second colour,
-    a gradient or a shadow. Tile, lid, body, straps, band, lock plate: each
-    plane is a step further into the hue than the one behind it, and every
-    outline is the hue at full strength on a single stroke weight, round joins.
+    The app icon: the coffer drawn as a box in isometric, duotone. One hue
+    throughout — #A96A21 — and the depth comes from stacking tones of it rather
+    than from a second colour, a gradient or a shadow. Left wall, right wall,
+    lid: each plane is a step further into the hue than the one behind it.
 
-    The tones are mixed with white and set opaque rather than laid on as
-    opacity, so a nearer plane covers what is under it. Stacked alphas make the
-    seam show through the lock plate and the band stripe across its face.
+    The tones are mixed with the tile and set opaque rather than laid on as
+    opacity, so nothing shows through anything. resources/logo-mark.svg is the
+    same drawing in currentColor, where the same tones are reached with
+    fill-opacity instead; the geometry between the two has to stay in step.
 
     The tile is a superellipse (|x|⁵ + |y|⁵ = 1), not a rounded rectangle — the
     curvature runs continuously into the straight edges. The path is eight
@@ -23,56 +23,16 @@
     d="M512 256C512 404.56 511.72 446 478.86 478.86C446 511.72 404.56 512 256 512C107.44 512 66 511.72 33.14 478.86C0.28 446 0 404.56 0 256C0 107.44 0.28 66 33.14 33.14C66 0.28 107.44 0 256 0C404.56 0 446 0.28 478.86 33.14C511.72 66 512 107.44 512 256Z"
   />
 
-  <defs>
-    <!-- The chest's own outline, so the planes inside it stop where it does. -->
-    <clipPath id="hull">
-      <path d="M184 84H328A144 144 0 0 1 472 228V384A44 44 0 0 1 428 428H84A44 44 0 0 1 40 384V228A144 144 0 0 1 184 84Z" />
-    </clipPath>
-  </defs>
-
-  <g clip-path="url(#hull)">
-    <!-- Body, and the lid a shade lighter for the light it takes from above. -->
-    <rect x="40" y="84" width="432" height="344" fill="#EADBCA" />
-    <rect x="40" y="84" width="432" height="144" fill="#F1E7DB" />
-
-    <!-- Straps down the sides, then the band across the seam over them. -->
-    <g fill="#E0C9AF">
-      <rect x="106" y="84" width="56" height="344" />
-      <rect x="350" y="84" width="56" height="344" />
-    </g>
-    <rect x="40" y="198" width="432" height="60" fill="#D7BA99" />
-  </g>
-
-  <g
-    fill="none"
-    stroke="#A96A21"
-    stroke-width="28"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <!-- The silhouette, and the seam where the lid meets the body. -->
-    <path d="M184 84H328A144 144 0 0 1 472 228V384A44 44 0 0 1 428 428H84A44 44 0 0 1 40 384V228A144 144 0 0 1 184 84Z" />
-    <path d="M58 228H454" />
-  </g>
-
-  <!-- The lock plate: the nearest plane, and the one that interrupts the seam. -->
-  <rect
-    x="190"
-    y="162"
-    width="132"
-    height="132"
-    rx="30"
-    fill="#CDA97E"
-    stroke="#A96A21"
-    stroke-width="28"
-    stroke-linejoin="round"
-  />
-
-  <!-- The keyhole: a bore and a tapered ward, the one place inside the plate
-       where the hue is solid. It falls away below about 32px, where the plate
-       alone still carries the shape. -->
-  <g fill="#A96A21">
-    <circle cx="256" cy="209" r="19" />
-    <path d="M248 209H264L269 259H243Z" />
+  <!--
+    The mark is drawn in its own units and placed here, so its proportions are
+    the ones the drawing was made at. 360px across, centred on the tile.
+  -->
+  <g transform="translate(38.9 20.8) scale(18.09)" fill-rule="evenodd" stroke-width="1.1" stroke-linejoin="miter" stroke-miterlimit="1.5">
+    <!-- The left wall, turned away from the light: the hue at a half. -->
+    <path d="M2.6 9.3 L12 14 L12 21.4 L2.6 16.7 Z" fill="#D0AD85" stroke="#D0AD85" />
+    <!-- The right wall, three quarters of the way in. -->
+    <path d="M21.4 9.3 L12 14 L12 21.4 L21.4 16.7 Z" fill="#BC8C53" stroke="#BC8C53" />
+    <!-- The lid at full strength, with the slot cut out of it to the tile. -->
+    <path d="M12 4.6 L21.4 9.3 L12 14 L2.6 9.3 Z M16.25 11.58 L13.75 12.83 L7.75 9.58 L10.25 8.33 Z" fill="#A96A21" stroke="#A96A21" />
   </g>
 </svg>

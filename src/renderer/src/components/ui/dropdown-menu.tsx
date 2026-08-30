@@ -8,9 +8,14 @@ const surface =
   'materialize material-thick material-edge z-50 min-w-[8rem] overflow-hidden rounded-2xl p-1.5 text-popover-foreground shadow-overlay'
 
 const item = [
-  'relative flex cursor-pointer items-center gap-2 rounded-[14px] px-2.5 py-[5px]',
+  'relative flex cursor-pointer items-center gap-2 rounded-[10px] px-2.5 py-[5px]',
   'text-base outline-hidden select-none transition-colors duration-100',
-  'focus:bg-tint focus:text-tint-foreground',
+  /* The highlight is a wash rather than a filled bar. A filled bar is right
+     when the fill is a colour — the platform's blue reads as "this one"
+     without shouting. Ours is ink: near-white in dark, near-black in light,
+     and a bar of it across a menu item inverts the row and drags the eye off
+     everything else in the menu. The wash says it and leaves the text alone. */
+  'focus:bg-accent-strong focus:text-foreground',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   "[&_svg:not([class*='text-'])]:text-muted-foreground"

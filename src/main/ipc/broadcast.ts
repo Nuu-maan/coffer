@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron'
 import { CH } from '@shared/ipc/channels'
-import type { Item } from '@shared/types/item'
+import type { Snapshot } from '@shared/types/item'
 
 export function broadcast(channel: string, payload: unknown): void {
   for (const window of BrowserWindow.getAllWindows()) {
@@ -8,7 +8,11 @@ export function broadcast(channel: string, payload: unknown): void {
   }
 }
 
-export function broadcastItems(items: Item[]): Item[] {
-  broadcast(CH.ON_ITEMS_CHANGED, items)
-  return items
+/* The list and its sections travel together — a rename moves items between
+   captions and can delete a caption outright, and two events for that would
+   have the renderer draw one frame with the items already moved and the caption
+   still there. */
+export function broadcastItems(snapshot: Snapshot): Snapshot {
+  broadcast(CH.ON_ITEMS_CHANGED, snapshot)
+  return snapshot
 }

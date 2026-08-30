@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { BrowserWindow, nativeTheme, shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { HEADER_HEIGHT, MAIN_HEIGHT, MAIN_WIDTH } from '@shared/constants'
 import { getStore } from '@main/store/store'
@@ -21,10 +21,28 @@ export function getMainWindow(): BrowserWindow | null {
  * Handing the header height to titleBarOverlay is what centres them in a 38px
  * bar and publishes env(titlebar-area-x) for the renderer to inset itself by.
  */
+/*
+ * The panel is a translucent sheet, so the frame under it has to be transparent
+ * and the renderer draws the surface itself — including the corners, which is
+ * why the radius lives in global.css rather than being asked of the window.
+ *
+ * macOS gets the real thing: `vibrancy` is the system material, sampled and
+ * blurred by the compositor, which is the only way to get the saturation pass
+ * Apple's own panels have. Elsewhere the renderer's own backdrop-filter stands
+ * in — on Wayland what it can sample is up to the compositor, so the result is
+ * a tint rather than a true blur unless a rule like Hyprland's `blur` is set
+ * for this window.
+ */
 const CHROME =
   process.platform === 'darwin'
-    ? { titleBarStyle: 'hidden' as const, titleBarOverlay: { height: HEADER_HEIGHT } }
-    : { frame: false, titleBarStyle: 'hidden' as const }
+    ? {
+        titleBarStyle: 'hidden' as const,
+        titleBarOverlay: { height: HEADER_HEIGHT },
+        vibrancy: 'sidebar' as const,
+        visualEffectState: 'active' as const,
+        transparent: true
+      }
+    : { frame: false, titleBarStyle: 'hidden' as const, transparent: true }
 
 export function createMainWindow(): BrowserWindow {
   const { x, y } = mainWindowOrigin(MAIN_WIDTH, MAIN_HEIGHT)
@@ -39,7 +57,10 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     ...CHROME,
     alwaysOnTop: getStore().settings.alwaysOnTop,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1f1f22' : '#ffffff',
+    /* Nothing, so the sheet the renderer draws is what is seen and no opaque
+       rectangle flashes behind it on a cold start. The panel's own colour is
+       --background in global.css. */
+    backgroundColor: '#00000000',
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,

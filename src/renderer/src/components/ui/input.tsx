@@ -11,7 +11,7 @@ const inputVariants = cva(
   [
     'flex w-full min-w-0 rounded-lg text-base outline-none',
     'border border-input-border bg-input text-foreground',
-    'placeholder:text-muted-foreground/70',
+    'placeholder:text-muted-foreground',
     'transition-[color,background-color,border-color,box-shadow] duration-100',
     'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30',
     'aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/25',

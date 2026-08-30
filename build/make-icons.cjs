@@ -9,7 +9,8 @@ const { app, BrowserWindow } = require('electron')
  *
  * The menu bar wants a template image: black, with the shape carried entirely
  * by the alpha channel, which macOS then inverts or tints to match its own
- * state. Colour in one is discarded, so tray.png cannot simply be reused.
+ * state. Colour in one is discarded, so tray.png — the same mark in the brand
+ * hue, for the Windows and Linux trays — cannot simply be reused.
  *
  * The Dock wants the artwork inset. macOS does not mask app icons the way iOS
  * does, so the 512px full-bleed square Coffer ships for Windows and Linux would
@@ -27,6 +28,14 @@ const ICON_CANVAS = 1024
 const JOBS = [
   { svg: 'logo-mark.svg', out: 'trayTemplate.png', size: 16 },
   { svg: 'logo-mark.svg', out: 'trayTemplate@2x.png', size: 32 },
+  /* Monochrome like the macOS template, but white rather than black. Windows
+     and Linux take this one as-is — nothing recolours it the way the macOS
+     menu bar recolours a template — and the bars it lands in are dark by
+     default, where a black mark is a black mark on black. White reads on a
+     dark bar and still reads on a light one against the shadow bars draw
+     under their icons; black reads on neither. */
+  { svg: 'logo-mark.svg', out: 'tray.png', size: 32, color: '#ffffff' },
+  { svg: 'logo.svg', out: 'icon.png', size: 512 },
   { svg: 'logo.svg', out: 'icon-mac.png', size: ICON_CANVAS, inset: true }
 ]
 
@@ -38,7 +47,8 @@ async function main() {
   await window.loadURL('data:text/html,%3Cmeta%20charset%3D%22utf-8%22%3E')
 
   for (const job of JOBS) {
-    const svg = await readFile(join(ROOT, job.svg), 'utf8')
+    const file = await readFile(join(ROOT, job.svg), 'utf8')
+    const svg = job.color ? file.replace('<svg ', `<svg style="color:${job.color}" `) : file
     const box = job.inset ? Math.round((ICON_BOX / ICON_CANVAS) * job.size) : job.size
     const bytes = await render(window, svg, job.size, box)
 
@@ -57,7 +67,10 @@ async function main() {
  * keeps its alpha regardless.
  *
  * currentColor inside an <img> resolves against the SVG's own document, where
- * it defaults to black — which is exactly what a template image asks for.
+ * it defaults to black — which is exactly what a template image asks for. A
+ * job that wants the mark in the brand hue instead says so with `color`, set
+ * on the SVG's own root for the same reason: nothing outside the image gets to
+ * cascade into it.
  */
 async function render(window, svg, size, box) {
   const source = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`

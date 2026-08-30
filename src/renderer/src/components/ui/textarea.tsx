@@ -12,7 +12,7 @@ const textareaVariants = cva('', {
       /* No chrome at all: for editing text in place, inside a row. */
       bare: [
         'field-sizing-content flex w-full resize-none bg-transparent p-0 text-base outline-none',
-        'placeholder:text-muted-foreground/70',
+        'placeholder:text-muted-foreground',
         'disabled:cursor-not-allowed disabled:opacity-40'
       ]
     }

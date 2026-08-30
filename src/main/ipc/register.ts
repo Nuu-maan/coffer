@@ -5,16 +5,26 @@ import type {
   AddImageInput,
   AddItemInput,
   ClipRegion,
-  ReorderInput
+  ReorderInput,
+  ReorderSectionInput
 } from '@shared/ipc/contract'
 import type { HotkeyStatus, PermissionKind, Settings } from '@shared/types/item'
 import {
   addImage,
   addItem,
+  addSection,
   clearDone,
-  listItems,
+  moveSectionItems,
   removeItem,
+  removeItems,
+  removeSection,
+  restoreItems,
+  renameTag,
   reorderItem,
+  reorderSection,
+  setSectionDone,
+  setTag,
+  snapshot,
   toggleItem,
   updateItem
 } from '@main/features/items/service'
@@ -44,7 +54,7 @@ type IpcHooks = {
 }
 
 export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void {
-  ipcMain.handle(CH.ITEMS_LIST, () => listItems())
+  ipcMain.handle(CH.ITEMS_LIST, () => snapshot())
   ipcMain.handle(CH.ITEMS_ADD, (_event, input: AddItemInput) => broadcastItems(addItem(input)))
   ipcMain.handle(CH.ITEMS_ADD_IMAGE, async (_event, input: AddImageInput) => {
     const image = nativeImage.createFromBuffer(Buffer.from(input.data))
@@ -55,10 +65,30 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
     broadcastItems(updateItem(id, text))
   )
   ipcMain.handle(CH.ITEMS_DELETE, (_event, id: string) => broadcastItems(removeItem(id)))
+  ipcMain.handle(CH.ITEMS_DELETE_MANY, (_event, ids: string[]) => broadcastItems(removeItems(ids)))
+  ipcMain.handle(CH.ITEMS_RESTORE, (_event, ids: string[]) => broadcastItems(restoreItems(ids)))
   ipcMain.handle(CH.ITEMS_REORDER, (_event, input: ReorderInput) =>
     broadcastItems(reorderItem(input))
   )
   ipcMain.handle(CH.ITEMS_CLEAR_DONE, () => broadcastItems(clearDone()))
+  ipcMain.handle(CH.ITEMS_SET_TAG, (_event, id: string, tag: string) =>
+    broadcastItems(setTag(id, tag))
+  )
+
+  ipcMain.handle(CH.SECTIONS_ADD, (_event, name: string) => broadcastItems(addSection(name)))
+  ipcMain.handle(CH.SECTIONS_RENAME, (_event, from: string, to: string) =>
+    broadcastItems(renameTag(from, to))
+  )
+  ipcMain.handle(CH.SECTIONS_REMOVE, (_event, name: string) => broadcastItems(removeSection(name)))
+  ipcMain.handle(CH.SECTIONS_REORDER, (_event, input: ReorderSectionInput) =>
+    broadcastItems(reorderSection(input))
+  )
+  ipcMain.handle(CH.SECTIONS_MOVE_ITEMS, (_event, from: string, to: string) =>
+    broadcastItems(moveSectionItems(from, to))
+  )
+  ipcMain.handle(CH.SECTIONS_SET_DONE, (_event, name: string, done: boolean) =>
+    broadcastItems(setSectionDone(name, done))
+  )
 
   ipcMain.handle(CH.CLIPBOARD_READ, () => clipboard.readText())
   ipcMain.handle(CH.CLIPBOARD_WRITE, (_event, text: string) => {

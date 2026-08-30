@@ -4,62 +4,140 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Light is white. Not off-white, not Apple's grouped-table grey — white.
+ *
+ * The mistake was twice the same mistake. First the ground was #f2f2f7, which
+ * is the right colour behind a full-screen table on an opaque phone and the
+ * wrong one behind a small panel; then it came up to #f6f6f8 and still read
+ * grey, because the *sheet* was translucent. A white at 82% over a dark desktop
+ * is not a white — it is whatever the wallpaper leaves of it, and on a dark
+ * wallpaper that is a mid-grey. Translucency was quietly repainting the panel
+ * darker than any value in this file.
+ *
+ * So the sheet is opaque enough to hold its colour — 98%, which keeps the
+ * blur's edge treatment and nothing else — and everything on it is white too.
+ * (If it still reads grey on your desktop, check the compositor: Hyprland's
+ * `inactive_opacity` dims the whole window when it is not focused, and no
+ * value in this file can win against a multiply applied after we have drawn.)
+ * Which
+ * leaves nothing to separate a card from its ground — and that is the point:
+ * the separation is the shadow. A white card on a white sheet with a soft drop
+ * under it is a piece of paper on a desk, which is the oldest and clearest way
+ * to say "this is a thing, and it is on top".
+ *
+ * Text contrast does not follow the surfaces down. Contrast where something is
+ * read is not the same question as contrast where it is only felt.
+ */
 :root {
+  /*
+   * One number, and everything else derived from it.
+   *
+   * --window-radius is written onto the element by the renderer from the
+   * setting; this is the fallback for the frame or two before that lands, and
+   * for the clipper windows, which have no panel to match.
+   *
+   * The rule the rest follow is concentricity: a thing nested inside another
+   * is the outer radius less the padding between them, so the curves stay
+   * parallel rather than the inner one looking pinched. The list sits in a
+   * 12px gutter and a card is the window less 8 — a shade softer than strict
+   * concentricity, because a card is small enough that the true concentric
+   * value reads tighter than the window around it. Clamped at both ends: below
+   * about 8px a curve stops reading as one, and past 18 a 52px card turns into
+   * a lozenge.
+   */
+  --window-radius: 20px;
+  --card-radius: clamp(8px, calc(var(--window-radius) - 8px), 18px);
+  --inner-radius: clamp(5px, calc(var(--window-radius) - 12px), 14px);
   --radius: 0.75rem;
 
-  --background: #ececec;
+  --background: #ffffff;
   --foreground: #1c1c1e;
 
   --card: #ffffff;
   --card-foreground: #1c1c1e;
+  /* A step off the card, not a wash over it. Hover on a card cannot be the
+     translucent ink the buttons use — ink over a card shows the panel through
+     it and the card stops being white, which is the one thing it is for. */
+  --card-hover: #f2f2f4;
   --popover: #ffffff;
   --popover-foreground: #1c1c1e;
-  --elevated: #f7f7f7;
+  --elevated: #ffffff;
 
-  --primary: #007aff;
+  --primary: #1c1c1e;
   --primary-foreground: #ffffff;
-  --secondary: #e8e8ed;
+  --secondary: #f0f0f3;
   --secondary-foreground: #1c1c1e;
-  --muted: #f2f2f4;
-  --muted-foreground: #6e6e73;
-  --accent: #e5e5ea;
+  --muted: #f4f4f6;
+  /* Every timestamp, caption and placeholder in the window. Apple's #6e6e73 is
+     sampled against an opaque surface; over a translucent one it loses a step,
+     and it was landing under AA on a card. This clears 6:1 on white and is
+     still plainly the quieter of the two greys. */
+  --muted-foreground: #5c5c62;
+  /*
+   * Hover is a wash, not a colour.
+   *
+   * It was an opaque grey, which only worked on the one surface it was mixed
+   * against: the same #e5e5ea over a white card, over the panel and over a menu
+   * came out as three different amounts of contrast, and over a card it was
+   * nearly invisible. A translucent ink layer darkens whatever is under it by
+   * the same proportion everywhere, which is what makes one hover token
+   * possible at all — and it is how the platform does it.
+   */
+  --accent: rgb(0 0 0 / 0.055);
+  --accent-strong: rgb(0 0 0 / 0.09);
   --accent-foreground: #1c1c1e;
   --destructive: #ff3b30;
   --destructive-foreground: #ffffff;
 
-  --tint: #007aff;
+  /*
+   * The accent, and it is a value rather than a hue. A saturated blue on a
+   * translucent panel is the loudest thing on the screen by a distance — it
+   * pulls the eye to a Stash button and a focus ring rather than to the clip
+   * or the sentence they belong to. Ink instead: the accent is the darkest
+   * thing here in light and the lightest in dark, so emphasis is carried by
+   * contrast, which is the same currency the rest of the window trades in.
+   *
+   * --destructive keeps its red. That is a signal, not an accent — it means
+   * "this one does not come back", and colour is how that gets said.
+   */
+  --tint: #1c1c1e;
   --tint-foreground: #ffffff;
-  --tint-soft: rgb(0 122 255 / 0.12);
-  --tint-hover: #0071eb;
+  --tint-soft: rgb(0 0 0 / 0.08);
+  --tint-hover: #333336;
 
   /* A stash is a card, and a selected card is ringed rather than filled: the
      text keeps the contrast it had, and several picked at once still read as
      the same kind of thing rather than as a blue block. */
-  --selected: rgb(0 0 0 / 0.07);
+  --selected: rgb(0 0 0 / 0.065);
   --selected-foreground: #000000;
-  --selected-edge: rgb(0 0 0 / 0.14);
-  --selected-ring: #007aff;
+  --selected-edge: rgb(0 0 0 / 0.12);
+  --selected-ring: #1c1c1e;
 
-  --border: rgb(0 0 0 / 0.1);
-  --border-strong: rgb(0 0 0 / 0.22);
+  --border: rgb(0 0 0 / 0.09);
+  --border-strong: rgb(0 0 0 / 0.24);
+  /* A divider is not a border. It runs between two rows of the same surface
+     rather than around one, and it is lighter for it — the platform keeps the
+     two apart and so does this. */
+  --separator: rgb(0 0 0 / 0.075);
   --input: #ffffff;
-  --input-border: rgb(0 0 0 / 0.16);
-  --ring: #007aff;
+  --input-border: rgb(0 0 0 / 0.14);
+  --ring: #3a3a3c;
 
   --control: #ffffff;
   --control-foreground: #1c1c1e;
-  --control-active: #e6e6e8;
+  --control-active: #efeff2;
   --well: rgb(0 0 0 / 0.045);
 
-  --mat-thin: rgb(255 255 255 / 0.6);
+  --mat-thin: rgb(255 255 255 / 0.72);
   --mat-thin-blur: 20px;
-  --mat-regular: rgb(246 246 246 / 0.72);
+  --mat-regular: rgb(255 255 255 / 0.86);
   --mat-regular-blur: 30px;
-  --mat-thick: rgb(246 246 246 / 0.9);
+  --mat-thick: rgb(255 255 255 / 0.97);
   --mat-thick-blur: 50px;
   --mat-saturate: 180%;
   --mat-edge: rgb(255 255 255 / 0.8);
-  --mat-border: rgb(0 0 0 / 0.12);
+  --mat-border: rgb(0 0 0 / 0.09);
 
   --hud: rgb(30 30 30 / 0.82);
   --hud-foreground: #ffffff;
@@ -67,78 +145,158 @@
 
   --scrim: rgb(0 0 0 / 0.22);
 
-  --shadow-hairline: 0 0 0 0.5px rgb(0 0 0 / 0.14);
-  --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.1), 0 0 0 0.5px rgb(0 0 0 / 0.1);
-  --shadow-card: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 1px 3px rgb(0 0 0 / 0.06);
-  --shadow-raised: 0 0 0 0.5px rgb(0 0 0 / 0.09), 0 2px 6px rgb(0 0 0 / 0.08);
-  --shadow-float: 0 0 0 0.5px rgb(0 0 0 / 0.1), 0 6px 18px -4px rgb(0 0 0 / 0.16);
-  --shadow-overlay: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 12px 40px -8px rgb(0 0 0 / 0.28);
+  /* The window itself: --background, held back so what is behind shows through.
+     One value rather than a material utility plus a /alpha, which set the same
+     property and fought over it. Opaque enough to read on a busy desktop even
+     where the compositor declines to blur behind us. */
+  --sheet: rgb(255 255 255 / 0.98);
+
+  /*
+   * The elevation ramp, and it is a ramp: every level is the level below it
+   * plus one more layer, pushed further and softened more.
+   *
+   * One blurred rectangle is what a shadow looks like in a drawing program, not
+   * what one looks like in a room. Real light leaves a tight dark contact
+   * shadow where the object nearly touches its ground and a wide faint one
+   * further out, and it is the gap between those two that the eye reads as
+   * height. A single layer can be dark or it can be soft; it cannot be both,
+   * which is why it either smears or disappears.
+   *
+   * Every layer is offset downward only and pulled in with a negative spread,
+   * so nothing leaks out sideways — a shadow that spreads evenly in every
+   * direction reads as a glow. The hairline is on all of them: on a white
+   * ground it is what makes the edge findable, and the shadow is only ever
+   * doing the lifting.
+   */
+  --shadow-hairline: 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  --shadow-control:
+    0 0 0 0.5px rgb(0 0 0 / 0.1), 0 1px 1px -0.5px rgb(0 0 0 / 0.05),
+    0 2px 2px -1.5px rgb(0 0 0 / 0.04);
+  /*
+   * No ring on the surfaces. A card inside a window is told apart from its
+   * ground by its fill; the ring these used to carry outlined every list row
+   * and every settings group, which is what made the window read as a
+   * wireframe. The ring stays on control, float and overlay — a button has to
+   * survive being white on white, and a menu floats over content it does not
+   * own and cannot assume anything about.
+   */
+  /*
+   * Edge first, shadow second — the opposite of how this started.
+   *
+   * With a card and its ground both white the shadow was carrying all of the
+   * separation, so it had to be heavy enough to be seen, and a heavy shadow
+   * under a small capsule reads as a smear rather than as lift. Worse, it made
+   * the search field visible from below and invisible from above: there was
+   * nothing along its top edge at all.
+   *
+   * The hairline does the finding now, at nearly double the weight, and it goes
+   * all the way round. That frees the drop to be what a drop should be at this
+   * size — barely there, offset downward only, because a shadow that spreads
+   * evenly in every direction reads as a glow and a card does not glow.
+   */
+  --shadow-card:
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 1px 2px -1px rgb(0 0 0 / 0.07),
+    0 3px 5px -2.5px rgb(0 0 0 / 0.05), 0 6px 10px -5px rgb(0 0 0 / 0.035);
+  --shadow-raised:
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 2px 3px -1.5px rgb(0 0 0 / 0.07),
+    0 5px 9px -4px rgb(0 0 0 / 0.055), 0 11px 20px -8px rgb(0 0 0 / 0.045);
+  --shadow-float:
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 2px 4px -2px rgb(0 0 0 / 0.06),
+    0 7px 13px -5px rgb(0 0 0 / 0.07), 0 16px 28px -11px rgb(0 0 0 / 0.07);
+  /* For material-hud, which brings its own border: the float ramp with the
+     hairline taken out, so the two do not stack. */
+  --shadow-hud:
+    0 2px 4px -2px rgb(0 0 0 / 0.08), 0 7px 13px -5px rgb(0 0 0 / 0.09),
+    0 16px 28px -11px rgb(0 0 0 / 0.1);
+  --shadow-overlay:
+    0 0 0 0.5px rgb(0 0 0 / 0.1), 0 4px 7px -3.5px rgb(0 0 0 / 0.05),
+    0 11px 20px -7px rgb(0 0 0 / 0.07), 0 24px 44px -14px rgb(0 0 0 / 0.09),
+    0 44px 72px -26px rgb(0 0 0 / 0.08);
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.7);
 }
 
 /*
- * Dark is built the way macOS builds it: a cool near-black base, surfaces that
- * separate by getting *lighter* rather than by casting shadows (a shadow on a
- * dark ground is invisible), and a top edge highlight standing in for the light
- * that a raised surface would catch.
+ * Dark is built the way macOS builds it: surfaces separate by getting *lighter*
+ * rather than by casting shadows — a shadow on a dark ground is invisible — and
+ * every step of the ramp is a real step, not a nudge.
+ *
+ * Neutral rather than cool, and neutral all the way up: the base is #111111,
+ * the greys above it carry no hue, and the accent is a light grey rather than
+ * a blue. The only colour left in the window is --destructive, which is there
+ * to mean something rather than to decorate.
  */
 .dark {
-  --background: #141416;
-  --foreground: #f2f2f5;
+  --background: #111111;
+  --foreground: #f2f2f2;
 
-  --card: #1f1f22;
-  --card-foreground: #f2f2f5;
-  --popover: #262629;
-  --popover-foreground: #f2f2f5;
-  --elevated: #2c2c31;
+  /* A step further off the #111 ground than it was. In the dark a surface is
+     told apart from its background by being lighter, and #1c1c1c over #111 is
+     eleven levels — visible on an OLED panel in a dark room and nowhere else. */
+  --card: #212121;
+  --card-foreground: #f2f2f2;
+  --card-hover: #292929;
+  --popover: #282828;
+  --popover-foreground: #f2f2f2;
+  --elevated: #303030;
 
-  --primary: #0a84ff;
-  --primary-foreground: #ffffff;
-  --secondary: #2a2a2f;
-  --secondary-foreground: #f2f2f5;
-  --muted: #1f1f22;
-  --muted-foreground: #90909a;
-  --accent: #2a2a2f;
-  --accent-foreground: #f2f2f5;
+  --primary: #f2f2f2;
+  --primary-foreground: #111111;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #f2f2f2;
+  --muted: #1c1c1c;
+  /* See the light side: #8c8c8c is the sampled value and it lands around 4.9:1
+     on a card — before the sheet under it lets a bright desktop through, which
+     is where it fell apart. #a3a3a3 clears 7:1 on the panel and reads as grey
+     rather than as text that has been dimmed out. */
+  --muted-foreground: #a3a3a3;
+  /* See the light side. A wash rather than a fill, and a touch stronger than
+     light's: the eye reads a given proportional change as less on a dark
+     ground than on a bright one. */
+  --accent: rgb(255 255 255 / 0.075);
+  --accent-strong: rgb(255 255 255 / 0.12);
+  --accent-foreground: #f2f2f2;
   --destructive: #ff453a;
   --destructive-foreground: #ffffff;
 
-  --tint: #0a84ff;
-  --tint-foreground: #ffffff;
-  --tint-soft: rgb(10 132 255 / 0.2);
-  --tint-hover: #2b95ff;
+  --tint: #ededed;
+  --tint-foreground: #111111;
+  --tint-soft: rgb(255 255 255 / 0.14);
+  --tint-hover: #ffffff;
 
   --selected: rgb(255 255 255 / 0.1);
   --selected-foreground: #ffffff;
   --selected-edge: rgb(255 255 255 / 0.16);
-  --selected-ring: #0a84ff;
+  --selected-ring: #f0f0f0;
 
-  --border: rgb(255 255 255 / 0.09);
-  --border-strong: rgb(255 255 255 / 0.22);
-  --input: #17171a;
-  --input-border: rgb(255 255 255 / 0.14);
-  --ring: #0a84ff;
+  --border: rgb(255 255 255 / 0.16);
+  --border-strong: rgb(255 255 255 / 0.34);
+  --separator: rgb(255 255 255 / 0.14);
+  --input: #0b0b0b;
+  --input-border: rgb(255 255 255 / 0.26);
+  --ring: #d0d0d0;
 
-  --control: #2a2a2f;
-  --control-foreground: #f2f2f5;
-  --control-active: #38383e;
+  --control: #2a2a2a;
+  --control-foreground: #f2f2f2;
+  --control-active: #383838;
   --well: rgb(0 0 0 / 0.32);
 
-  --mat-thin: rgb(48 48 53 / 0.62);
+  --mat-thin: rgb(42 42 42 / 0.62);
   --mat-thin-blur: 20px;
-  --mat-regular: rgb(38 38 43 / 0.76);
+  --mat-regular: rgb(30 30 30 / 0.78);
   --mat-regular-blur: 30px;
-  --mat-thick: rgb(46 46 51 / 0.88);
+  --mat-thick: rgb(38 38 38 / 0.9);
   --mat-thick-blur: 50px;
   --mat-saturate: 170%;
-  --mat-edge: rgb(255 255 255 / 0.12);
-  --mat-border: rgb(255 255 255 / 0.13);
+  --mat-edge: rgb(255 255 255 / 0.14);
+  --mat-border: rgb(255 255 255 / 0.16);
 
-  --hud: rgb(28 28 32 / 0.9);
+  --hud: rgb(30 30 30 / 0.9);
   --hud-foreground: #ffffff;
   --hud-border: rgb(255 255 255 / 0.16);
 
   --scrim: rgb(0 0 0 / 0.55);
+
+  --sheet: rgb(17 17 17 / 0.88);
 
   /*
    * Every edge here is drawn inside the box. An outer ring the colour of the
@@ -146,36 +304,54 @@
    * rounded card ends up looking bitten rather than curved. A surface in the
    * dark separates by being lighter than its ground, which is what the inset
    * hairline is for.
+   *
+   * Which is also why the drop shadows here are kept light. They are not doing
+   * the separating — the hairline is — so their job is only to say which way
+   * is up. Taken any further they stop reading as depth and start reading as
+   * grime pooled under every card.
    */
-  --shadow-hairline: inset 0 0 0 0.5px rgb(255 255 255 / 0.1);
-  --shadow-control: inset 0 0 0 0.5px rgb(255 255 255 / 0.11), 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-card: inset 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 1px 3px rgb(0 0 0 / 0.35);
-  --shadow-raised: inset 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 3px 10px rgb(0 0 0 / 0.4);
-  --shadow-float: inset 0 0 0 0.5px rgb(255 255 255 / 0.12), 0 10px 28px rgb(0 0 0 / 0.5);
-  --shadow-overlay: inset 0 0 0 0.5px rgb(255 255 255 / 0.14), 0 20px 56px rgb(0 0 0 / 0.6);
+  --shadow-hairline: inset 0 0 0 0.5px rgb(255 255 255 / 0.12);
+  --shadow-control: inset 0 0 0 0.5px rgb(255 255 255 / 0.11), 0 1px 2px rgb(0 0 0 / 0.22);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow-raised: 0 2px 8px rgb(0 0 0 / 0.24);
+  --shadow-float: inset 0 0 0 0.5px rgb(255 255 255 / 0.12), 0 8px 22px rgb(0 0 0 / 0.3);
+  --shadow-hud: 0 8px 22px rgb(0 0 0 / 0.4);
+  --shadow-overlay: inset 0 0 0 0.5px rgb(255 255 255 / 0.14), 0 16px 44px rgb(0 0 0 / 0.38);
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.1);
 }
 
 @theme inline {
   /*
-   * Two steps rounder than a window-manager chrome would draw it. The rule the
-   * scale is built on is concentricity: a thing nested inside another is the
-   * outer radius less the padding between them, so the curves stay parallel
-   * instead of the inner one looking pinched. p-1.5 inside a 2xl surface lands
-   * on 14px, p-[2px] inside a capsule stays a capsule, and so on.
+   * About as square as this can go while still reading as drawn rather than as
+   * a table cell. It started two steps rounder than a window-manager chrome
+   * would draw it, which made a list row read as a pill; a 2xl surface is now
+   * 12px, which is roughly what the platform itself uses for a card.
+   *
+   * The rule the scale is built on is concentricity: a thing nested inside
+   * another is the outer radius less the padding between them, so the curves
+   * stay parallel instead of the inner one looking pinched. p-1.5 inside a 2xl
+   * surface lands on 6px, p-[2px] inside a capsule stays a capsule, and so on.
+   * Pulling the scale in moves every derived radius with it, which is why the
+   * handful of literal px radii in the components are written down rather than
+   * left to be re-guessed.
    */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 9px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 26px;
+  --radius-window: var(--window-radius);
+  --radius-card: var(--card-radius);
+  --radius-inner: var(--inner-radius);
+
+  --radius-xs: 2px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 13px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-card-hover: var(--card-hover);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-elevated: var(--elevated);
@@ -186,6 +362,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -238,11 +415,14 @@
   --text-2xl--line-height: 1.15;
   --text-2xl--letter-spacing: -0.024em;
 
+  --color-separator: var(--separator);
+
   --shadow-hairline: var(--shadow-hairline);
   --shadow-control: var(--shadow-control);
   --shadow-card: var(--shadow-card);
   --shadow-raised: var(--shadow-raised);
   --shadow-float: var(--shadow-float);
+  --shadow-hud: var(--shadow-hud);
   --shadow-overlay: var(--shadow-overlay);
 
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
@@ -255,14 +435,23 @@
     @apply border-border;
   }
 
+  /*
+   * Transparent, not --background. Every window here is a frameless transparent
+   * BrowserWindow whose surface the renderer draws itself — the rounded sheet
+   * in the main window, material-thick in the clip form, the screenshot in the
+   * region picker. An opaque body under those is a square of panel colour
+   * filling the whole window, which is what put a dark tray behind the sheet's
+   * rounded corners and along its edges.
+   */
   html,
   body,
   #root {
     height: 100%;
+    background: transparent;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: var(--font-sans);
     font-size: 13px;
     font-optical-sizing: auto;
@@ -288,8 +477,12 @@
     outline: none;
   }
 
+  /* Off the foreground rather than the accent. The accent is now near-white in
+     dark, and a white wash under near-white text is text you cannot read. A
+     translucent ink mark lands mid-grey in either theme, which is what a
+     selection is supposed to be. */
   ::selection {
-    background-color: color-mix(in srgb, var(--tint) 28%, transparent);
+    background-color: color-mix(in srgb, var(--foreground) 26%, transparent);
     color: var(--foreground);
   }
 
@@ -348,6 +541,18 @@
   backdrop-filter: blur(40px) saturate(180%);
 }
 
+/*
+ * The window's own surface. backdrop-filter is a request, not a guarantee:
+ * macOS honours it, and on Wayland whether anything is actually sampled behind
+ * a window is the compositor's call — Hyprland needs `blur` set for this window
+ * before it does. --sheet is opaque enough that the panel reads either way; the
+ * blur is the improvement, not the load-bearing part.
+ */
+@utility sheet {
+  background-color: var(--sheet);
+  backdrop-filter: blur(var(--mat-thick-blur)) saturate(var(--mat-saturate));
+}
+
 @utility material-edge {
   border: 0.5px solid var(--mat-border);
   box-shadow: var(--shadow-inset-top);
@@ -399,29 +604,47 @@
   }
 }
 
+/*
+ * Pressing scales as well as darkens. Brightness alone says the control noticed
+ * the pointer; the scale says the control moved under it, which is the whole
+ * point of a press state — instant, physical feedback that the interface heard
+ * you. Kept subtle: below about 0.95 a button starts to look like it is being
+ * sucked into the page.
+ *
+ * transform is enumerated on its own rather than folded into the list above so
+ * it can run faster than the colour changes; the press should land before the
+ * fill has finished catching up.
+ */
 @utility press {
   transition:
     background-color 90ms var(--ease-out-quart),
     color 90ms var(--ease-out-quart),
     box-shadow 120ms var(--ease-out-quart),
     border-color 90ms var(--ease-out-quart),
-    opacity 90ms var(--ease-out-quart);
+    opacity 90ms var(--ease-out-quart),
+    transform 140ms var(--ease-out-quart);
 
   &:active:not(:disabled):not([data-disabled]) {
     filter: brightness(0.94);
+    transform: scale(0.96);
   }
 }
 
+/* The same, scaled harder. A 17px circle taken to 0.96 moves by two thirds of a
+   pixel, which is not much feedback; this is the one place the exaggeration is
+   the point, and it is reserved for controls under ~20px. */
 @utility press-sm {
   transition:
     background-color 90ms var(--ease-out-quart),
     color 90ms var(--ease-out-quart),
     box-shadow 120ms var(--ease-out-quart),
     border-color 90ms var(--ease-out-quart),
-    opacity 90ms var(--ease-out-quart);
+    opacity 90ms var(--ease-out-quart),
+    transform 140ms var(--ease-out-quart);
 
   &:active:not(:disabled):not([data-disabled]) {
     filter: brightness(0.94);
+    transform: scale(0.94);
   }
 }
 
@@ -492,12 +715,14 @@
   :root {
     --border: rgb(0 0 0 / 0.3);
     --border-strong: rgb(0 0 0 / 0.5);
+    --separator: rgb(0 0 0 / 0.24);
     --muted-foreground: #4a4a4f;
   }
 
   .dark {
     --border: rgb(255 255 255 / 0.3);
     --border-strong: rgb(255 255 255 / 0.5);
+    --separator: rgb(255 255 255 / 0.24);
     --muted-foreground: #c4c4c9;
   }
 }

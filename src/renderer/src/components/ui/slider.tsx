@@ -55,7 +55,7 @@ function Slider({
           key={index}
           className={cn(
             'block size-[15px] shrink-0 rounded-full bg-white shadow-control outline-none',
-            'ring-[0.5px] ring-black/10 transition-transform duration-100 ease-[var(--ease-out-quart)]',
+            'transition-transform duration-100 ease-[var(--ease-out-quart)]',
             'active:scale-110',
             'disabled:pointer-events-none'
           )}
