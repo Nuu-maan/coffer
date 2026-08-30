@@ -1,3 +1,4 @@
+import { writeSync } from 'node:fs'
 import { join } from 'node:path'
 import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
@@ -44,9 +45,16 @@ const CHROME =
       }
     : { frame: false, titleBarStyle: 'hidden' as const, transparent: true }
 
+const trace = process.env['COFFER_TRACE']
+  ? (step: string): void => {
+      writeSync(1, `[boot] ${step}\n`)
+    }
+  : (): void => undefined
+
 export function createMainWindow(): BrowserWindow {
   const { x, y } = mainWindowOrigin(MAIN_WIDTH, MAIN_HEIGHT)
 
+  trace('creating main window')
   const window = new BrowserWindow({
     x,
     y,
@@ -69,6 +77,7 @@ export function createMainWindow(): BrowserWindow {
     }
   })
 
+  trace('main window created')
   window.on('ready-to-show', () => window.show())
   window.on('closed', () => {
     mainWindow = null
@@ -85,6 +94,7 @@ export function createMainWindow(): BrowserWindow {
   } else {
     void window.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  trace('main window load started')
 
   mainWindow = window
   return window
@@ -93,9 +103,12 @@ export function createMainWindow(): BrowserWindow {
 export function showMainWindow(): void {
   const window = mainWindow ?? createMainWindow()
   setWindowVisible(true)
+  trace('activation policy set')
   if (window.isMinimized()) window.restore()
   window.show()
+  trace('main window shown')
   window.focus()
+  trace('main window focused')
 }
 
 export function hideMainWindow(): void {

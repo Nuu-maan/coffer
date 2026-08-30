@@ -1,3 +1,4 @@
+import { writeSync } from 'node:fs'
 import { app, screen } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { APP_ID } from '@shared/constants'
@@ -22,8 +23,13 @@ import { startUpdateChecks, stopUpdateChecks } from './features/updates'
 
 /* Startup is the one place a failure leaves nothing behind to look at: no
    window, no log, and a process that is still running. Off unless asked for. */
+/* writeSync, not console.log: stdout to a pipe is asynchronous, so if the main
+   thread wedges in a native call the queued lines are lost — which is exactly
+   the failure being traced. */
 const trace = process.env['COFFER_TRACE']
-  ? (step: string): void => console.log(`[boot] ${step}`)
+  ? (step: string): void => {
+      writeSync(1, `[boot] ${step}\n`)
+    }
   : (): void => undefined
 
 if (!app.requestSingleInstanceLock()) {
@@ -93,10 +99,12 @@ async function boot(): Promise<void> {
   app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window))
 
   serveCofferScheme()
+  trace('scheme served')
   registerIpc({
     onSettingsChanged: (settings) => hotkeys.apply(settings),
     hotkeyStatus: () => hotkeys.status()
   })
+  trace('ipc registered')
 
   installMenu()
   trace('menu installed')
@@ -105,6 +113,7 @@ async function boot(): Promise<void> {
   hotkeys.apply(store.settings)
   trace('hotkeys applied')
   syncTheme(store.settings.theme)
+  trace('theme synced')
   syncLoginItem(store.settings.launchOnLogin)
   trace('login item synced')
 
@@ -118,6 +127,7 @@ async function boot(): Promise<void> {
   }
 
   startUpdateChecks()
+  trace('update checks started')
 
   primeOverlays()
   trace('overlays primed')
@@ -127,7 +137,9 @@ async function boot(): Promise<void> {
 
   // Launched into the menu bar rather than onto the screen: no window, so on
   // macOS no Dock tile either until there is one.
-  if (!startedHidden() && !isForwardedAction(process.argv)) showMainWindow()
+  const hidden = startedHidden()
+  trace(`started hidden: ${hidden}`)
+  if (!hidden && !isForwardedAction(process.argv)) showMainWindow()
   else setWindowVisible(false)
 
   trace('window decided')
