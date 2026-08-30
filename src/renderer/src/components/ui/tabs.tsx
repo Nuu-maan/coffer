@@ -50,7 +50,10 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-well shadow-[inset_0_0_0_0.5px_var(--border)]',
+        /* A plain well. The segmented control on the platforms this imitates is a
+           recess with a floating pill in it — the ring around the track was a
+           second edge saying what the fill already said. */
+        default: 'bg-well',
         glass: 'material-thin material-edge',
         line: 'gap-1 rounded-none bg-transparent p-0'
       }

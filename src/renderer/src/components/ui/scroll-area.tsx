@@ -6,8 +6,13 @@ import { cn } from '@/lib/utils'
 function ScrollArea({
   className,
   children,
+  onViewportScroll,
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>): React.JSX.Element {
+}: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
+  /* Radix scrolls the viewport, not the root, so a caller that wants to know
+     how far down the content is cannot listen on the element it was handed. */
+  onViewportScroll?: React.UIEventHandler<HTMLDivElement>
+}): React.JSX.Element {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -17,6 +22,7 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
+        onScroll={onViewportScroll}
         className="size-full rounded-[inherit] outline-none"
       >
         {children}

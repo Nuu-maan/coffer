@@ -18,7 +18,12 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
           toast:
             'material-hud !rounded-full !border-0 !px-3 !py-1.5 !text-xs !font-medium !shadow-float',
           description: '!text-muted-foreground',
-          icon: '!mr-1.5'
+          icon: '!mr-1.5',
+          /* The toast is a dark capsule whatever the theme, so the action
+             inside it is styled against that rather than against the window —
+             an unstyled sonner action lands as dark text on a dark pill. */
+          actionButton:
+            '!ml-1.5 !rounded-full !bg-white/15 !px-2 !py-0.5 !text-xs !font-medium !text-[var(--hud-foreground)] hover:!bg-white/25'
         }
       }}
       icons={{

@@ -36,7 +36,8 @@ function ToggleGroup({
       data-size={size}
       className={cn(
         'group/toggle-group relative flex w-fit items-center rounded-full',
-        variant === 'segment' && 'gap-0 bg-well p-[2px] shadow-[inset_0_0_0_0.5px_var(--border)]',
+        /* A plain well, matching TabsList. */
+        variant === 'segment' && 'gap-0 bg-well p-[2px]',
         variant === 'outline' && 'gap-1',
         variant === 'default' && 'gap-1',
         className

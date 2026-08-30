@@ -9,9 +9,9 @@ const surface =
   'materialize material-thick material-edge z-50 min-w-[10rem] overflow-hidden rounded-2xl p-1.5 text-popover-foreground shadow-overlay'
 
 const item = [
-  'relative flex cursor-pointer items-center gap-2 rounded-[14px] px-2.5 py-[5px]',
+  'relative flex cursor-pointer items-center gap-2 rounded-[10px] px-2.5 py-[5px]',
   'text-base outline-hidden select-none transition-colors duration-100',
-  'focus:bg-tint focus:text-tint-foreground',
+  'focus:bg-accent-strong focus:text-foreground',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   "[&_svg:not([class*='text-'])]:text-muted-foreground"
