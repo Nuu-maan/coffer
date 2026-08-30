@@ -32,6 +32,7 @@ export const RELEASES: Release[] = [
       'Redesigned the New Clip window, and the copy badge on a card.',
       'Deleting is undoable. A deleted stash offers Undo, and its image is kept until the offer has gone.',
       'Reorder without a pointer: Alt with an arrow moves the selected stash, or the focused section caption.',
+      'Toasts can be swiped away in any direction, and stay long enough to reach the Undo in them.',
       'The tray icon is white, so it reads on a dark bar.'
     ]
   },

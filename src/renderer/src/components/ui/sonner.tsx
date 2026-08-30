@@ -13,10 +13,33 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
       theme="system"
       className="toaster group"
       offset={12}
+      /*
+       * Any direction throws it away, not just the one the position implies.
+       *
+       * Sonner infers a single swipe axis from where the toast sits, so at
+       * top-center it only left when you pushed it up — and up is the one
+       * direction nobody tries, because the toast is already at the top of the
+       * window and it does not look like it has anywhere to go. Sideways is
+       * what a capsule this shape invites, so sideways works.
+       */
+      swipeDirections={['top', 'left', 'right']}
+      /* Long enough to read the sentence and reach the Undo in it. The default
+         four seconds is a notice; this one is an offer. */
+      duration={6000}
       toastOptions={{
+        closeButton: false,
         classNames: {
+          /*
+           * no-drag is what actually makes the swipe possible.
+           *
+           * The toast sits 12px from the top of the window, which is inside the
+           * 44px title bar — and that bar is -webkit-app-region: drag. A press
+           * there is claimed by the window manager before the page sees it, so
+           * the pointer moved the whole window and the toast sat still. Sonner
+           * was never the problem; nothing was reaching it.
+           */
           toast:
-            'material-hud !rounded-full !border-0 !px-3 !py-1.5 !text-xs !font-medium !shadow-float',
+            'no-drag material-hud !rounded-full !border-0 !px-3 !py-1.5 !text-xs !font-medium !shadow-float',
           description: '!text-muted-foreground',
           icon: '!mr-1.5',
           /* The toast is a dark capsule whatever the theme, so the action

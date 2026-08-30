@@ -152,7 +152,7 @@
   --sheet: rgb(255 255 255 / 0.98);
 
   --shadow-hairline: 0 0 0 0.5px rgb(0 0 0 / 0.1);
-  --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.05), 0 0 0 0.5px rgb(0 0 0 / 0.07);
+  --shadow-control: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 0.5px 1px rgb(0 0 0 / 0.035);
   /*
    * No ring on the surfaces. A card inside a window is told apart from its
    * ground by its fill; the ring these used to carry outlined every list row
@@ -162,23 +162,27 @@
    * own and cannot assume anything about.
    */
   /*
-   * The whole of the separation, now that a card and its ground are the same
-   * white. Three parts, and each is doing one job: a hairline so the edge is
-   * findable at all, a tight 1px drop for the contact shadow directly under the
-   * card, and a wider soft one below it for the lift. Both drops are offset
-   * downward only — a shadow that spreads evenly in every direction reads as a
-   * glow, and a card does not glow.
+   * Edge first, shadow second — the opposite of how this started.
+   *
+   * With a card and its ground both white the shadow was carrying all of the
+   * separation, so it had to be heavy enough to be seen, and a heavy shadow
+   * under a small capsule reads as a smear rather than as lift. Worse, it made
+   * the search field visible from below and invisible from above: there was
+   * nothing along its top edge at all.
+   *
+   * The hairline does the finding now, at nearly double the weight, and it goes
+   * all the way round. That frees the drop to be what a drop should be at this
+   * size — barely there, offset downward only, because a shadow that spreads
+   * evenly in every direction reads as a glow and a card does not glow.
    */
-  --shadow-card:
-    0 0 0 0.5px rgb(0 0 0 / 0.055), 0 1px 1px rgb(0 0 0 / 0.04), 0 2px 5px -1px rgb(0 0 0 / 0.07);
-  --shadow-raised:
-    0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 10px -2px rgb(0 0 0 / 0.09);
+  --shadow-card: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 1px 2px rgb(0 0 0 / 0.035);
+  --shadow-raised: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 2px 6px -2px rgb(0 0 0 / 0.05);
   --shadow-float:
-    0 0 0 0.5px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 20px -6px rgb(0 0 0 / 0.16);
+    0 0 0 0.5px rgb(0 0 0 / 0.11), 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 20px -8px rgb(0 0 0 / 0.1);
   /* For material-hud, which brings its own border: the float shadow with the
      ring taken out, so the two do not stack. */
   --shadow-hud: 0 6px 18px -4px rgb(0 0 0 / 0.18);
-  --shadow-overlay: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 12px 40px -8px rgb(0 0 0 / 0.2);
+  --shadow-overlay: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 12px 34px -10px rgb(0 0 0 / 0.14);
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.7);
 }
 

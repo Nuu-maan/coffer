@@ -145,12 +145,12 @@ export function App(): React.JSX.Element {
             <>
               <Button
                 variant="default"
-                size="icon-sm"
+                size="icon"
                 className="no-drag hit-36 shrink-0 text-muted-foreground hover:text-foreground"
                 onClick={() => show('list')}
                 aria-label="Back to the list"
               >
-                <ChevronLeftIcon />
+                <ChevronLeftIcon className="size-4" />
               </Button>
               <span className="text-sm font-semibold">{TITLES[tab]}</span>
             </>
@@ -169,11 +169,14 @@ export function App(): React.JSX.Element {
                 */}
                 <Button
                   variant="default"
-                  size="icon-sm"
+                  size="icon"
                   className="hit-36 text-muted-foreground hover:text-foreground"
                   aria-label="Menu"
                 >
-                  <MoreHorizontal />
+                  {/* Sized to the field beside it, and the glyph sized to the
+                      button. Three dots at 14px inside a 22px circle left a
+                      ring of fill around a mark too small to aim at. */}
+                  <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
