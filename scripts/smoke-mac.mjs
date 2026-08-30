@@ -124,10 +124,13 @@ await check('the hotkey manager settled on the mode its permissions allow', asyn
   return `mode=${status.mode} error=${status.error ?? 'none'}`
 })
 
+/* list() answers with a snapshot — items and their sections together — since
+   the section redesign, so the items are a field of it rather than the whole
+   answer. */
 await check('IPC round-trips', async () => {
-  const before = await page.evaluate(() => window.coffer.items.list())
+  const before = (await page.evaluate(() => window.coffer.items.list())).items
   await page.evaluate(() => window.coffer.items.add({ text: 'smoke test' }))
-  const after = await page.evaluate(() => window.coffer.items.list())
+  const after = (await page.evaluate(() => window.coffer.items.list())).items
   assert.equal(after.length, before.length + 1)
   assert.equal(after.at(-1).text, 'smoke test')
   return `${before.length} → ${after.length} items`
@@ -216,10 +219,10 @@ await check('a stash runs end to end without throwing or eating the clipboard', 
 
   const outcome = await page.evaluate(async (text) => {
     await window.coffer.clipboard.write(text)
-    const before = (await window.coffer.items.list()).length
+    const before = (await window.coffer.items.list()).items.length
     await window.coffer.stash.selection()
     return {
-      after: (await window.coffer.items.list()).length,
+      after: (await window.coffer.items.list()).items.length,
       before,
       clipboard: await window.coffer.clipboard.read()
     }
