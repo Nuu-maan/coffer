@@ -9,40 +9,63 @@ fail=0
 note() { printf '  %-58s %s\n' "$1" "$2"; }
 bad() { printf '  %-58s %s\n' "$1" "FAIL — $2"; fail=1; }
 
-for arch in arm64 x64; do
-  app="release/mac-${arch}/Coffer.app"
-  echo
-  echo "── ${app}"
+# Discovered rather than assumed. electron-builder names the output directory
+# for the runner's own architecture differently from the cross-built one, so a
+# hardcoded release/mac-x64 is right in one direction and wrong in the other.
+apps="$(find release -maxdepth 2 -name 'Coffer.app' -type d | sort)"
 
-  if [ ! -d "$app" ]; then
-    bad "bundle exists" "not built"
-    continue
-  fi
+if [ -z "$apps" ]; then
+  echo "no Coffer.app anywhere under release/"
+  ls -la release 2>/dev/null || true
+  exit 1
+fi
 
+echo "found:"
+echo "$apps" | sed 's/^/  /'
+
+for app in $apps; do
   exe="${app}/Contents/MacOS/Coffer"
+  # The bundle says which architecture it is; the directory name is a guess.
+  arch="$(lipo -archs "$exe" | awk '{ print $1 }')"
+
+  # lipo says x86_64 where every directory and package name says x64. Written
+  # as an if rather than a bare && because this script runs under set -e, and a
+  # test that is simply false would otherwise end it.
+  if [ "$arch" = "x86_64" ]; then slice=x64; else slice="$arch"; fi
+
+  echo
+  echo "── ${app}  (${arch})"
   plist="${app}/Contents/Info.plist"
 
-  # The executable must be the architecture it claims. Building x64 on an
-  # arm64 runner is exactly where this goes wrong silently.
+  # One architecture per bundle, and it must be one we ship.
   got="$(lipo -archs "$exe")"
-  [ "$got" = "$arch" ] && note "executable is ${arch}" "ok" || bad "executable is ${arch}" "got ${got}"
+  case "$got" in
+    arm64 | x86_64) note "executable is a single slice" "${got}" ;;
+    *) bad "executable is a single slice" "got '${got}'" ;;
+  esac
 
   # No foreign prebuilds. The signer walks the bundle by sniffing binaries
   # rather than by extension, so an ELF or PE left inside gets handed to
   # codesign — and node-gyp-build would rather load build/Release than a
   # prebuild, so a stale one there wins over the correct binary.
+  foreign="$(find "$app" -type d -name 'darwin-*' ! -name "darwin-${slice}" | head -3)"
+  [ -z "$foreign" ] && note "only the ${slice} prebuild" "ok" || bad "only the ${slice} prebuild" "$foreign"
+
   strays="$(find "$app" -path '*prebuilds/linux-*' -o -path '*prebuilds/win32-*' | head -5)"
   [ -z "$strays" ] && note "no linux or win32 prebuilds" "ok" || bad "no linux or win32 prebuilds" "$strays"
 
   leftover="$(find "$app" -path '*uiohook-napi/build/Release*' | head -3)"
   [ -z "$leftover" ] && note "no stale build/Release" "ok" || bad "no stale build/Release" "$leftover"
 
-  # Every native binary that did ship must match the target.
+  # Every native binary that shipped must match the bundle it shipped in. The
+  # afterPack hook drops the other architecture's prebuild, so a mismatch here
+  # means it did not run or did not find it.
   for node in $(find "$app" -name '*.node'); do
     narch="$(lipo -archs "$node" 2>/dev/null || echo unknown)"
+    where="$(basename "$(dirname "$node")")/$(basename "$node")"
     case " $narch " in
-      *" $arch "*) note "$(basename "$(dirname "$node")")/$(basename "$node") is ${arch}" "ok" ;;
-      *) bad "$(basename "$node") is ${arch}" "got ${narch}" ;;
+      *" $arch "*) note "${where} is ${arch}" "ok" ;;
+      *) bad "${where} matches the bundle" "bundle is ${arch}, binary is ${narch}" ;;
     esac
   done
 
