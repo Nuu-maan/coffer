@@ -20,8 +20,7 @@ export type Release = {
 export const RELEASES: Release[] = [
   {
     version: '0.3.0',
-    date: '',
-    unreleased: true,
+    date: '2026-08-31',
     changes: [
       'Sections are real: make an empty one from the + menu, drag a caption to move the whole section, and rename it in place.',
       'Tick or untick a whole section at once, or move everything in it somewhere else in one go.',
