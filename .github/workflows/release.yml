@@ -79,13 +79,74 @@ jobs:
         if: runner.os == 'macOS'
         run: bash scripts/check-mac-bundle.sh
 
+      # The hardened runtime refuses to let anything attach to the process, and
+      # the smoke test drives the app through exactly that. Rather than weaken
+      # what users download, a throwaway copy is re-signed as debuggable. It is
+      # the same bits otherwise, and it never leaves the runner.
+      - name: Sign a debuggable copy to test
+        if: runner.os == 'macOS'
+        run: |
+          rm -rf /tmp/CofferTest.app
+          cp -R release/mac-arm64/Coffer.app /tmp/CofferTest.app
+          codesign --force --deep --sign - --options runtime --entitlements build/entitlements.test.plist /tmp/CofferTest.app
+          if codesign -d --entitlements :- /tmp/CofferTest.app 2>/dev/null | grep -q get-task-allow; then
+            echo "the copy is debuggable"
+          else
+            echo "re-signing did not take"
+            exit 1
+          fi
+
+      # A gate, not a diagnostic. Four runs built Windows and Linux green while
+      # startup was broken on all three platforms, because building an app and
+      # running one are different questions and CI was only asking the first.
+      #
+      # This needs no debugger and no driver: the app says how far it got, and
+      # reaching the end is the assertion.
+      - name: The app has to start
+        if: runner.os == 'macOS'
+        env:
+          COFFER_TRACE: '1'
+          ELECTRON_ENABLE_LOGGING: '1'
+        run: |
+          set +e
+          /tmp/CofferTest.app/Contents/MacOS/Coffer > boot.log 2>&1 &
+          pid=$!
+
+          for _ in $(seq 1 40); do
+            grep -q '\[boot\] booted' boot.log && break
+            sleep 1
+          done
+
+          alive=no
+          kill -0 "$pid" 2>/dev/null && alive=yes
+
+          echo "── $(wc -c < boot.log) bytes, still running: ${alive} ──"
+          cat boot.log
+
+          if grep -q '\[boot\] booted' boot.log; then
+            kill "$pid" 2>/dev/null
+            echo "started cleanly"
+            exit 0
+          fi
+
+          echo "── it never finished starting. where is it? ──"
+          if [ "$alive" = yes ]; then
+            sample "$pid" 2 -file sample.txt >/dev/null 2>&1
+            sed -n '/Call graph/,/Binary Images/p' sample.txt | head -40
+          fi
+          kill "$pid" 2>/dev/null
+          exit 1
+
       - name: Smoke test the packaged app
         if: runner.os == 'macOS'
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+          COFFER_TRACE: '1'
+          # Says what Playwright is waiting for, which a launch timeout does not.
+          DEBUG: 'pw:electron*,pw:browser*'
         run: |
           npm i --no-save playwright-core
-          node scripts/smoke-mac.mjs release/mac-arm64/Coffer.app/Contents/MacOS/Coffer
+          node scripts/smoke-mac.mjs /tmp/CofferTest.app/Contents/MacOS/Coffer
 
       - name: Keep what the smoke test saw
         if: runner.os == 'macOS' && always()

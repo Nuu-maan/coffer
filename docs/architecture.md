@@ -63,9 +63,13 @@ is testable without a keyboard.
 | Session | Trigger | Reading the selection |
 | --- | --- | --- |
 | Windows | `uiohook-napi` low-level hook, or accelerator | Synthesize `Ctrl+C`, poll the clipboard, restore it on failure |
-| macOS | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
+| macOS ¹ | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
 | Linux / X11 | Same hook, or accelerator | Read the PRIMARY selection directly — no keystroke needed |
 | Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
+
+¹ macOS is in early development. Everything below describes what the code does
+and what CI verifies on a runner; none of it has been watched by a person on a
+real Mac, and the places that matters most are listed at the end of this file.
 
 The double-tap trigger needs to watch the keyboard, which Wayland does not
 permit. Neither does it permit `globalShortcut`, which reports success there and
@@ -150,3 +154,28 @@ through the single-instance lock.
   ad-hoc bundle is a hash that changes every build), and why the updater is off
   there — Squirrel.Mac verifies the signature, and it does so only after
   downloading the whole update.
+
+## What macOS still needs a real Mac for
+
+CI builds both architectures, reads the finished bundle back, and drives the
+packaged app: the keyboard hook starts, a stash runs end to end without losing
+the clipboard, the region overlay covers the full display, and the renderer
+paints without errors. A hosted runner also turns out to be trusted for
+Accessibility and screen capture, so the granted paths are exercised too.
+
+What it cannot answer, and what would move macOS out of early development:
+
+- Whether the synthesised `⌘C` really copies out of Safari, Chrome, VS Code,
+  Terminal and Notes, and whether the 500ms clipboard window suits the macOS
+  pasteboard.
+- Whether the overlay visually covers the menu bar, the Dock, the notch band and
+  another app's fullscreen Space — and whether the crosshair cursor appears.
+- Whether the traffic lights land centred in the 38px header, and what
+  `env(titlebar-area-x)` actually evaluates to.
+- Whether Gatekeeper's first-launch sequence matches what the README claims, for
+  someone downloading the DMG in a browser. CI never sets the quarantine
+  attribute, so none of that story is testable there.
+- Whether the per-keystroke `dispatch_sync` in libuiohook's darwin backend causes
+  system-wide input lag under load (uiohook-napi#47).
+- Whether the x64 build runs on an Intel Mac at all. The runner is Apple silicon
+  with no Rosetta, so it can build that slice but never execute it.

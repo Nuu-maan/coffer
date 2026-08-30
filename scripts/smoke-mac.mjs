@@ -6,11 +6,14 @@ import { _electron as electron } from 'playwright-core'
  * Drives the packaged macOS app on a CI runner and asserts what a machine with
  * no TCC grants can honestly assert.
  *
- * The runner is permanently denied Accessibility and Screen Recording — TCC.db
- * is protected by SIP and SIP cannot be turned off inside a hosted runner — so
- * the denied paths are not a gap here, they are the point. They are what a Mac
- * user hits on first run, and they are the paths that had no code at all before
- * this branch.
+ * A hosted runner turns out to be TRUSTED for both Accessibility and screen
+ * capture, which I had assumed it could not be — the first run to get this far
+ * proved otherwise. That is better than expected: it means the granted paths
+ * are exercised here too, including uIOhook.start() actually succeeding.
+ *
+ * So nothing below asserts a particular grant. It asserts that the answers are
+ * well formed and that the app's own state agrees with them, which holds on a
+ * machine in either condition — including a developer's Mac.
  *
  * What genuinely cannot be checked here is in the README of this branch and in
  * the PR: whether a granted Cmd+C actually copies out of Safari, whether the
@@ -39,7 +42,13 @@ if (!existsSync(APP)) {
 /* Deliberately not given a --user-data-dir: where Electron puts userData on a
    packaged macOS bundle is one of the things this run exists to find out, and
    overriding it would answer a question nobody asked. */
-const app = await electron.launch({ executablePath: APP, timeout: 60_000 })
+const app = await electron.launch({ executablePath: APP, timeout: 120_000 }).catch((error) => {
+  console.error(
+    'the app never became ready. The startup log from the step before this one is ' +
+      'where the reason will be, if it printed one.'
+  )
+  throw error
+})
 
 const pageErrors = []
 app.on('window', (page) => {
@@ -73,17 +82,46 @@ await check('the renderer paints', async () => {
   return 'screenshot written'
 })
 
+const info = await page.evaluate(() => window.coffer.platform.info())
+
 await check('platformInfo reports darwin and a macos session', async () => {
-  const info = await page.evaluate(() => window.coffer.platform.info())
   assert.equal(info.platform, 'darwin')
   assert.equal(info.session, 'macos', `session was ${info.session}`)
   assert.equal(info.supportsAccelerators, true)
+  assert.equal(info.supportsSourceCapture, true)
+  return `session=${info.session} doubleShift=${info.supportsDoubleShift}`
+})
+
+await check('the permission answers are well formed and agree with each other', async () => {
+  const access = await page.evaluate(() => window.coffer.permissions.status())
+
+  assert.equal(typeof access.accessibility, 'boolean')
+  assert.ok(
+    ['granted', 'denied', 'restricted', 'not-determined', 'unknown'].includes(access.screen),
+    `screen was ${access.screen}`
+  )
+  // supportsDoubleShift is derived from the same grant. They must not disagree.
   assert.equal(
     info.supportsDoubleShift,
-    false,
-    'a runner has no Accessibility grant, so this must be false'
+    access.accessibility,
+    'the trigger flag and the permission it comes from say different things'
   )
-  return `session=${info.session} doubleShift=${info.supportsDoubleShift}`
+  return `accessibility=${access.accessibility} screen=${access.screen}`
+})
+
+/* With the grant in hand this proves uIOhook.start() really succeeded on
+   macOS; without it, that the fallback published a mode and a reason. Either
+   way it is the whole hotkey path, in the real signed process. */
+await check('the hotkey manager settled on the mode its permissions allow', async () => {
+  const status = await page.evaluate(() => window.coffer.hotkeys.status())
+
+  if (info.supportsDoubleShift) {
+    assert.equal(status.mode, 'double-shift', `mode was ${status.mode}: ${status.error ?? ''}`)
+  } else {
+    assert.equal(status.mode, 'accelerator', `mode was ${status.mode}`)
+    assert.match(String(status.error), /Accessibility/, 'the fallback did not say why')
+  }
+  return `mode=${status.mode} error=${status.error ?? 'none'}`
 })
 
 await check('IPC round-trips', async () => {
@@ -115,27 +153,25 @@ await check('an overlay can cover the whole display, menu bar included', async (
   return `${asked.width}×${asked.height} at (${asked.x},${asked.y})`
 })
 
-await check('the macOS default accelerators are registrable', async () => {
-  const registered = await app.evaluate(async ({ globalShortcut }) => {
-    const out = {}
-    for (const accelerator of ['Control+Command+S', 'Control+Command+R']) {
-      out[accelerator] = globalShortcut.register(accelerator, () => {})
-      globalShortcut.unregister(accelerator)
-    }
-    return out
-  })
-  for (const [accelerator, ok] of Object.entries(registered)) {
-    assert.equal(ok, true, `${accelerator} was refused`)
-  }
-  return Object.keys(registered).join(', ')
+/* Asked rather than registered. Trying to register it is how the first run of
+   this test failed: Coffer already held it, so the call correctly returned
+   false, which is the opposite of the problem it looked like. */
+await check('Coffer holds the macOS clipper accelerator it ships with', async () => {
+  const held = await app.evaluate(({ globalShortcut }) => ({
+    clip: globalShortcut.isRegistered('Control+Command+R'),
+    // Free unless the trigger fell back to it, which depends on the grant.
+    stash: globalShortcut.isRegistered('Control+Command+S')
+  }))
+  assert.equal(held.clip, true, 'Control+Command+R is not registered to anything')
+  return `clip=${held.clip} stash=${held.stash}`
 })
 
-await check('Accessibility reads as denied without throwing', async () => {
+await check('Accessibility answers without throwing', async () => {
   const trusted = await app.evaluate(({ systemPreferences }) =>
     systemPreferences.isTrustedAccessibilityClient(false)
   )
-  assert.equal(trusted, false, 'a hosted runner cannot have been granted this')
-  return 'isTrustedAccessibilityClient(false) = false'
+  assert.equal(typeof trusted, 'boolean')
+  return `isTrustedAccessibilityClient(false) = ${trusted}`
 })
 
 await check('there is no request API for the screen', async () => {
@@ -162,67 +198,53 @@ await check('desktopCapturer is refused, and refused the way the clipper expects
   return outcome.message.trim()
 })
 
-/* keyTap must not throw and must not crash without the grant — which is exactly
-   why selection capture is gated on a preflight rather than on a try/catch.
-   The main bundle is an ES module, so there is no ambient require to borrow;
-   one is built against the app's own path so it resolves inside app.asar. */
-await check('uiohook-napi loads on darwin', async () => {
-  const arch = await app.evaluate(async ({ app }) => {
-    const { createRequire } = await import('node:module')
-    const load = createRequire(`${app.getAppPath()}/`)
-    const { UiohookKey } = load('uiohook-napi')
-    return { meta: UiohookKey.Meta, ctrl: UiohookKey.Ctrl, arch: process.arch }
-  })
-  assert.ok(arch.meta > 0, 'UiohookKey.Meta is missing, so the copy chord has no ⌘')
-  return `arch=${arch.arch} Meta=${arch.meta} Ctrl=${arch.ctrl}`
-})
+/*
+ * uiohook is reached through the app rather than poked at directly. Playwright
+ * evaluates in a context with no dynamic import callback, so `await
+ * import('node:module')` throws there and the main bundle is an ES module with
+ * no require to borrow — but going through Coffer's own IPC is the better test
+ * anyway, because it runs the real code in the real signed process with the
+ * real entitlements.
+ *
+ * Stash is the whole path: clear the clipboard, synthesise the copy chord
+ * through uiohook, poll, restore. On a granted runner that means keyTap really
+ * fires; on a denied one the preflight turns it away before the clipboard is
+ * touched. Neither may throw, and neither may lose what was on the clipboard.
+ */
+await check('a stash runs end to end without throwing or eating the clipboard', async () => {
+  const marker = `coffer-smoke-${process.pid}`
 
-await check('keyTap without the grant neither throws nor crashes', async () => {
-  const threw = await app.evaluate(async ({ app }) => {
-    const { createRequire } = await import('node:module')
-    const load = createRequire(`${app.getAppPath()}/`)
-    const { UiohookKey, uIOhook } = load('uiohook-napi')
-    try {
-      uIOhook.keyTap(UiohookKey.C, [UiohookKey.Meta])
-      return null
-    } catch (error) {
-      return String(error.message ?? error)
+  const outcome = await page.evaluate(async (text) => {
+    await window.coffer.clipboard.write(text)
+    const before = (await window.coffer.items.list()).length
+    await window.coffer.stash.selection()
+    return {
+      after: (await window.coffer.items.list()).length,
+      before,
+      clipboard: await window.coffer.clipboard.read()
     }
-  })
-  assert.equal(threw, null, `keyTap threw: ${threw}`)
-  return 'returned silently, as documented'
+  }, marker)
+
+  // Nothing was selected in a text field, so the honest outcomes are "no new
+  // item" or "one new item"; what must not happen is a lost clipboard.
+  assert.ok(outcome.after >= outcome.before, 'the stash removed items')
+  assert.equal(
+    outcome.clipboard,
+    marker,
+    'the clipboard was cleared for the copy and never put back'
+  )
+  return `items ${outcome.before} → ${outcome.after}, clipboard intact`
 })
 
-await check('starting the hook is refused, and named', async () => {
-  const outcome = await app.evaluate(async ({ app }) => {
-    const { createRequire } = await import('node:module')
-    const load = createRequire(`${app.getAppPath()}/`)
-    const { uIOhook } = load('uiohook-napi')
-    try {
-      uIOhook.start()
-      uIOhook.stop()
-      return { started: true }
-    } catch (error) {
-      return { started: false, code: error.code, message: String(error.message ?? error) }
-    }
-  })
-  if (outcome.started) return 'runner allowed the event tap — nothing to assert'
-  assert.equal(outcome.code, 'UIOHOOK_ERROR_AXAPI_DISABLED', `code was ${outcome.code}`)
-  return outcome.code
-})
+/* The shell fallback's own error classifying is covered by unit tests that run
+   anywhere. What cannot be tested off a Mac is that asking for a permission
+   comes back at all rather than hanging or throwing. */
+await check('requesting a permission answers', async () => {
+  const after = await page.evaluate(() => window.coffer.permissions.request('accessibility'))
 
-await check('osascript is reachable, and its refusal is classified', async () => {
-  const outcome = await app.evaluate(async () => {
-    const { execFile } = await import('node:child_process')
-    return new Promise((resolve) => {
-      execFile('osascript', ['-e', 'return 1'], (error, stdout) =>
-        resolve({ error: error ? String(error.message) : null, stdout: String(stdout).trim() })
-      )
-    })
-  })
-  assert.equal(outcome.error, null, `osascript failed: ${outcome.error}`)
-  assert.equal(outcome.stdout, '1')
-  return 'execFile plumbing works on darwin'
+  assert.equal(typeof after.accessibility, 'boolean')
+  assert.equal(typeof after.needsRestart, 'boolean')
+  return `accessibility=${after.accessibility} needsRestart=${after.needsRestart}`
 })
 
 await check('userData lands where the store expects it', async () => {
@@ -230,11 +252,19 @@ await check('userData lands where the store expects it', async () => {
     userData: app.getPath('userData'),
     name: app.getName()
   }))
-  // Recorded rather than pinned to a literal: this is the value that must not
-  // change once macOS users exist, so the log is the record of what it is.
   console.log(`\n  userData = ${paths.userData}\n  app.getName() = ${paths.name}\n`)
-  assert.ok(paths.userData.includes('Application Support'), paths.userData)
-  assert.equal(paths.userData, userDataDir, 'the --user-data-dir override did not take')
+
+  /* Pinned, because this is the one value here that cannot be changed once Mac
+     users exist — moving it orphans their stash. It resolves from the package
+     name rather than from CFBundleName, which is why it is lowercase and why
+     adding a productName to package.json would move it on every platform at
+     once. If this ever fails, the README's data table is wrong too. */
+  assert.match(
+    paths.userData,
+    /[/\\]Application Support[/\\]coffer$/,
+    `userData moved to ${paths.userData}`
+  )
+  assert.equal(paths.name, 'coffer', `app.getName() became ${paths.name}`)
   return paths.userData
 })
 

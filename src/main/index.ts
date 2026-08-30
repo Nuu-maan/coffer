@@ -20,12 +20,25 @@ import { startClip } from './features/clipper'
 import { syncLoginItem, syncTheme } from './features/settings/service'
 import { startUpdateChecks, stopUpdateChecks } from './features/updates'
 
+/* Startup is the one place a failure leaves nothing behind to look at: no
+   window, no log, and a process that is still running. Off unless asked for. */
+const trace = process.env['COFFER_TRACE']
+  ? (step: string): void => console.log(`[boot] ${step}`)
+  : (): void => undefined
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   applyLinuxCommandLineFlags()
   registerCofferScheme()
-  void boot()
+
+  /* Anything that escapes boot() leaves a process that is running, has a
+     debugger port, and will never show a window — which looks like a hang and
+     is impossible to diagnose from the outside. Say what happened and stop. */
+  boot().catch((error) => {
+    console.error('[app] failed to start', error)
+    app.exit(1)
+  })
 }
 
 function isForwardedAction(argv: string[]): boolean {
@@ -39,12 +52,22 @@ function isForwardedAction(argv: string[]): boolean {
  * reports the same fact its own way.
  */
 function startedHidden(): boolean {
-  if (isMac()) return app.getLoginItemSettings().wasOpenedAtLogin
-  return process.argv.includes('--hidden')
+  if (!isMac()) return process.argv.includes('--hidden')
+
+  // SMAppService throws rather than answering for a bundle it does not consider
+  // installed. Not knowing means showing the window, which is the safe way to
+  // be wrong.
+  try {
+    return app.getLoginItemSettings().wasOpenedAtLogin
+  } catch {
+    return false
+  }
 }
 
 async function boot(): Promise<void> {
+  trace('start')
   const store = await loadStore()
+  trace('store loaded')
 
   const hotkeys = createHotkeyManager(
     {
@@ -62,7 +85,9 @@ async function boot(): Promise<void> {
     showMainWindow()
   })
 
+  trace('waiting for ready')
   await app.whenReady()
+  trace('ready')
 
   electronApp.setAppUserModelId(APP_ID)
   app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window))
@@ -74,10 +99,14 @@ async function boot(): Promise<void> {
   })
 
   installMenu()
+  trace('menu installed')
   createTray()
+  trace('tray created')
   hotkeys.apply(store.settings)
+  trace('hotkeys applied')
   syncTheme(store.settings.theme)
   syncLoginItem(store.settings.launchOnLogin)
+  trace('login item synced')
 
   if (storeIntact()) {
     const kept = new Set(
@@ -91,6 +120,7 @@ async function boot(): Promise<void> {
   startUpdateChecks()
 
   primeOverlays()
+  trace('overlays primed')
   screen.on('display-added', () => primeOverlays())
   screen.on('display-removed', () => primeOverlays())
   screen.on('display-metrics-changed', () => primeOverlays())
@@ -100,6 +130,7 @@ async function boot(): Promise<void> {
   if (!startedHidden() && !isForwardedAction(process.argv)) showMainWindow()
   else setWindowVisible(false)
 
+  trace('window decided')
   watchActivation()
   app.on('window-all-closed', () => undefined)
 
@@ -127,4 +158,6 @@ async function boot(): Promise<void> {
       app.exit(0)
     }
   })
+
+  trace('booted')
 }

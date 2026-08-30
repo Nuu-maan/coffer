@@ -50,13 +50,22 @@ export function syncLoginItem(enabled: boolean): void {
   /* args and openAsHidden are Windows-only — macOS ignores both, and Electron
      routes macOS 13 and later through SMAppService, which can land the app in
      'requires-approval' with the user still to enable it in System Settings.
-     Reporting that as success is how a login item silently never happens. */
-  if (isMac()) {
-    app.setLoginItemSettings({ openAtLogin: enabled })
+     Reporting that as success is how a login item silently never happens.
 
-    const { status } = app.getLoginItemSettings()
-    if (enabled && status === 'requires-approval') {
-      console.warn('[settings] the login item needs approving in System Settings')
+     Wrapped because SMAppService refuses outright for a bundle it does not
+     consider properly installed — running from a build directory rather than
+     /Applications is enough — and it says so by throwing. A login item is a
+     convenience; it is not worth taking the app down with it. */
+  if (isMac()) {
+    try {
+      app.setLoginItemSettings({ openAtLogin: enabled })
+
+      const { status } = app.getLoginItemSettings()
+      if (enabled && status === 'requires-approval') {
+        console.warn('[settings] the login item needs approving in System Settings')
+      }
+    } catch (error) {
+      console.error('[settings] macOS would not register the login item', error)
     }
     return
   }
