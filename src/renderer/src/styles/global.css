@@ -151,8 +151,27 @@
      where the compositor declines to blur behind us. */
   --sheet: rgb(255 255 255 / 0.98);
 
+  /*
+   * The elevation ramp, and it is a ramp: every level is the level below it
+   * plus one more layer, pushed further and softened more.
+   *
+   * One blurred rectangle is what a shadow looks like in a drawing program, not
+   * what one looks like in a room. Real light leaves a tight dark contact
+   * shadow where the object nearly touches its ground and a wide faint one
+   * further out, and it is the gap between those two that the eye reads as
+   * height. A single layer can be dark or it can be soft; it cannot be both,
+   * which is why it either smears or disappears.
+   *
+   * Every layer is offset downward only and pulled in with a negative spread,
+   * so nothing leaks out sideways — a shadow that spreads evenly in every
+   * direction reads as a glow. The hairline is on all of them: on a white
+   * ground it is what makes the edge findable, and the shadow is only ever
+   * doing the lifting.
+   */
   --shadow-hairline: 0 0 0 0.5px rgb(0 0 0 / 0.1);
-  --shadow-control: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 0.5px 1px rgb(0 0 0 / 0.035);
+  --shadow-control:
+    0 0 0 0.5px rgb(0 0 0 / 0.1), 0 1px 1px -0.5px rgb(0 0 0 / 0.05),
+    0 2px 2px -1.5px rgb(0 0 0 / 0.04);
   /*
    * No ring on the surfaces. A card inside a window is told apart from its
    * ground by its fill; the ring these used to carry outlined every list row
@@ -175,14 +194,24 @@
    * size — barely there, offset downward only, because a shadow that spreads
    * evenly in every direction reads as a glow and a card does not glow.
    */
-  --shadow-card: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 1px 2px rgb(0 0 0 / 0.035);
-  --shadow-raised: 0 0 0 0.5px rgb(0 0 0 / 0.11), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-card:
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 1px 2px -1px rgb(0 0 0 / 0.07),
+    0 3px 5px -2.5px rgb(0 0 0 / 0.05), 0 6px 10px -5px rgb(0 0 0 / 0.035);
+  --shadow-raised:
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 2px 3px -1.5px rgb(0 0 0 / 0.07),
+    0 5px 9px -4px rgb(0 0 0 / 0.055), 0 11px 20px -8px rgb(0 0 0 / 0.045);
   --shadow-float:
-    0 0 0 0.5px rgb(0 0 0 / 0.11), 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 20px -8px rgb(0 0 0 / 0.1);
-  /* For material-hud, which brings its own border: the float shadow with the
-     ring taken out, so the two do not stack. */
-  --shadow-hud: 0 6px 18px -4px rgb(0 0 0 / 0.18);
-  --shadow-overlay: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 12px 34px -10px rgb(0 0 0 / 0.14);
+    0 0 0 0.5px rgb(0 0 0 / 0.09), 0 2px 4px -2px rgb(0 0 0 / 0.06),
+    0 7px 13px -5px rgb(0 0 0 / 0.07), 0 16px 28px -11px rgb(0 0 0 / 0.07);
+  /* For material-hud, which brings its own border: the float ramp with the
+     hairline taken out, so the two do not stack. */
+  --shadow-hud:
+    0 2px 4px -2px rgb(0 0 0 / 0.08), 0 7px 13px -5px rgb(0 0 0 / 0.09),
+    0 16px 28px -11px rgb(0 0 0 / 0.1);
+  --shadow-overlay:
+    0 0 0 0.5px rgb(0 0 0 / 0.1), 0 4px 7px -3.5px rgb(0 0 0 / 0.05),
+    0 11px 20px -7px rgb(0 0 0 / 0.07), 0 24px 44px -14px rgb(0 0 0 / 0.09),
+    0 44px 72px -26px rgb(0 0 0 / 0.08);
   --shadow-inset-top: inset 0 0.5px 0 rgb(255 255 255 / 0.7);
 }
 

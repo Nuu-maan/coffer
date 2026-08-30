@@ -30,23 +30,29 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
         closeButton: false,
         classNames: {
           /*
-           * no-drag is what actually makes the swipe possible.
+           * The same material a menu is made of, rather than a HUD.
            *
-           * The toast sits 12px from the top of the window, which is inside the
-           * 44px title bar — and that bar is -webkit-app-region: drag. A press
-           * there is claimed by the window manager before the page sees it, so
-           * the pointer moved the whole window and the toast sat still. Sonner
-           * was never the problem; nothing was reaching it.
+           * A HUD is dark in both themes on purpose: the copy badge over an
+           * image and the region picker's readouts float on content this app
+           * knows nothing about, so they have to bring their own dark ground.
+           * A toast floats on the panel, which is a surface we own and have a
+           * colour for. Dark in light mode made it the only inverted thing on
+           * screen, for the least important message on it.
+           *
+           * no-drag is what makes the swipe possible. The toast sits 12px from
+           * the top, inside the 44px title bar, and that bar is
+           * -webkit-app-region: drag — a press there is claimed by the window
+           * manager before the page sees it, so the pointer moved the whole
+           * window and the toast sat still.
            */
           toast:
-            'no-drag material-hud !rounded-full !border-0 !px-3 !py-1.5 !text-xs !font-medium !shadow-float',
+            'no-drag material-thick material-edge !rounded-full !px-3 !py-1.5 !text-xs !font-medium !shadow-overlay',
           description: '!text-muted-foreground',
           icon: '!mr-1.5',
-          /* The toast is a dark capsule whatever the theme, so the action
-             inside it is styled against that rather than against the window —
-             an unstyled sonner action lands as dark text on a dark pill. */
+          /* Ink on the panel's own hover wash, so it reads in either theme —
+             it used to be white on white/15, which only worked on a dark pill. */
           actionButton:
-            '!ml-1.5 !rounded-full !bg-white/15 !px-2 !py-0.5 !text-xs !font-medium !text-[var(--hud-foreground)] hover:!bg-white/25'
+            '!ml-1.5 !rounded-full !bg-accent-strong !px-2 !py-0.5 !text-xs !font-medium !text-foreground hover:!bg-accent-strong'
         }
       }}
       icons={{
@@ -57,25 +63,22 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
         loading: <Loader2Icon className="size-3.5 animate-spin" />
       }}
       /*
-       * --normal-bg carries the fill, and it used to be transparent.
+       * --normal-bg carries the fill, and it has to be set here rather than
+       * left to the class. Sonner sets `background: var(--normal-bg)` on the
+       * toast; an inline custom property beats a class every time, and the
+       * shorthand wipes the utility's background-color with it. Left at
+       * transparent — which is how this started — the toast rendered perfectly
+       * and could not be read.
        *
-       * The idea was that material-hud beside it would paint the capsule. It
-       * cannot: sonner sets `background: var(--normal-bg)` on the toast, an
-       * inline custom property beats a class every time, and the shorthand
-       * wipes the utility's background-color. So the toast was transparent with
-       * --hud-foreground text — white on white in light mode, which is a toast
-       * that renders perfectly and cannot be read. Dark mode hid it, because
-       * white on a dark panel looks intentional.
-       *
-       * Pointing it at the same token material-hud would have used settles it
-       * without an !important arms race. The utility keeps the blur, the
-       * saturation and the border, which are the parts nothing is fighting it
+       * Pointed at the material tokens, it is a menu: white with dark text in
+       * light, dark with light text in dark. The utility keeps the blur, the
+       * saturation and the edge, which are the parts nothing is fighting it
        * over.
        */
       style={
         {
-          '--normal-bg': 'var(--hud)',
-          '--normal-text': 'var(--hud-foreground)',
+          '--normal-bg': 'var(--mat-thick)',
+          '--normal-text': 'var(--popover-foreground)',
           '--normal-border': 'transparent',
           '--border-radius': '9999px'
         } as React.CSSProperties
