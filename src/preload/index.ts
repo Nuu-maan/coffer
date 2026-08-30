@@ -7,9 +7,10 @@ import type {
   CofferApi,
   OverlayFrame,
   ReorderInput,
+  ReorderSectionInput,
   Unsubscribe
 } from '@shared/ipc/contract'
-import type { HotkeyStatus, Item, PermissionKind, Settings } from '@shared/types/item'
+import type { HotkeyStatus, PermissionKind, Settings, Snapshot } from '@shared/types/item'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): Unsubscribe {
   const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
@@ -25,8 +26,19 @@ const api: CofferApi = {
     toggle: (id: string) => ipcRenderer.invoke(CH.ITEMS_TOGGLE, id),
     update: (id: string, text: string) => ipcRenderer.invoke(CH.ITEMS_UPDATE, id, text),
     remove: (id: string) => ipcRenderer.invoke(CH.ITEMS_DELETE, id),
+    removeMany: (ids: string[]) => ipcRenderer.invoke(CH.ITEMS_DELETE_MANY, ids),
+    restore: (ids: string[]) => ipcRenderer.invoke(CH.ITEMS_RESTORE, ids),
     reorder: (input: ReorderInput) => ipcRenderer.invoke(CH.ITEMS_REORDER, input),
-    clearDone: () => ipcRenderer.invoke(CH.ITEMS_CLEAR_DONE)
+    clearDone: () => ipcRenderer.invoke(CH.ITEMS_CLEAR_DONE),
+    setTag: (id, tag) => ipcRenderer.invoke(CH.ITEMS_SET_TAG, id, tag)
+  },
+  sections: {
+    add: (name: string) => ipcRenderer.invoke(CH.SECTIONS_ADD, name),
+    rename: (from: string, to: string) => ipcRenderer.invoke(CH.SECTIONS_RENAME, from, to),
+    remove: (name: string) => ipcRenderer.invoke(CH.SECTIONS_REMOVE, name),
+    reorder: (input: ReorderSectionInput) => ipcRenderer.invoke(CH.SECTIONS_REORDER, input),
+    moveItems: (from: string, to: string) => ipcRenderer.invoke(CH.SECTIONS_MOVE_ITEMS, from, to),
+    setDone: (name: string, done: boolean) => ipcRenderer.invoke(CH.SECTIONS_SET_DONE, name, done)
   },
   clipboard: {
     read: () => ipcRenderer.invoke(CH.CLIPBOARD_READ),
@@ -67,7 +79,7 @@ const api: CofferApi = {
   },
   on: {
     clipperFrame: (callback) => subscribe<OverlayFrame>(CH.ON_CLIPPER_FRAME, callback),
-    itemsChanged: (callback) => subscribe<Item[]>(CH.ON_ITEMS_CHANGED, callback),
+    itemsChanged: (callback) => subscribe<Snapshot>(CH.ON_ITEMS_CHANGED, callback),
     settingsChanged: (callback) => subscribe<Settings>(CH.ON_SETTINGS_CHANGED, callback),
     hotkeyStatus: (callback) => subscribe<HotkeyStatus>(CH.ON_HOTKEY_STATUS, callback),
     showSettings: (callback) => subscribe<void>(CH.ON_SHOW_SETTINGS, callback)

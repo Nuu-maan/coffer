@@ -5,8 +5,18 @@ export const CH = {
   ITEMS_TOGGLE: 'items:toggle',
   ITEMS_UPDATE: 'items:update',
   ITEMS_DELETE: 'items:delete',
+  ITEMS_DELETE_MANY: 'items:deleteMany',
+  ITEMS_RESTORE: 'items:restore',
   ITEMS_REORDER: 'items:reorder',
   ITEMS_CLEAR_DONE: 'items:clearDone',
+  ITEMS_SET_TAG: 'items:setTag',
+
+  SECTIONS_ADD: 'sections:add',
+  SECTIONS_RENAME: 'sections:rename',
+  SECTIONS_REMOVE: 'sections:remove',
+  SECTIONS_REORDER: 'sections:reorder',
+  SECTIONS_MOVE_ITEMS: 'sections:moveItems',
+  SECTIONS_SET_DONE: 'sections:setDone',
 
   CLIPBOARD_READ: 'clipboard:read',
   CLIPBOARD_WRITE: 'clipboard:write',

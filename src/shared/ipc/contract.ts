@@ -1,12 +1,12 @@
 import type {
   ClipDraft,
   HotkeyStatus,
-  Item,
   ItemSource,
   PermissionKind,
   Permissions,
   PlatformInfo,
-  Settings
+  Settings,
+  Snapshot
 } from '../types/item'
 
 export type OverlayFrame = {
@@ -26,6 +26,8 @@ export type ClipRegion = {
 export type AddItemInput = {
   text: string
   source?: ItemSource
+  /** Files it as it is created, and makes the section if it does not exist. */
+  tag?: string
 }
 
 export type AddImageInput = {
@@ -40,18 +42,44 @@ export type ReorderInput = {
   afterId: string | null
 }
 
+/* The same shape a row's reorder takes, addressed by name — a section has no id
+   because its name is its identity. */
+export type ReorderSectionInput = {
+  name: string
+  beforeName: string | null
+  afterName: string | null
+}
+
 export type Unsubscribe = () => void
 
 export interface CofferApi {
   items: {
-    list(): Promise<Item[]>
-    add(input: AddItemInput): Promise<Item[]>
-    addImage(input: AddImageInput): Promise<Item[]>
-    toggle(id: string): Promise<Item[]>
-    update(id: string, text: string): Promise<Item[]>
-    remove(id: string): Promise<Item[]>
-    reorder(input: ReorderInput): Promise<Item[]>
-    clearDone(): Promise<Item[]>
+    list(): Promise<Snapshot>
+    add(input: AddItemInput): Promise<Snapshot>
+    addImage(input: AddImageInput): Promise<Snapshot>
+    toggle(id: string): Promise<Snapshot>
+    update(id: string, text: string): Promise<Snapshot>
+    remove(id: string): Promise<Snapshot>
+    removeMany(ids: string[]): Promise<Snapshot>
+    /** Puts named deleted stashes back. Held in memory, so the offer does not
+        survive a restart. */
+    restore(ids: string[]): Promise<Snapshot>
+    reorder(input: ReorderInput): Promise<Snapshot>
+    clearDone(): Promise<Snapshot>
+    /** '' unfiles the item. Filing under an unknown name creates that section. */
+    setTag(id: string, tag: string): Promise<Snapshot>
+  }
+  sections: {
+    /** Creates an empty section. Naming an existing one is a no-op. */
+    add(name: string): Promise<Snapshot>
+    /** '' unfiles every item under `from` and deletes the section. */
+    rename(from: string, to: string): Promise<Snapshot>
+    remove(name: string): Promise<Snapshot>
+    reorder(input: ReorderSectionInput): Promise<Snapshot>
+    /** Every item under `from`, filed under `to` at once. '' unfiles them. */
+    moveItems(from: string, to: string): Promise<Snapshot>
+    /** Ticks or unticks the whole section. */
+    setDone(name: string, done: boolean): Promise<Snapshot>
   }
   clipboard: {
     read(): Promise<string>
@@ -93,7 +121,7 @@ export interface CofferApi {
   }
   on: {
     clipperFrame(callback: (frame: OverlayFrame) => void): Unsubscribe
-    itemsChanged(callback: (items: Item[]) => void): Unsubscribe
+    itemsChanged(callback: (snapshot: Snapshot) => void): Unsubscribe
     settingsChanged(callback: (settings: Settings) => void): Unsubscribe
     hotkeyStatus(callback: (status: HotkeyStatus) => void): Unsubscribe
     showSettings(callback: () => void): Unsubscribe
