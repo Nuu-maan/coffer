@@ -56,9 +56,25 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
         error: <OctagonXIcon className="size-3.5" />,
         loading: <Loader2Icon className="size-3.5 animate-spin" />
       }}
+      /*
+       * --normal-bg carries the fill, and it used to be transparent.
+       *
+       * The idea was that material-hud beside it would paint the capsule. It
+       * cannot: sonner sets `background: var(--normal-bg)` on the toast, an
+       * inline custom property beats a class every time, and the shorthand
+       * wipes the utility's background-color. So the toast was transparent with
+       * --hud-foreground text — white on white in light mode, which is a toast
+       * that renders perfectly and cannot be read. Dark mode hid it, because
+       * white on a dark panel looks intentional.
+       *
+       * Pointing it at the same token material-hud would have used settles it
+       * without an !important arms race. The utility keeps the blur, the
+       * saturation and the border, which are the parts nothing is fighting it
+       * over.
+       */
       style={
         {
-          '--normal-bg': 'transparent',
+          '--normal-bg': 'var(--hud)',
           '--normal-text': 'var(--hud-foreground)',
           '--normal-border': 'transparent',
           '--border-radius': '9999px'
