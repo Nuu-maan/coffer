@@ -160,7 +160,7 @@ export function RegionSelect(): React.JSX.Element {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={ease}
-            className="material-hud pointer-events-none absolute top-9 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-float"
+            className="material-hud pointer-events-none absolute top-9 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-hud"
           >
             Drag to clip · Esc to cancel
           </motion.p>
@@ -208,7 +208,7 @@ function Loupe({ frame, pointer }: { frame: OverlayFrame; pointer: Point }): Rea
         />
       </div>
 
-      <span className="material-hud vibrant rounded-full px-2 py-[2px] text-2xs tabular-nums shadow-float">
+      <span className="material-hud vibrant rounded-full px-2 py-[2px] text-2xs tabular-nums shadow-hud">
         {pointer.x}, {pointer.y}
       </span>
     </div>
@@ -221,7 +221,7 @@ function SizeReadout({ pointer, rect }: { pointer: Point; rect: Rect }): React.J
 
   return (
     <span
-      className="material-hud vibrant pointer-events-none absolute rounded-full px-2 py-[2px] text-xs tabular-nums shadow-float"
+      className="material-hud vibrant pointer-events-none absolute rounded-full px-2 py-[2px] text-xs tabular-nums shadow-hud"
       style={{
         left: flipX ? pointer.x - 16 - 92 : pointer.x + 16,
         top: flipY ? pointer.y - 16 - 24 : pointer.y + 16

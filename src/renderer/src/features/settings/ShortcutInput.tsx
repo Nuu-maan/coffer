@@ -77,7 +77,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
           {parts(value, mac).map((part, index) => (
             <kbd
               key={`${part}-${index}`}
-              className="rounded-[4px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground shadow-[inset_0_0_0_0.5px_var(--border)]"
+              className="rounded-[2px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground"
             >
               {part}
             </kbd>

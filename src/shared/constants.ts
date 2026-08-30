@@ -16,7 +16,7 @@ export function draftUrl(token: number): string {
 }
 
 /** The window's own title bar. macOS is told this so it can centre the traffic lights in it. */
-export const HEADER_HEIGHT = 38
+export const HEADER_HEIGHT = 44
 
 export const MAIN_WIDTH = 460
 export const MAIN_HEIGHT = 620

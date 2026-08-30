@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Check, Copy } from '@/components/icons'
 import type { HotkeyStatus, PlatformInfo } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 type Props = {
   status: HotkeyStatus
@@ -31,7 +30,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   if (status.error) {
     return (
-      <div className="flex flex-col gap-1.5 rounded-[8px] bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+      <div className="flex flex-col gap-1.5 rounded-[5px] bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
         <span className="font-medium">The desktop portal would not register Coffer.</span>
         <span className="text-destructive/80">{status.error}</span>
       </div>
@@ -40,7 +39,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   if (status.portalShortcuts.length === 0) {
     return (
-      <p className="rounded-[8px] bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-card">
+      <p className="rounded-[5px] bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-card">
         Asking the desktop portal for shortcuts…
       </p>
     )
@@ -48,15 +47,20 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="overflow-hidden rounded-[8px] bg-card shadow-card">
+      <div className="overflow-hidden rounded-[5px] bg-card shadow-card">
         {status.portalShortcuts.map((shortcut, index) => (
           <div
             key={shortcut.id}
-            className={cn(
-              'flex min-h-[34px] items-center justify-between gap-3 px-3 py-1.5',
-              index > 0 && 'border-t border-border'
-            )}
+            className="relative flex min-h-[34px] items-center justify-between gap-3 px-3 py-1.5"
           >
+            {/* The same inset rule the settings rows use, rather than a
+                full-bleed border — one divider in the app, not two. */}
+            {index > 0 && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-0 right-0 left-3 h-px bg-separator"
+              />
+            )}
             <div className="flex min-w-0 flex-col">
               <span className="truncate text-base">{shortcut.description}</span>
               <code className="truncate font-mono text-2xs text-muted-foreground">
@@ -65,7 +69,7 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
             </div>
 
             {shortcut.trigger ? (
-              <kbd className="shrink-0 rounded-[4px] bg-well px-1.5 py-px text-xs leading-5 shadow-[inset_0_0_0_0.5px_var(--border)]">
+              <kbd className="shrink-0 rounded-[2px] bg-well px-1.5 py-px text-xs leading-5">
                 {shortcut.trigger}
               </kbd>
             ) : (
@@ -75,10 +79,10 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
         ))}
       </div>
 
-      <div className="flex flex-col gap-2 rounded-[8px] bg-card px-3 py-2.5 shadow-card">
+      <div className="flex flex-col gap-2 rounded-[5px] bg-card px-3 py-2.5 shadow-card">
         <p className="text-sm text-muted-foreground">{config.hint}</p>
 
-        <pre className="overflow-x-auto rounded-[6px] bg-well px-2.5 py-2 font-mono text-2xs leading-5 text-foreground">
+        <pre className="overflow-x-auto rounded-[4px] bg-well px-2.5 py-2 font-mono text-2xs leading-5 text-foreground">
           {config.snippet}
         </pre>
 
