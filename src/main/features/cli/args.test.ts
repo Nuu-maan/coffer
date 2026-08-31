@@ -28,6 +28,19 @@ describe('parseForwardedAction', () => {
     expect(parseForwardedAction(['coffer', '--copy', '--hidden'])).toBeNull()
   })
 
+  it('reads the inlined form, which survives argv reordering', () => {
+    expect(parseForwardedAction(['coffer', '--copy=byW9AwaE4DQz']))
+      .toEqual({ kind: 'copy', id: 'byW9AwaE4DQz' })
+    expect(parseForwardedAction(['coffer', '--done=byW9AwaE4DQz']))
+      .toEqual({ kind: 'done', id: 'byW9AwaE4DQz' })
+    expect(parseForwardedAction(['coffer', '--copy='])).toBeNull()
+  })
+
+  it('prefers the inlined id over a stray positional', () => {
+    expect(parseForwardedAction(['coffer', '--done=abc', 'out/main/index.js']))
+      .toEqual({ kind: 'done', id: 'abc' })
+  })
+
   it('prefers capture over the item flags when both are passed', () => {
     expect(parseForwardedAction(['coffer', '--stash', '--copy', 'abc']))
       .toEqual({ kind: 'stash' })

@@ -5,6 +5,9 @@ export type ForwardedAction =
   | { kind: 'done'; id: string }
 
 function flagValue(argv: readonly string[], flag: string): string | undefined {
+  const inlined = argv.find((arg) => arg.startsWith(flag + '='))
+  if (inlined) return inlined.slice(flag.length + 1) || undefined
+
   const index = argv.indexOf(flag)
   if (index === -1) return undefined
   const value = argv[index + 1]
