@@ -171,6 +171,10 @@ bind = SUPER SHIFT, S, global, com.coffer.app:clip
 Compositors that do not speak the shortcuts portal can bind a command instead:
 `coffer --stash` and `coffer --clip` are forwarded to the running instance.
 
+Two more take an item id, for working the list down from outside the window:
+`coffer --copy <id>` puts an item on the clipboard, and `coffer --done <id>`
+ticks it off. Neither opens a window. Ids are the `id` field in `store.json`.
+
 ## Your data
 
 Everything is a JSON file and a folder of PNGs, on your machine, in a location
