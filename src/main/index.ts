@@ -4,7 +4,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { APP_ID } from '@shared/constants'
 import { CH } from '@shared/ipc/channels'
 import { createHotkeyManager } from './hotkey'
-import { broadcast } from './ipc/broadcast'
+import { broadcast, broadcastItems } from './ipc/broadcast'
 import { registerIpc } from './ipc/register'
 import { installMenu, watchActivation } from './menu'
 import { applyLinuxCommandLineFlags } from './platform/linux-flags'
@@ -16,6 +16,9 @@ import { pruneOrphans } from './features/images/store'
 import { createTray, destroyTray } from './tray'
 import { showMainWindow } from './windows/main-window'
 import { destroyOverlays, primeOverlays } from './windows/clipper-overlay'
+import { parseForwardedAction } from './features/cli/args'
+import { copyItem } from './features/items/clipboard'
+import { setItemDone } from './features/items/service'
 import { stashSelection } from './features/stash/capture-flow'
 import { startClip } from './features/clipper'
 import { syncLoginItem, syncTheme } from './features/settings/service'
@@ -47,8 +50,20 @@ if (!app.requestSingleInstanceLock()) {
   })
 }
 
+function runForwardedAction(argv: string[]): boolean {
+  const action = parseForwardedAction(argv)
+  if (!action) return false
+
+  if (action.kind === 'stash') void stashSelection()
+  else if (action.kind === 'clip') void startClip()
+  else if (action.kind === 'copy') void copyItem(action.id)
+  else broadcastItems(setItemDone(action.id, true))
+
+  return true
+}
+
 function isForwardedAction(argv: string[]): boolean {
-  return argv.includes('--stash') || argv.includes('--clip')
+  return parseForwardedAction(argv) !== null
 }
 
 /*
@@ -86,9 +101,7 @@ async function boot(): Promise<void> {
   // Compositors that cannot bind portal shortcuts (or users who would rather
   // not) can bind a command instead: a second launch forwards the action here.
   app.on('second-instance', (_event, argv) => {
-    if (argv.includes('--stash')) return void stashSelection()
-    if (argv.includes('--clip')) return void startClip()
-    showMainWindow()
+    if (!runForwardedAction(argv)) showMainWindow()
   })
 
   trace('waiting for ready')
@@ -146,8 +159,7 @@ async function boot(): Promise<void> {
   watchActivation()
   app.on('window-all-closed', () => undefined)
 
-  if (process.argv.includes('--stash')) void stashSelection()
-  if (process.argv.includes('--clip')) void startClip()
+  runForwardedAction(process.argv)
 
   /* Quitting is held open just long enough to finish the debounced write. A
      failed write must not hold it open forever, so the exit is in the finally
