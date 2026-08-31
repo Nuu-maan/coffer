@@ -173,7 +173,13 @@ Compositors that do not speak the shortcuts portal can bind a command instead:
 
 Two more take an item id, for working the list down from outside the window:
 `coffer --copy <id>` puts an item on the clipboard, and `coffer --done <id>`
-ticks it off. Neither opens a window. Ids are the `id` field in `store.json`.
+ticks it off. Neither opens a window. Ids are the `id` field in `store.json`,
+and both accept `--copy=<id>` as well, which survives argument reordering.
+
+`--copy` is the one with a caveat, and it is Wayland's: only the focused client
+may own the selection, so a Coffer sitting in the tray cannot take it. The flag
+works on X11, Windows, and macOS; on Wayland, pipe the text to `wl-copy`
+yourself, which is what the Omarchy bar plugin does.
 
 ## Your data
 
