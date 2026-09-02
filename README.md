@@ -179,9 +179,9 @@ launcher, bar or script can drive it without opening the window:
 | `coffer --done <id>` | Tick a stash off |
 
 Ids are the `id` field in `store.json`, and `--copy=<id>` is accepted too. On
-Wayland, `--copy` cannot take the
-clipboard from an unfocused process — the compositor only allows the focused
-client to — so pipe the text to `wl-copy` yourself there.
+Wayland, `--copy` cannot take the clipboard from an unfocused process — the
+compositor only allows the focused client to — so pipe the text to `wl-copy`
+yourself there.
 
 ## Your data
 
