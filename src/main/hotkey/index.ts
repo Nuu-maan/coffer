@@ -14,7 +14,7 @@ export type HotkeyTriggers = {
 export type HotkeyManager = {
   apply(settings: Settings): void
   refresh(settings: Settings): void
-  dispose(): void
+  dispose(): Promise<void>
   status(): HotkeyStatus
 }
 
@@ -45,6 +45,7 @@ export function createHotkeyManager(
   // Portal binding is asynchronous, so a settings change that lands mid-flight
   // must be able to discard the work it started.
   let generation = 0
+  let closing: Promise<void> = Promise.resolve()
 
   function publish(next: HotkeyStatus): void {
     current = next
@@ -59,7 +60,7 @@ export function createHotkeyManager(
     stashAccelerator = null
     clipAccelerator?.stop()
     clipAccelerator = null
-    portal?.close()
+    closing = portal?.close() ?? Promise.resolve()
     portal = null
   }
 
@@ -69,6 +70,7 @@ export function createHotkeyManager(
 
     void (async () => {
       try {
+        await closing
         await ensureDesktopEntry()
 
         const handle = await bindPortalShortcuts([
@@ -87,7 +89,7 @@ export function createHotkeyManager(
         ])
 
         if (mine !== generation) {
-          handle.close()
+          void handle.close()
           return
         }
 
@@ -186,6 +188,7 @@ export function createHotkeyManager(
       teardown()
       appliedKey = null
       current = IDLE
+      return closing
     },
     status: () => current
   }

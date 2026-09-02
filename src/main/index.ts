@@ -176,7 +176,7 @@ async function boot(): Promise<void> {
     event.preventDefault()
 
     try {
-      hotkeys.dispose()
+      await hotkeys.dispose()
       stopUpdateChecks()
       destroyOverlays()
       destroyTray()

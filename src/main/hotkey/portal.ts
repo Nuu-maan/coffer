@@ -29,7 +29,7 @@ export type PortalRequest = {
 }
 
 export type PortalHandle = {
-  close(): void
+  close(): Promise<void>
   shortcuts(): PortalShortcut[]
 }
 
@@ -132,8 +132,8 @@ export async function bindPortalShortcuts(requests: PortalRequest[]): Promise<Po
     })
 
     return {
-      close() {
-        void call(bus, {
+      async close() {
+        await call(bus, {
           destination: PORTAL,
           path: sessionHandle,
           interface: 'org.freedesktop.portal.Session',
