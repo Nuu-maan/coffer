@@ -1,3 +1,4 @@
+import { APP_ID } from '@shared/constants'
 import type { HotkeyStatus, Settings } from '@shared/types/item'
 import { platformInfo } from '@main/platform/session'
 import { ensureDesktopEntry } from '@main/platform/desktop-entry'
@@ -23,7 +24,7 @@ export type HotkeyManager = {
   status(): HotkeyStatus
 }
 
-const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [] }
+const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [], activated: [] }
 
 /** Everything the bindings are built from, and nothing else. */
 function bindingKey(settings: Settings): string {
@@ -46,15 +47,26 @@ export function createHotkeyManager(
   let current: HotkeyStatus = IDLE
   let appliedKey: string | null = null
   let deniedAccessibility = false
+  const activated = new Set<string>()
 
   // Portal binding is asynchronous, so a settings change that lands mid-flight
   // must be able to discard the work it started.
   let generation = 0
   let closing: Promise<void> = Promise.resolve()
 
-  function publish(next: HotkeyStatus): void {
-    current = next
-    onStatusChange(next)
+  function publish(next: Omit<HotkeyStatus, 'activated'>): void {
+    current = { ...next, activated: [...activated] }
+    onStatusChange(current)
+  }
+
+  function fired(id: string, trigger: () => void): () => void {
+    return () => {
+      if (!activated.has(id)) {
+        activated.add(id)
+        publish(current)
+      }
+      trigger()
+    }
   }
 
   function teardown(): void {
@@ -88,13 +100,13 @@ export function createHotkeyManager(
             id: 'stash',
             description: 'Stash the selection',
             preferredTrigger: toPortalTrigger(settings.accelerator),
-            onActivated: triggers.onStash
+            onActivated: fired(`${APP_ID}:stash`, triggers.onStash)
           },
           {
             id: 'clip',
             description: 'Clip a region of the screen',
             preferredTrigger: toPortalTrigger(settings.clipperAccelerator),
-            onActivated: triggers.onClip
+            onActivated: fired(`${APP_ID}:clip`, triggers.onClip)
           }
         ])
 
@@ -162,6 +174,7 @@ export function createHotkeyManager(
     deniedAccessibility = false
 
     teardown()
+    activated.clear()
 
     const platform = platformInfo()
 

@@ -117,6 +117,7 @@ export type HotkeyStatus = {
   /** Set when the accelerator could not be claimed, or the portal turned us down. */
   error: string | null
   portalShortcuts: PortalShortcut[]
+  activated: string[]
 }
 
 /** What macOS has been asked for, and what it said. Everywhere else: granted. */
