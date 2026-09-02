@@ -3,6 +3,7 @@ import { isLinux, isMac, isWayland } from '@main/platform/session'
 import { hasAccessibility } from '@main/platform/permissions'
 import { readClipboard, restoreClipboard, snapshotClipboard } from './clipboard'
 import { sendCopyKeystroke, sendCopyViaShell } from './copy-key'
+import { readWaylandSelection } from './wayland'
 import type { Capture } from './types'
 
 export type { Capture } from './types'
@@ -19,6 +20,11 @@ export async function readSelection(): Promise<Capture> {
 }
 
 async function readSelectionLinux(): Promise<Capture> {
+  if (isWayland()) {
+    const viaWlClipboard = await readWaylandSelection()
+    if (viaWlClipboard) return viaWlClipboard
+  }
+
   const primary = readClipboard('selection')
   if (primary.ok) return primary
 

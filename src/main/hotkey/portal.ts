@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { APP_ID } from '@shared/constants'
 import type { PortalShortcut } from '@shared/types/item'
@@ -29,7 +30,7 @@ export type PortalRequest = {
 }
 
 export type PortalHandle = {
-  close(): void
+  close(): Promise<void>
   shortcuts(): PortalShortcut[]
 }
 
@@ -132,8 +133,8 @@ export async function bindPortalShortcuts(requests: PortalRequest[]): Promise<Po
     })
 
     return {
-      close() {
-        void call(bus, {
+      async close() {
+        await call(bus, {
           destination: PORTAL,
           path: sessionHandle,
           interface: 'org.freedesktop.portal.Session',
@@ -212,6 +213,27 @@ function readShortcuts(value: unknown): PortalShortcut[] {
     ]
   })
 }
+
+/* Hyprland allows one registration per name. If ours is already there before
+   we bind, a session nobody is listening on holds it and every press goes to
+   that one. */
+export function hyprlandHoldsOurShortcuts(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const child = execFile('hyprctl', ['-j', 'globalshortcuts'], { timeout: 2000 }, (error, out) => {
+      if (error) return resolve(false)
+      try {
+        const names = (JSON.parse(out) as { name?: string }[]).map((entry) => entry.name ?? '')
+        resolve(names.some((name) => name.startsWith(`${APP_ID}:`)))
+      } catch {
+        resolve(false)
+      }
+    })
+    child.on('error', () => resolve(false))
+  })
+}
+
+export const STALE_HYPRLAND_SESSION =
+  'Hyprland still holds Coffer’s shortcuts from an earlier run, so key presses never reach this one. Run `systemctl --user restart xdg-desktop-portal-hyprland`, then reopen Coffer.'
 
 function token(prefix: string): string {
   return `coffer_${prefix}_${randomBytes(6).toString('hex')}`

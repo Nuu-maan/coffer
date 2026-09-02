@@ -127,4 +127,5 @@ deb:
     - libsecret-1-0
   recommends:
     - xdotool
+    - wl-clipboard
     - libayatana-appindicator3-1

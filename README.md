@@ -114,9 +114,9 @@ bind = SUPER SHIFT, S, global, com.coffer.app:clip
 ```
 
 Compositors that do not speak the shortcuts portal can bind a command instead;
-see [Command line](#command-line). `xdotool` improves selection capture on X11
-and `libayatana-appindicator3-1` provides a tray icon on desktops that need
-one; both are recommended, neither is required.
+see [Command line](#command-line). Stashing on Wayland reads the selection
+through `wl-clipboard`, so install it; `xdotool` does the same on X11, and
+`libayatana-appindicator3-1` provides a tray icon on desktops that need one.
 
 </details>
 

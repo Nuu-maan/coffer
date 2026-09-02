@@ -1,9 +1,15 @@
+import { APP_ID } from '@shared/constants'
 import type { HotkeyStatus, Settings } from '@shared/types/item'
 import { platformInfo } from '@main/platform/session'
 import { ensureDesktopEntry } from '@main/platform/desktop-entry'
 import { startAcceleratorHotkey, type FallbackHandle } from './fallback'
 import { AX_DENIED, startDoubleShiftHook, type HookHandle } from './hook'
-import { bindPortalShortcuts, type PortalHandle } from './portal'
+import {
+  STALE_HYPRLAND_SESSION,
+  bindPortalShortcuts,
+  hyprlandHoldsOurShortcuts,
+  type PortalHandle
+} from './portal'
 import { toPortalTrigger } from './trigger'
 
 export type HotkeyTriggers = {
@@ -14,11 +20,11 @@ export type HotkeyTriggers = {
 export type HotkeyManager = {
   apply(settings: Settings): void
   refresh(settings: Settings): void
-  dispose(): void
+  dispose(): Promise<void>
   status(): HotkeyStatus
 }
 
-const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [] }
+const IDLE: HotkeyStatus = { mode: 'none', error: null, portalShortcuts: [], activated: [] }
 
 /** Everything the bindings are built from, and nothing else. */
 function bindingKey(settings: Settings): string {
@@ -41,14 +47,26 @@ export function createHotkeyManager(
   let current: HotkeyStatus = IDLE
   let appliedKey: string | null = null
   let deniedAccessibility = false
+  const activated = new Set<string>()
 
   // Portal binding is asynchronous, so a settings change that lands mid-flight
   // must be able to discard the work it started.
   let generation = 0
+  let closing: Promise<void> = Promise.resolve()
 
-  function publish(next: HotkeyStatus): void {
-    current = next
-    onStatusChange(next)
+  function publish(next: Omit<HotkeyStatus, 'activated'>): void {
+    current = { ...next, activated: [...activated] }
+    onStatusChange(current)
+  }
+
+  function fired(id: string, trigger: () => void): () => void {
+    return () => {
+      if (!activated.has(id)) {
+        activated.add(id)
+        publish(current)
+      }
+      trigger()
+    }
   }
 
   function teardown(): void {
@@ -59,7 +77,7 @@ export function createHotkeyManager(
     stashAccelerator = null
     clipAccelerator?.stop()
     clipAccelerator = null
-    portal?.close()
+    closing = portal?.close() ?? Promise.resolve()
     portal = null
   }
 
@@ -69,6 +87,12 @@ export function createHotkeyManager(
 
     void (async () => {
       try {
+        await closing
+        if (platformInfo().desktop.includes('hyprland') && (await staleAfterSettling())) {
+          if (mine !== generation) return
+          publish({ mode: 'none', error: STALE_HYPRLAND_SESSION, portalShortcuts: [] })
+          return
+        }
         await ensureDesktopEntry()
 
         const handle = await bindPortalShortcuts([
@@ -76,18 +100,18 @@ export function createHotkeyManager(
             id: 'stash',
             description: 'Stash the selection',
             preferredTrigger: toPortalTrigger(settings.accelerator),
-            onActivated: triggers.onStash
+            onActivated: fired(`${APP_ID}:stash`, triggers.onStash)
           },
           {
             id: 'clip',
             description: 'Clip a region of the screen',
             preferredTrigger: toPortalTrigger(settings.clipperAccelerator),
-            onActivated: triggers.onClip
+            onActivated: fired(`${APP_ID}:clip`, triggers.onClip)
           }
         ])
 
         if (mine !== generation) {
-          handle.close()
+          void handle.close()
           return
         }
 
@@ -103,6 +127,12 @@ export function createHotkeyManager(
         })
       }
     })()
+  }
+
+  async function staleAfterSettling(): Promise<boolean> {
+    if (!(await hyprlandHoldsOurShortcuts())) return false
+    await new Promise((resolve) => setTimeout(resolve, 750))
+    return hyprlandHoldsOurShortcuts()
   }
 
   function applyViaAccelerators(settings: Settings): void {
@@ -144,6 +174,7 @@ export function createHotkeyManager(
     deniedAccessibility = false
 
     teardown()
+    activated.clear()
 
     const platform = platformInfo()
 
@@ -186,6 +217,7 @@ export function createHotkeyManager(
       teardown()
       appliedKey = null
       current = IDLE
+      return closing
     },
     status: () => current
   }

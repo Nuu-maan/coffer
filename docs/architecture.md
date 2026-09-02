@@ -65,7 +65,7 @@ is testable without a keyboard.
 | Windows | `uiohook-napi` low-level hook, or accelerator | Synthesize `Ctrl+C`, poll the clipboard, restore it on failure |
 | macOS | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
 | Linux / X11 | Same hook, or accelerator | Read the PRIMARY selection directly — no keystroke needed |
-| Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
+| Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | `wl-paste`: the PRIMARY selection, falling back to the clipboard. Chromium only sees offers while focused, and a hidden panel never is |
 
 The double-tap trigger needs to watch the keyboard, which Wayland does not
 permit. Neither does it permit `globalShortcut`, which reports success there and

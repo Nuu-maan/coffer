@@ -19,7 +19,7 @@ type Props = {
    had before the rounding pass. */
 export function PortalShortcuts({ status, platform }: Props): React.JSX.Element {
   const [copied, setCopied] = useState(false)
-  const config = configFor(platform.desktop, status, quote(platform.executable))
+  const config = configFor(platform, status, quote(platform.executable))
 
   function copy(): void {
     void navigator.clipboard.writeText(config.snippet).then(() => {
@@ -68,12 +68,17 @@ export function PortalShortcuts({ status, platform }: Props): React.JSX.Element 
               </code>
             </div>
 
-            {shortcut.trigger ? (
+            {status.activated.includes(shortcut.id) ? (
+              <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                <Check className="size-3.5 text-tint" />
+                Works
+              </span>
+            ) : shortcut.trigger ? (
               <kbd className="shrink-0 rounded-[2px] bg-well px-1.5 py-px text-xs leading-5">
                 {shortcut.trigger}
               </kbd>
             ) : (
-              <span className="shrink-0 text-xs text-muted-foreground">Not bound yet</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{config.unbound}</span>
             )}
           </div>
         ))}
@@ -100,19 +105,34 @@ function quote(path: string): string {
 }
 
 function configFor(
-  desktop: string,
+  platform: PlatformInfo,
   status: HotkeyStatus,
   executable: string
-): { hint: string; snippet: string } {
+): { hint: string; snippet: string; unbound: string } {
   const [stash, clip] = status.portalShortcuts
+  const unbound = 'Not bound yet'
+  const desktop = platform.desktop
+
+  if (desktop.includes('hyprland') && platform.hyprlandLua) {
+    return {
+      hint: 'Add these to ~/.config/hypr/bindings.lua; Hyprland reloads on save. The unbind frees SUPER+S from Omarchy’s scratchpad. Hyprland does not report which key a shortcut has, so press it once to check.',
+      snippet: [
+        'hl.unbind("SUPER + S")',
+        `o.bind("SUPER + S", "Coffer: stash selection", hl.dsp.global("${stash?.id ?? ''}"))`,
+        `o.bind("SUPER + SHIFT + S", "Coffer: clip region", hl.dsp.global("${clip?.id ?? ''}"))`
+      ].join('\n'),
+      unbound: 'Press to check'
+    }
+  }
 
   if (desktop.includes('hyprland')) {
     return {
-      hint: 'Wayland leaves key bindings to the compositor. Add these to hyprland.conf, then reload with hyprctl reload.',
+      hint: 'Wayland leaves key bindings to the compositor. Add these to hyprland.conf, then reload with hyprctl reload. Hyprland does not report which key a shortcut has, so press it once to check.',
       snippet: [
         `bind = SUPER, S, global, ${stash?.id ?? ''}`,
         `bind = SUPER SHIFT, S, global, ${clip?.id ?? ''}`
-      ].join('\n')
+      ].join('\n'),
+      unbound: 'Press to check'
     }
   }
 
@@ -122,14 +142,16 @@ function configFor(
       snippet: [
         `bindsym $mod+s exec ${executable} --stash`,
         `bindsym $mod+Shift+s exec ${executable} --clip`
-      ].join('\n')
+      ].join('\n'),
+      unbound
     }
   }
 
   if (desktop.includes('gnome') || desktop.includes('kde') || desktop.includes('plasma')) {
     return {
       hint: 'Wayland leaves key bindings to the desktop. Open Settings → Keyboard → Shortcuts, find Coffer, and give these actions keys.',
-      snippet: status.portalShortcuts.map((entry) => entry.id).join('\n')
+      snippet: status.portalShortcuts.map((entry) => entry.id).join('\n'),
+      unbound
     }
   }
 
@@ -140,6 +162,7 @@ function configFor(
       '',
       `${executable} --stash`,
       `${executable} --clip`
-    ].join('\n')
+    ].join('\n'),
+    unbound
   }
 }

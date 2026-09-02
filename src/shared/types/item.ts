@@ -98,6 +98,8 @@ export type PlatformInfo = {
   desktop: string
   /** How to invoke Coffer again, for users who bind a command instead. */
   executable: string
+  /** Hyprland configured in Lua (Omarchy), where bindings.lua replaces hyprland.conf. */
+  hyprlandLua: boolean
   supportsDoubleShift: boolean
   supportsAccelerators: boolean
   supportsLoginItem: boolean
@@ -117,6 +119,7 @@ export type HotkeyStatus = {
   /** Set when the accelerator could not be claimed, or the portal turned us down. */
   error: string | null
   portalShortcuts: PortalShortcut[]
+  activated: string[]
 }
 
 /** What macOS has been asked for, and what it said. Everywhere else: granted. */
