@@ -1,6 +1,5 @@
 import {
   CircleCheckIcon,
-  Corners,
   Crop,
   Hand,
   Info,
@@ -15,7 +14,7 @@ import {
   Zap
 } from '@/components/icons'
 import { AnimatePresence, motion } from 'motion/react'
-import { WINDOW_RADIUS, type Settings } from '@shared/types/item'
+import type { Settings } from '@shared/types/item'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -91,30 +90,6 @@ export function SettingsPanel(): React.JSX.Element {
             </ToggleGroup>
           </Row>
 
-          {!mac && (
-            <Row
-              label="Corner radius"
-              hint="The panel's corners, and everything shaped to match them"
-              htmlFor="window-radius"
-              icon={<Corners />}
-            >
-              <div className="flex w-[150px] items-center gap-2">
-                <Slider
-                  id="window-radius"
-                  min={WINDOW_RADIUS.min}
-                  max={WINDOW_RADIUS.max}
-                  step={WINDOW_RADIUS.step}
-                  value={[settings.windowRadius ?? WINDOW_RADIUS.default]}
-                  onValueChange={([value]) => {
-                    if (value !== undefined) patch({ windowRadius: value })
-                  }}
-                />
-                <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                  {settings.windowRadius ?? WINDOW_RADIUS.default}px
-                </span>
-              </div>
-            </Row>
-          )}
         </Group>
 
         {acceleratorsAvailable ? (

@@ -53,7 +53,7 @@ export function ClipForm(): React.JSX.Element {
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={springSheet}
-        className="sheet flex h-full flex-col overflow-hidden rounded-window text-foreground"
+        className="sheet flex h-full flex-col overflow-hidden rounded-card text-foreground"
       >
         {/* The panel's title bar: the same 44px, the same gutter. The size is
             the one fact worth knowing about a clip, so it trails the name

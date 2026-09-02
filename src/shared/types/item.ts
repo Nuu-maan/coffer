@@ -141,22 +141,7 @@ export type Settings = {
   launchOnLogin: boolean
   alwaysOnTop: boolean
   theme: ThemeChoice
-  /*
-   * The panel's corner radius, in pixels, and the root every other radius in
-   * the window is derived from — a card is this less the gutter it sits in, a
-   * control is this less its own padding, so the curves stay parallel however
-   * far this is pushed.
-   *
-   * A setting because the right answer is the compositor's, not ours: this
-   * window is a transparent sheet the renderer draws the corners of, and it
-   * sits next to whatever rounding the desktop already uses. Matching that is
-   * something only the person looking at it can do.
-   */
-  windowRadius: number
 }
-
-/** What the radius slider will accept. Zero is square, and square is allowed. */
-export const WINDOW_RADIUS = { min: 0, max: 28, step: 2, default: 20 } as const
 
 export type ClipDraft = {
   url: string
@@ -179,8 +164,7 @@ export const DEFAULT_SETTINGS: Settings = {
   doubleTapWindowMs: 350,
   launchOnLogin: true,
   alwaysOnTop: false,
-  theme: 'system',
-  windowRadius: WINDOW_RADIUS.default
+  theme: 'system'
 }
 
 /*
