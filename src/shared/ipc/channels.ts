@@ -48,6 +48,7 @@ export const CH = {
   ON_ITEMS_CHANGED: 'on:itemsChanged',
   ON_SETTINGS_CHANGED: 'on:settingsChanged',
   ON_HOTKEY_STATUS: 'on:hotkeyStatus',
+  ON_PERMISSIONS_CHANGED: 'on:permissionsChanged',
   ON_SHOW_SETTINGS: 'on:showSettings'
 } as const
 
