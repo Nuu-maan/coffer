@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { BrowserWindow, clipboard, ipcMain, nativeImage } from 'electron'
+import { BrowserWindow, app, clipboard, ipcMain, nativeImage } from 'electron'
 import { CH } from '@shared/ipc/channels'
 import type {
   AddImageInput,
@@ -148,4 +148,9 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
   ipcMain.on(CH.WINDOW_OPEN_MAIN, () => showMainWindow())
   ipcMain.on(CH.WINDOW_HIDE_MAIN, () => hideMainWindow())
   ipcMain.on(CH.WINDOW_MINIMIZE, (event) => BrowserWindow.fromWebContents(event.sender)?.minimize())
+
+  ipcMain.on(CH.APP_RELAUNCH, () => {
+    app.relaunch()
+    app.quit()
+  })
 }

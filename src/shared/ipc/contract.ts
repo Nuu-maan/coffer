@@ -119,6 +119,9 @@ export interface CofferApi {
     minimize(): void
     hideMain(): void
   }
+  app: {
+    relaunch(): void
+  }
   on: {
     clipperFrame(callback: (frame: OverlayFrame) => void): Unsubscribe
     itemsChanged(callback: (snapshot: Snapshot) => void): Unsubscribe

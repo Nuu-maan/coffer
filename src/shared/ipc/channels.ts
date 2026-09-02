@@ -43,6 +43,7 @@ export const CH = {
   WINDOW_OPEN_MAIN: 'window:openMain',
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_HIDE_MAIN: 'window:hideMain',
+  APP_RELAUNCH: 'app:relaunch',
 
   ON_CLIPPER_FRAME: 'on:clipperFrame',
   ON_ITEMS_CHANGED: 'on:itemsChanged',

@@ -83,6 +83,9 @@ const api: CofferApi = {
     minimize: () => ipcRenderer.send(CH.WINDOW_MINIMIZE),
     hideMain: () => ipcRenderer.send(CH.WINDOW_HIDE_MAIN)
   },
+  app: {
+    relaunch: () => ipcRenderer.send(CH.APP_RELAUNCH)
+  },
   on: {
     clipperFrame: (callback) => subscribe<OverlayFrame>(CH.ON_CLIPPER_FRAME, callback),
     itemsChanged: (callback) => subscribe<Snapshot>(CH.ON_ITEMS_CHANGED, callback),
