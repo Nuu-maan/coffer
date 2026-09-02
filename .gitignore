@@ -15,3 +15,9 @@ TODO
 
 # What the macOS smoke test saw. CI keeps it as an artifact.
 smoke-mac.png
+
+packaging/aur/*/pkg/
+packaging/aur/*/src/
+packaging/aur/*/*.pkg.tar.*
+packaging/aur/*/*.deb
+packaging/aur/*/LICENSE-*

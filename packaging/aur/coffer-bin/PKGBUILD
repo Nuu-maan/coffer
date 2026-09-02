@@ -1,0 +1,30 @@
+# Maintainer: nuu-maan <n82238895@gmail.com>
+pkgname=coffer-bin
+_pkgname=coffer
+pkgver=0.3.1
+pkgrel=1
+pkgdesc="A capture buffer and prompt queue for AI-assisted work. Local-only."
+arch=('x86_64')
+url="https://github.com/Nuu-maan/coffer"
+license=('MIT')
+depends=('alsa-lib' 'at-spi2-core' 'gtk3' 'libdrm' 'libnotify' 'libsecret' 'libxkbcommon'
+         'libxss' 'libxtst' 'mesa' 'nss' 'xdg-utils')
+optdepends=('xdotool: selection capture on X11'
+            'libayatana-appindicator: tray icon on desktops that need one')
+provides=("$_pkgname")
+conflicts=("$_pkgname")
+options=('!strip' '!debug')
+source=("$_pkgname-$pkgver.deb::$url/releases/download/v$pkgver/Coffer.deb"
+        "LICENSE-$pkgver::https://raw.githubusercontent.com/Nuu-maan/coffer/v$pkgver/LICENSE")
+sha256sums=('60e0bccdfbbf21909220bd8597a6ed2839f89bf510c1b1e1c575b16de6861298'
+            '711108773bc3c5d811e2a54c6be53e5866815adc7c38353f0cf60179dc7bc704')
+
+package() {
+  bsdtar -xf "$srcdir/$_pkgname-$pkgver.deb" -C "$srcdir" data.tar.xz
+  bsdtar -xf "$srcdir/data.tar.xz" -C "$pkgdir" opt usr/share/applications usr/share/icons
+
+  chmod 4755 "$pkgdir/opt/Coffer/chrome-sandbox"
+  install -d "$pkgdir/usr/bin"
+  ln -s /opt/Coffer/coffer "$pkgdir/usr/bin/$_pkgname"
+  install -Dm644 "$srcdir/LICENSE-$pkgver" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

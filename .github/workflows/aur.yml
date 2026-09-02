@@ -1,0 +1,51 @@
+name: aur
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release to publish, without the v
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Needs an AUR account with this key registered. Without the secret the
+      # job says so and stops, so a release never fails on the AUR's account.
+      - name: Check for the AUR key
+        id: gate
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -n "$AUR_SSH_PRIVATE_KEY" ]; then echo ready=true >> "$GITHUB_OUTPUT"
+          else echo "no AUR_SSH_PRIVATE_KEY secret; skipping"; fi
+
+      - name: Point the PKGBUILD at this release
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          VERSION: ${{ github.event.inputs.version || github.event.release.tag_name }}
+        run: |
+          version="${VERSION#v}"
+          deb="$(curl -fsSL "https://github.com/$GITHUB_REPOSITORY/releases/download/v$version/Coffer.deb" | sha256sum | cut -d' ' -f1)"
+          license="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/v$version/LICENSE" | sha256sum | cut -d' ' -f1)"
+          cd packaging/aur/coffer-bin
+          sed -i "s/^pkgver=.*/pkgver=$version/; s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sed -i "s/^sha256sums=('[0-9a-f]*'/sha256sums=('$deb'/; s/^            '[0-9a-f]*')/            '$license')/" PKGBUILD
+          grep -E '^(pkgver|sha256sums)|^ +' PKGBUILD
+
+      - name: Push to the AUR
+        if: steps.gate.outputs.ready == 'true'
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: coffer-bin
+          pkgbuild: packaging/aur/coffer-bin/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Update to ${{ github.event.inputs.version || github.event.release.tag_name }}
+          ssh_keyscan_types: rsa,ecdsa,ed25519
