@@ -29,6 +29,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Button } from '@/components/ui/button'
+import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
 import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
@@ -277,9 +278,12 @@ export function SettingsPanel(): React.JSX.Element {
 
         {mac && access?.needsRestart && (
           <Note variant="warning">
-            macOS keeps its answer for as long as Coffer is running, so a
-            permission you have just granted only takes effect once you quit and
-            reopen it.
+            <span className="flex flex-col items-start gap-2">
+              macOS applies Screen Recording to an app only after it is reopened.
+              <Button variant="outline" size="sm" onClick={() => coffer.app.relaunch()}>
+                Relaunch Coffer
+              </Button>
+            </span>
           </Note>
         )}
 
