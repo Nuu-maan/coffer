@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, rename } from 'node:fs/promises'
 import { join } from 'node:path'
 import { app } from 'electron'
 import { emptyStore, type Settings, type Store } from '@shared/types/item'
@@ -16,11 +16,12 @@ function storePath(): string {
   return join(app.getPath('userData'), STORE_FILE)
 }
 
-/* Whether the empty store in memory is the truth or the fallback. A store file
-   that is missing means a fresh install; one that is present and unreadable
-   means the items are still on disk, and nothing may be reclaimed on the
-   strength of a list we failed to read. */
+/* Whether the store in memory is the truth or a fallback. A missing file is a
+   fresh install; a present but unreadable one still holds the user's items, so
+   nothing may be reclaimed — or written over it — on the strength of a list we
+   failed to read. */
 let intact = true
+let writable = true
 
 export function storeIntact(): boolean {
   return intact
@@ -34,8 +35,20 @@ export async function loadStore(): Promise<Store> {
   } catch (error) {
     state = emptyStore(process.platform)
     intact = (error as NodeJS.ErrnoException).code === 'ENOENT'
+    if (!intact) await setAside(error)
   }
   return state
+}
+
+async function setAside(error: unknown): Promise<void> {
+  const backup = `${storePath()}.unreadable-${Date.now()}`
+  try {
+    await rename(storePath(), backup)
+    console.error(`[store] could not read the store; the file is kept at ${backup}`, error)
+  } catch {
+    writable = false
+    console.error('[store] could not read or move the store; nothing will be saved this session', error)
+  }
 }
 
 export function getStore(): Store {
@@ -60,6 +73,7 @@ function scheduleSave(): void {
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     saveTimer = null
+    if (!writable) return
     pendingSave = atomicWriteJson(storePath(), state).catch((error) => {
       console.error('[store] save failed', error)
     })
@@ -70,7 +84,7 @@ export async function flushStore(): Promise<void> {
   if (saveTimer) {
     clearTimeout(saveTimer)
     saveTimer = null
-    pendingSave = atomicWriteJson(storePath(), state)
+    if (writable) pendingSave = atomicWriteJson(storePath(), state)
   }
   await pendingSave
 }
