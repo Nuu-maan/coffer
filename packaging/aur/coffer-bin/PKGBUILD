@@ -10,7 +10,7 @@ license=('MIT')
 depends=('alsa-lib' 'at-spi2-core' 'gtk3' 'libdrm' 'libnotify' 'libsecret' 'libxkbcommon'
          'libxss' 'libxtst' 'mesa' 'nss' 'xdg-utils')
 optdepends=('xdotool: selection capture on X11'
-            'libappindicator-gtk3: tray icon on desktops that need one')
+            'libayatana-appindicator: tray icon on desktops that need one')
 provides=("$_pkgname")
 conflicts=("$_pkgname")
 options=('!strip' '!debug')
