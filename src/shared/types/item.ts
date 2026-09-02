@@ -98,6 +98,8 @@ export type PlatformInfo = {
   desktop: string
   /** How to invoke Coffer again, for users who bind a command instead. */
   executable: string
+  /** Hyprland configured in Lua (Omarchy), where bindings.lua replaces hyprland.conf. */
+  hyprlandLua: boolean
   supportsDoubleShift: boolean
   supportsAccelerators: boolean
   supportsLoginItem: boolean

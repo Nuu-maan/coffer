@@ -19,7 +19,7 @@ type Props = {
    had before the rounding pass. */
 export function PortalShortcuts({ status, platform }: Props): React.JSX.Element {
   const [copied, setCopied] = useState(false)
-  const config = configFor(platform.desktop, status, quote(platform.executable))
+  const config = configFor(platform, status, quote(platform.executable))
 
   function copy(): void {
     void navigator.clipboard.writeText(config.snippet).then(() => {
@@ -105,12 +105,25 @@ function quote(path: string): string {
 }
 
 function configFor(
-  desktop: string,
+  platform: PlatformInfo,
   status: HotkeyStatus,
   executable: string
 ): { hint: string; snippet: string; unbound: string } {
   const [stash, clip] = status.portalShortcuts
   const unbound = 'Not bound yet'
+  const desktop = platform.desktop
+
+  if (desktop.includes('hyprland') && platform.hyprlandLua) {
+    return {
+      hint: 'Add these to ~/.config/hypr/bindings.lua; Hyprland reloads on save. The unbind frees SUPER+S from Omarchy’s scratchpad. Hyprland does not report which key a shortcut has, so press it once to check.',
+      snippet: [
+        'hl.unbind("SUPER + S")',
+        `o.bind("SUPER + S", "Coffer: stash selection", hl.dsp.global("${stash?.id ?? ''}"))`,
+        `o.bind("SUPER + SHIFT + S", "Coffer: clip region", hl.dsp.global("${clip?.id ?? ''}"))`
+      ].join('\n'),
+      unbound: 'Press to check'
+    }
+  }
 
   if (desktop.includes('hyprland')) {
     return {

@@ -1,4 +1,7 @@
 import type { PlatformInfo, SessionKind } from '@shared/types/item'
+import { existsSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { executablePath } from './desktop-entry'
 import { hasAccessibility } from './permissions'
 
@@ -49,6 +52,7 @@ export function platformInfo(): PlatformInfo {
     session,
     desktop: (process.env['XDG_CURRENT_DESKTOP'] ?? '').toLowerCase(),
     executable: executablePath(),
+    hyprlandLua: existsSync(join(homedir(), '.config/hypr/bindings.lua')),
     /* Named sessions only. An unknown session is one where reading the keyboard
        has already been ruled out, and macOS additionally has to be trusted for
        Accessibility before a hook can see a single key. Asking here rather than
