@@ -28,15 +28,19 @@ export function storeIntact(): boolean {
 }
 
 export async function loadStore(): Promise<Store> {
+  let parsed: unknown
   try {
-    const raw = await readFile(storePath(), 'utf8')
-    state = migrate(JSON.parse(raw))
-    intact = true
+    parsed = JSON.parse(await readFile(storePath(), 'utf8'))
   } catch (error) {
     state = emptyStore(process.platform)
     intact = (error as NodeJS.ErrnoException).code === 'ENOENT'
     if (!intact) await setAside(error)
+    return state
   }
+
+  state = migrate(parsed)
+  const rawItems = (parsed as { items?: unknown }).items
+  intact = !Array.isArray(rawItems) || rawItems.length === state.items.length
   return state
 }
 
