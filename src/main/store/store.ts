@@ -69,14 +69,19 @@ export function setSettings(patch: Partial<Settings>): Settings {
   }).settings
 }
 
+function save(): Promise<void> {
+  if (!writable) return Promise.resolve()
+  pendingSave = pendingSave
+    .catch(() => undefined)
+    .then(() => atomicWriteJson(storePath(), state))
+  return pendingSave
+}
+
 function scheduleSave(): void {
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     saveTimer = null
-    if (!writable) return
-    pendingSave = atomicWriteJson(storePath(), state).catch((error) => {
-      console.error('[store] save failed', error)
-    })
+    save().catch((error) => console.error('[store] save failed', error))
   }, SAVE_DEBOUNCE_MS)
 }
 
@@ -84,7 +89,8 @@ export async function flushStore(): Promise<void> {
   if (saveTimer) {
     clearTimeout(saveTimer)
     saveTimer = null
-    if (writable) pendingSave = atomicWriteJson(storePath(), state)
+    await save()
+    return
   }
   await pendingSave
 }
