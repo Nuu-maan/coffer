@@ -24,6 +24,7 @@ import { SettingsPanel } from '@/features/settings/SettingsPanel'
 import { cn } from '@/lib/utils'
 import { coffer } from '@/lib/ipc'
 import { PAGE_BLUR, PAGE_SLIDE, pageSlide } from '@/lib/motion'
+import { usePlatform } from '@/hooks/use-platform'
 import { useScrolled } from '@/hooks/use-scrolled'
 
 type Tab = 'list' | 'settings' | 'changelog'
@@ -38,6 +39,7 @@ const TITLES: Record<Tab, string> = {
 }
 
 export function App(): React.JSX.Element {
+  const mac = usePlatform()?.platform === 'darwin'
   const [tab, setTab] = useState<Tab>('list')
   const [query, setQuery] = useState('')
   const { scrolled, reset, Provider: ScrolledProvider } = useScrolled()
@@ -103,9 +105,7 @@ export function App(): React.JSX.Element {
            * time in a colour the desktop behind it did not agree to.
            */
           'sheet flex h-full min-h-0 flex-col overflow-hidden',
-          /* The one radius the user sets. Everything else in the window is
-             derived from it in global.css. */
-          'rounded-window'
+          !mac && 'rounded-window'
         )}
       >
         {/*

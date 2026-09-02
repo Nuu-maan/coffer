@@ -91,33 +91,30 @@ export function SettingsPanel(): React.JSX.Element {
             </ToggleGroup>
           </Row>
 
-          {/* The panel is a transparent window whose corners the renderer
-              draws, so this is a real choice rather than a theme knob: it sits
-              next to whatever rounding the desktop already uses, and only the
-              person looking at it knows what that is. Every other radius in the
-              window is derived from this one. */}
-          <Row
-            label="Corner radius"
-            hint="The panel's corners, and everything shaped to match them"
-            htmlFor="window-radius"
-            icon={<Corners />}
-          >
-            <div className="flex w-[150px] items-center gap-2">
-              <Slider
-                id="window-radius"
-                min={WINDOW_RADIUS.min}
-                max={WINDOW_RADIUS.max}
-                step={WINDOW_RADIUS.step}
-                value={[settings.windowRadius ?? WINDOW_RADIUS.default]}
-                onValueChange={([value]) => {
-                  if (value !== undefined) patch({ windowRadius: value })
-                }}
-              />
-              <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                {settings.windowRadius ?? WINDOW_RADIUS.default}px
-              </span>
-            </div>
-          </Row>
+          {!mac && (
+            <Row
+              label="Corner radius"
+              hint="The panel's corners, and everything shaped to match them"
+              htmlFor="window-radius"
+              icon={<Corners />}
+            >
+              <div className="flex w-[150px] items-center gap-2">
+                <Slider
+                  id="window-radius"
+                  min={WINDOW_RADIUS.min}
+                  max={WINDOW_RADIUS.max}
+                  step={WINDOW_RADIUS.step}
+                  value={[settings.windowRadius ?? WINDOW_RADIUS.default]}
+                  onValueChange={([value]) => {
+                    if (value !== undefined) patch({ windowRadius: value })
+                  }}
+                />
+                <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                  {settings.windowRadius ?? WINDOW_RADIUS.default}px
+                </span>
+              </div>
+            </Row>
+          )}
         </Group>
 
         {acceleratorsAvailable ? (
