@@ -86,15 +86,20 @@ Coffer then asks for two permissions, and Settings shows the state of both:
 | Accessibility | Stash — copying the selection out of another app |
 | Screen & System Audio Recording | Clip — reading the screen it freezes |
 
-Both take effect only after Coffer is restarted, and macOS 15 and newer will
-re-confirm screen recording every month or so. That is Apple's behaviour, not
-Coffer's.
+Accessibility takes effect the moment it is granted. Screen Recording takes
+effect once Coffer is reopened — Settings offers a button for that — and macOS
+15 and newer will re-confirm it every month or so. That is Apple's behaviour,
+not Coffer's.
+
+If a permission shows as switched on in System Settings but Coffer still says
+it is missing, macOS is holding the grant for an earlier copy of the app. Press
+**Grant…** in Coffer's Settings: it clears that entry and asks again.
 
 Two things to know before you rely on it. Because the build is not signed with
-a Developer ID, macOS identifies it by a hash that changes with every release —
-so **both permissions must be granted again after each update**. And for the
-same reason **macOS does not auto-update**; new versions come from this page.
-Both go away if the project ever gets a Developer ID certificate.
+a persistent certificate, macOS identifies it by a hash that changes with every
+release — so **both permissions must be granted again after each update**. And
+for the same reason **macOS does not auto-update**; new versions come from this
+page. Both go away once releases are signed with a persistent certificate.
 
 ### Linux
 
