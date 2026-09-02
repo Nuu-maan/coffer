@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import { BrowserWindow, app, clipboard, ipcMain, nativeImage } from 'electron'
 import { CH } from '@shared/ipc/channels'
 import type {
@@ -28,7 +27,7 @@ import {
   toggleItem,
   updateItem
 } from '@main/features/items/service'
-import { resolveImage } from '@main/features/images/store'
+import { writeImageToClipboard } from '@main/features/items/clipboard'
 import { applySettings, getSettings } from '@main/features/settings/service'
 import { stashSelection } from '@main/features/stash/capture-flow'
 import {
@@ -94,19 +93,9 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
   ipcMain.handle(CH.CLIPBOARD_WRITE, (_event, text: string) => {
     clipboard.writeText(text)
   })
-  ipcMain.handle(CH.CLIPBOARD_WRITE_IMAGE, async (_event, file: string, text?: string) => {
-    const path = resolveImage(file)
-    if (!path) return false
-    try {
-      const image = nativeImage.createFromBuffer(await readFile(path))
-      const caption = text?.trim()
-      if (caption) clipboard.write({ image, text: caption })
-      else clipboard.writeImage(image)
-      return true
-    } catch {
-      return false
-    }
-  })
+  ipcMain.handle(CH.CLIPBOARD_WRITE_IMAGE, (_event, file: string, text?: string) =>
+    writeImageToClipboard(file, text)
+  )
 
   ipcMain.handle(CH.STASH_SELECTION, () => stashSelection())
 

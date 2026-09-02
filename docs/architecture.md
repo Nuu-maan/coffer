@@ -110,7 +110,15 @@ to line up:
 
 Compositors that do not speak the shortcuts portal can bind a command instead:
 `coffer --stash` and `coffer --clip` are forwarded to the running instance
-through the single-instance lock.
+through the single-instance lock, along with `coffer --copy <id>` and
+`coffer --done <id>`. `features/cli/args.ts` turns argv into one of those four
+actions; `index.ts` runs it, both on a second launch and on a cold start, and
+falls back to showing the window when there is none.
+
+`--copy` cannot work on Wayland from an unfocused process: the compositor only
+lets the focused client call `set_selection`, so `clipboard.writeText` is
+accepted and then dropped. Verified against a windowless Electron process on
+Hyprland. Nothing here can fix that from outside a focused window.
 
 ## Notes
 
