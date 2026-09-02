@@ -19,6 +19,14 @@ export type Release = {
  */
 export const RELEASES: Release[] = [
   {
+    version: '0.3.3',
+    date: '2026-09-03',
+    changes: [
+      'coffer --done <id> and coffer --copy <id> work with a space as well as with =; the id was being lost on the way to the running instance.',
+      'Hyprland: shortcuts bind again after a relaunch. 0.3.2 mistook the portal keeping its registrations for a fault and refused to bind.'
+    ]
+  },
+  {
     version: '0.3.2',
     date: '2026-09-03',
     changes: [
