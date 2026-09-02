@@ -19,6 +19,18 @@ export type Release = {
  */
 export const RELEASES: Release[] = [
   {
+    version: '0.3.2',
+    date: '2026-09-03',
+    changes: [
+      'Wayland: stashing works from the tray. The selection is read through wl-clipboard, which does not need the panel to be focused; install it if it is not already.',
+      'Hyprland: a shortcut that has fired shows as working in Settings, and a portal session left over from an earlier run is reported with the command that clears it instead of silently swallowing every press.',
+      'Omarchy: Settings shows the bindings.lua lines rather than hyprland.conf keywords the Lua config rejects.',
+      'Work the list from outside the window: coffer --copy <id> puts a stash on the clipboard and coffer --done <id> ticks it off, alongside --stash and --clip.',
+      'The corner radius setting is gone; the panel is square on every platform and cards keep their shape.',
+      'Arch users can build the package from packaging/aur; it publishes to the AUR as coffer-bin.'
+    ]
+  },
+  {
     version: '0.3.1',
     date: '2026-09-02',
     changes: [
