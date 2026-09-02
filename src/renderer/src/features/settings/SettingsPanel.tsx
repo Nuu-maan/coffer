@@ -276,6 +276,13 @@ export function SettingsPanel(): React.JSX.Element {
           </Group>
         )}
 
+        {mac && access && (!access.accessibility || access.screen !== 'granted') && (
+          <Note>
+            Already switched on in System Settings? macOS is holding that permission
+            for an earlier copy of Coffer. Grant… clears it and asks again.
+          </Note>
+        )}
+
         {mac && access?.needsRestart && (
           <Note variant="warning">
             <span className="flex flex-col items-start gap-2">
