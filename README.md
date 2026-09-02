@@ -13,26 +13,34 @@
 
 <br>
 
-<img src="docs/media/list-light.png#gh-light-mode-only" alt="The Coffer panel" width="440">
-<img src="docs/media/list-dark.png#gh-dark-mode-only" alt="The Coffer panel" width="440">
+<img src="docs/media/hero-light.png#gh-light-mode-only" alt="The Coffer panel and its settings" width="900">
+<img src="docs/media/hero-dark.png#gh-dark-mode-only" alt="The Coffer panel and its settings" width="900">
+
+<br><br>
+
+Working with an AI assistant means constantly carrying things into it — an error
+from a terminal, a paragraph of a spec, a screenshot of the thing that looks
+wrong. Coffer is where those land on the way there.
 
 </div>
 
 <br>
 
-Working with an AI assistant means constantly carrying things into it: an error
-from a terminal, a paragraph of a spec, a screenshot of the thing that looks
-wrong. Coffer is where those land on the way. Capture without leaving what you
-are doing, then work the list down — copy each item into ChatGPT, Claude or
-Cursor, and tick it off.
+<table>
+<tr>
+<th align="left" width="33%">Stash</th>
+<th align="left" width="33%">Clip</th>
+<th align="left" width="33%">Work it down</th>
+</tr>
+<tr valign="top">
+<td>Select text in any app and tap <code>Shift</code> twice. It lands in the list with the app it came from, and your clipboard is left as it was.</td>
+<td>Press the clip shortcut, draw a box on the screen, add a caption. Multiple displays, menu bars and docks included.</td>
+<td>Copy each item into ChatGPT, Claude or Cursor with <code>Enter</code> and tick it off. Sections, search and undo keep a long list honest.</td>
+</tr>
+</table>
 
-- **Stash a selection.** Select text in any app and tap `Shift` twice.
-- **Clip a region.** Draw a box on the screen and add a caption.
-- **Type or drop.** A prompt you just thought of, an image pasted or dragged in.
-- **Keep it in order.** Sections, search, undo, and a copy that hands you the
-  item — or the whole selection as a list.
-
-Everything stays on your machine: no account, no sync, no network calls.
+Type a prompt straight into the composer, or paste and drop images. Everything
+stays on your machine: no account, no sync, no network calls of any kind.
 
 ## Install
 
@@ -127,13 +135,6 @@ The double tap is the default wherever the keyboard can be read; the fallback
 accelerator takes over where it cannot, and on a Mac until Accessibility is
 granted. Both accelerators are rebindable, and Coffer refuses to register either
 if they collide rather than failing silently.
-
-<div align="center">
-<br>
-<img src="docs/media/settings-light.png#gh-light-mode-only" alt="Settings" width="400">
-<img src="docs/media/settings-dark.png#gh-dark-mode-only" alt="Settings" width="400">
-<br><br>
-</div>
 
 <details>
 <summary><b>In the window</b></summary>

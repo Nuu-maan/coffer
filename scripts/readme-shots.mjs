@@ -1,10 +1,11 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, unlinkSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join } from 'node:path'
 import { chromium } from 'playwright-core'
 
 /*
- * Renders the README screenshots into docs/media/ from a built renderer
+ * Renders the README hero images — panel beside settings, light and dark —
+ * into docs/media/ from a built renderer
  * (npm run build), in headless Chromium with the main-process bridge mocked.
  * No display, no window manager, and the exact viewport every time.
  */
@@ -95,14 +96,31 @@ async function render(theme, view) {
   }, clip)
   if (view === 'settings') await page.evaluate(() => window.__listeners.showSettings?.())
   await settle(1200)
-  await page.screenshot({ path: `${OUT}/${view}-${theme}.png`, omitBackground: true })
-  console.log(`wrote ${view}-${theme}`)
+  const path = `${OUT}/.${view}-${theme}.png`
+  await page.screenshot({ path, omitBackground: true })
   await context.close()
+  return path
+}
+
+async function hero(theme, left, right) {
+  const context = await browser.newContext({ viewport: { width: 460 * 2 + 40, height: 620 }, deviceScaleFactor: 2 })
+  const page = await context.newPage()
+  const src = (file) => `data:image/png;base64,${readFileSync(file).toString('base64')}`
+  await page.setContent(
+    `<body style="margin:0;background:none;display:flex;gap:40px">` +
+      `<img src="${src(left)}" width="460" height="620"><img src="${src(right)}" width="460" height="620"></body>`
+  )
+  await page.screenshot({ path: `${OUT}/hero-${theme}.png`, omitBackground: true })
+  console.log(`wrote ${OUT}/hero-${theme}.png`)
+  await context.close()
+  unlinkSync(left)
+  unlinkSync(right)
 }
 
 for (const theme of ['light', 'dark']) {
-  await render(theme, 'list')
-  await render(theme, 'settings')
+  const list = await render(theme, 'list')
+  const settings = await render(theme, 'settings')
+  await hero(theme, list, settings)
 }
 
 await browser.close()
