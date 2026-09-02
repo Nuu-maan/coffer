@@ -82,3 +82,16 @@ export async function requestPermission(kind: PermissionKind): Promise<Permissio
   await requestAccessibility()
   return permissions()
 }
+
+export function watchPermissions(onChange: (next: Permissions) => void): void {
+  if (!isMac()) return
+
+  let last = JSON.stringify(permissions())
+  setInterval(() => {
+    const next = permissions()
+    const key = JSON.stringify(next)
+    if (key === last) return
+    last = key
+    onChange(next)
+  }, 1000)
+}
