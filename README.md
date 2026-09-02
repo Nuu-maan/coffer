@@ -50,7 +50,7 @@ Download the latest build from the [releases page](https://github.com/Nuu-maan/c
 | --- | --- | --- |
 | Windows | `Coffer-Setup.exe` | Not code-signed yet; SmartScreen warns once. Choose **More info → Run anyway**. |
 | macOS | `Coffer-arm64.dmg` on Apple silicon, `Coffer-x64.dmg` on Intel | macOS 13.5+. First launch and permissions below. |
-| Linux | `Coffer.AppImage` or `Coffer.deb` | `chmod +x` the AppImage; `sudo apt install ./Coffer.deb` for the package. |
+| Linux | `Coffer.AppImage` or `Coffer.deb` | `chmod +x` the AppImage; `sudo apt install ./Coffer.deb` for the package. On Arch, `yay -S coffer-bin`. |
 
 Windows and the AppImage update themselves quietly, applied the next time you
 quit. The `.deb` updates through your package manager. macOS releases come from
