@@ -10,8 +10,9 @@ function flagValue(argv: readonly string[], flag: string): string | undefined {
 
   const index = argv.indexOf(flag)
   if (index === -1) return undefined
-  const value = argv[index + 1]
-  return value && !value.startsWith('--') ? value : undefined
+  const next = argv[index + 1]
+  if (next && !next.startsWith('-')) return next
+  return argv.slice(1).filter((arg) => !arg.startsWith('-')).pop()
 }
 
 export function parseForwardedAction(argv: readonly string[]): ForwardedAction | null {

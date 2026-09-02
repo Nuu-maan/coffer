@@ -28,6 +28,15 @@ describe('parseForwardedAction', () => {
     expect(parseForwardedAction(['coffer', '--copy', '--hidden'])).toBeNull()
   })
 
+  /* Chromium hands the running instance an argv with every switch first and
+     the positional arguments last, so the id no longer follows its flag. */
+  it('finds the id after Chromium has moved it to the end', () => {
+    expect(parseForwardedAction(['coffer', '--done', '--no-sandbox', 'byW9AwaE4DQz']))
+      .toEqual({ kind: 'done', id: 'byW9AwaE4DQz' })
+    expect(parseForwardedAction(['coffer', '--copy', '--hidden', 'byW9AwaE4DQz']))
+      .toEqual({ kind: 'copy', id: 'byW9AwaE4DQz' })
+  })
+
   it('reads the inlined form, which survives argv reordering', () => {
     expect(parseForwardedAction(['coffer', '--copy=byW9AwaE4DQz']))
       .toEqual({ kind: 'copy', id: 'byW9AwaE4DQz' })

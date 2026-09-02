@@ -4,12 +4,7 @@ import { platformInfo } from '@main/platform/session'
 import { ensureDesktopEntry } from '@main/platform/desktop-entry'
 import { startAcceleratorHotkey, type FallbackHandle } from './fallback'
 import { AX_DENIED, startDoubleShiftHook, type HookHandle } from './hook'
-import {
-  STALE_HYPRLAND_SESSION,
-  bindPortalShortcuts,
-  hyprlandHoldsOurShortcuts,
-  type PortalHandle
-} from './portal'
+import { bindPortalShortcuts, type PortalHandle } from './portal'
 import { toPortalTrigger } from './trigger'
 
 export type HotkeyTriggers = {
@@ -88,11 +83,6 @@ export function createHotkeyManager(
     void (async () => {
       try {
         await closing
-        if (platformInfo().desktop.includes('hyprland') && (await staleAfterSettling())) {
-          if (mine !== generation) return
-          publish({ mode: 'none', error: STALE_HYPRLAND_SESSION, portalShortcuts: [] })
-          return
-        }
         await ensureDesktopEntry()
 
         const handle = await bindPortalShortcuts([
@@ -127,12 +117,6 @@ export function createHotkeyManager(
         })
       }
     })()
-  }
-
-  async function staleAfterSettling(): Promise<boolean> {
-    if (!(await hyprlandHoldsOurShortcuts())) return false
-    await new Promise((resolve) => setTimeout(resolve, 750))
-    return hyprlandHoldsOurShortcuts()
   }
 
   function applyViaAccelerators(settings: Settings): void {
