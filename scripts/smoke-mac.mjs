@@ -64,9 +64,10 @@ await check('the app boots, so the tray was created without throwing', async () 
 })
 
 /* Not firstWindow(): the overlay pool primes one hidden window per display
-   before anything else, so the first window is never the one we want. */
+   before anything else, so the first window is never the one we want. A slow
+   runner has taken over ten seconds to reach ready, so the budget is generous. */
 async function mainWindow() {
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 120; attempt++) {
     const found = app.windows().find((page) => page.url().includes('index.html'))
     if (found) return found
     await new Promise((resolve) => setTimeout(resolve, 250))
