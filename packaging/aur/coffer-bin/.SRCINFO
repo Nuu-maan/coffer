@@ -18,6 +18,7 @@ pkgbase = coffer-bin
 	depends = nss
 	depends = xdg-utils
 	optdepends = xdotool: selection capture on X11
+	optdepends = wl-clipboard: selection capture on Wayland
 	optdepends = libayatana-appindicator: tray icon on desktops that need one
 	provides = coffer
 	conflicts = coffer
