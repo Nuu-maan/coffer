@@ -16,6 +16,7 @@ export function migrate(raw: unknown): Store {
     ? raw.items.map(toItem).filter((item): item is Item => item !== null)
     : []
   const settings = isRecord(raw.settings) ? raw.settings : {}
+  delete settings['windowRadius']
 
   return {
     version: 3,

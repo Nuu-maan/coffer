@@ -759,7 +759,7 @@ function SectionBlock({
       style={{ position: 'relative' }}
       /* Lifted while it travels, and everything inside it comes along — the
          caption, the cards, the lot. */
-      className={cn('list-none rounded-window', dragging && 'z-30 shadow-float')}
+      className={cn('list-none rounded-card', dragging && 'z-30 shadow-float')}
     >
       {/*
         The rectangle the drop test is run against, and the thing that lights up

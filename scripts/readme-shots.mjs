@@ -29,7 +29,7 @@ const SNAPSHOT = {
 
 const SETTINGS = {
   hotkeyMode: 'double-shift', accelerator: 'Control+Alt+Space', clipperAccelerator: 'Control+Shift+Space',
-  doubleTapWindowMs: 350, launchOnLogin: true, alwaysOnTop: false, theme: 'light', windowRadius: 20
+  doubleTapWindowMs: 350, launchOnLogin: true, alwaysOnTop: false, theme: 'light'
 }
 
 const PLATFORM = {
