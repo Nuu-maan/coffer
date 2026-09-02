@@ -1,6 +1,6 @@
 {
   "name": "coffer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A capture buffer and prompt queue for AI-assisted work. Local-only.",
   "main": "./out/main/index.js",
   "author": "nuu-maan <n82238895@gmail.com>",

@@ -13,6 +13,7 @@ export type HotkeyTriggers = {
 
 export type HotkeyManager = {
   apply(settings: Settings): void
+  refresh(settings: Settings): void
   dispose(): void
   status(): HotkeyStatus
 }
@@ -177,6 +178,10 @@ export function createHotkeyManager(
 
   return {
     apply,
+    refresh(settings) {
+      appliedKey = null
+      apply(settings)
+    },
     dispose() {
       teardown()
       appliedKey = null

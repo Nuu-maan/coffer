@@ -14,6 +14,7 @@ files:
 asarUnpack:
   - '**/*.node'
 afterPack: build/after-pack.mjs
+afterSign: build/after-sign.mjs
 # Chromium's own strings — its context menus, its error pages — in fifty-five
 # languages. Coffer has no translations, so fifty-four of them describe a UI
 # nobody will ever be shown. Handled here rather than in the afterPack hook
