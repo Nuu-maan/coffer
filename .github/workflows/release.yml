@@ -85,6 +85,33 @@ jobs:
       - name: Test
         run: npm test
 
+      # TCC keys a permission to the code identity. An ad-hoc signature is a new
+      # identity every release, so every update costs the user both grants
+      # again. A persistent certificate — self-signed is enough, Gatekeeper is
+      # a separate question — keeps them. Without the secret the build stays
+      # ad-hoc, as it always was.
+      - name: Import the macOS signing identity
+        if: runner.os == 'macOS'
+        env:
+          MAC_SIGN_CERT: ${{ secrets.MAC_SIGN_CERT }}
+          MAC_SIGN_CERT_PASSWORD: ${{ secrets.MAC_SIGN_CERT_PASSWORD }}
+        run: |
+          [ -n "$MAC_SIGN_CERT" ] || { echo "no MAC_SIGN_CERT secret; signing ad-hoc"; exit 0; }
+          echo "$MAC_SIGN_CERT" | base64 --decode > /tmp/sign.p12
+          security create-keychain -p ci /tmp/sign.keychain
+          security set-keychain-settings /tmp/sign.keychain
+          security unlock-keychain -p ci /tmp/sign.keychain
+          security import /tmp/sign.p12 -k /tmp/sign.keychain -P "$MAC_SIGN_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ci /tmp/sign.keychain >/dev/null
+          security list-keychains -d user -s /tmp/sign.keychain login.keychain
+          openssl pkcs12 -in /tmp/sign.p12 -passin pass:"$MAC_SIGN_CERT_PASSWORD" -nokeys -clcerts -legacy 2>/dev/null > /tmp/sign.pem \
+            || openssl pkcs12 -in /tmp/sign.p12 -passin pass:"$MAC_SIGN_CERT_PASSWORD" -nokeys -clcerts > /tmp/sign.pem
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain /tmp/sign.pem
+          identity="$(security find-identity -v -p codesigning /tmp/sign.keychain | awk -F'"' 'NR==1 { print $2 }')"
+          [ -n "$identity" ] || { echo "the certificate is not usable for code signing"; exit 1; }
+          echo "MAC_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "signing as \"$identity\""
+
       # A tag publishes. Anything else — a manual run to check the matrix still
       # builds — packages and throws the result away, so verifying a platform
       # never costs a tag or leaves a stray draft behind.
