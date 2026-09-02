@@ -27,13 +27,15 @@ you are doing, then work the list down later, copying each item into ChatGPT,
 Claude, or Cursor and ticking it off.
 
 - **Stash a selection** — select text anywhere and tap `Shift` twice.
-- **Clip a region** — `Ctrl+Shift+Space`, drag a box, add a note.
+- **Clip a region** — `Ctrl+Shift+Space` (`⌃⌘R` on a Mac), drag a box, add a note.
 - **Type or drop** — a prompt you thought of, an image pasted or dragged in.
+- **File it** — sections group the list, and a deleted stash can be put back.
 
 No account, no sync, no telemetry, no network calls of any kind.
 
 Windows and Linux are supported. [macOS is in early development](#macos--early-development)
-— it builds and CI exercises it, but it has not been run on real hardware.
+— it builds, CI drives the packaged app on every release, and the permission
+flow has been worked through, but it has had little time on real hardware.
 
 ## Install
 
@@ -95,11 +97,14 @@ If a permission shows as switched on in System Settings but Coffer still says
 it is missing, macOS is holding the grant for an earlier copy of the app. Press
 **Grant…** in Coffer's Settings: it clears that entry and asks again.
 
-Two things to know before you rely on it. Because the build is not signed with
-a persistent certificate, macOS identifies it by a hash that changes with every
-release — so **both permissions must be granted again after each update**. And
-for the same reason **macOS does not auto-update**; new versions come from this
-page. Both go away once releases are signed with a persistent certificate.
+Two things to know before you rely on it. Until releases are signed with a
+persistent certificate, macOS identifies each one by a hash that changes with
+every release — so **both permissions must be granted again after each update**
+(Grant… handles it, as above). And because the build has no Developer ID,
+**macOS does not auto-update**; new versions come from this page.
+
+The panel keeps the system's own window corners on macOS, so the corner radius
+setting is not offered there.
 
 ### Linux
 
@@ -129,32 +134,44 @@ instead, as it should. macOS does not update itself yet, for the reason above.
 
 ## Using it
 
-Coffer lives in the tray. These work anywhere on your desktop:
+Coffer lives in the tray — the menu bar on a Mac. These work anywhere on your
+desktop:
 
-| Key | Action |
-| --- | --- |
-| `Shift` `Shift` | Stash the current selection |
-| `Ctrl+Shift+Space` | Clip a region of the screen |
-| `Ctrl+Alt+Space` | Stash the selection — fallback trigger |
+| Action | Windows / Linux | macOS |
+| --- | --- | --- |
+| Stash the current selection | `Shift` `Shift` | `Shift` `Shift` |
+| Clip a region of the screen | `Ctrl+Shift+Space` | `⌃⌘R` |
+| Stash the selection — fallback trigger | `Ctrl+Alt+Space` | `⌃⌘S` |
 
-Both accelerators are rebindable in Settings, and Coffer refuses to register
-either if they collide rather than failing silently.
+The double tap is the default trigger wherever the keyboard can be read; the
+fallback accelerator takes over where it cannot, and on a Mac until
+Accessibility is granted. Both accelerators are rebindable in Settings, and
+Coffer refuses to register either if they collide rather than failing silently.
 
-In the window:
+In the window (`⌘` for `Ctrl` on a Mac):
 
 | Key | Action |
 | --- | --- |
 | `Enter` | Copy the selected stash |
 | `Space` | Toggle done |
-| `Delete` | Remove |
-| `j` `k` or arrows | Move the selection |
+| `Delete` / `Backspace` | Remove — undoable from the toast |
+| `j` `k` or arrows | Move the selection; hold `Shift` to extend it |
+| `Alt+↑` / `Alt+↓` | Move the selected stash, or the focused section |
+| `Ctrl+A` | Select everything |
 | `Ctrl+C` / `Ctrl+Shift+C` | Copy the selection, plain or as a list |
 | `Ctrl+V` | Stash an image from the clipboard |
-| `Esc` | Hide to tray |
+| `Ctrl+F` | Search the list |
+| `Esc` | Clear the selection, then hide to tray |
 
-Double-click a stash to edit it or caption an image. Drag to reorder. Drop image
-files anywhere in the window. An image stash has two copy targets: the thumbnail
-copies the image, the caption copies the text.
+Double-click a stash to edit it or caption an image. Drag to reorder, or drag a
+section caption to move the whole section. Drop image files anywhere in the
+window. An image stash has two copy targets: the thumbnail copies the image, the
+caption copies the text.
+
+Sections keep the list in order: make one from the `+` menu on the composer or
+by tagging a stash, double-click a caption to rename it, and use the caption's
+menu to tick, move or clear everything in it at once. Settings and the changelog
+are behind the `⋯` in the title bar.
 
 <div align="center">
 <img src="docs/media/settings-light.png#gh-light-mode-only" alt="Settings" width="380">
@@ -190,6 +207,10 @@ you can open:
 Delete the folder and Coffer is gone. Nothing is uploaded, and the app makes no
 outbound requests.
 
+If `store.json` cannot be read when Coffer starts, it is moved aside as
+`store.json.unreadable-<timestamp>` rather than written over, so the contents
+are there to recover.
+
 ## Roadmap
 
 - Getting macOS out of early development, which mostly means someone running it
@@ -197,8 +218,10 @@ outbound requests.
 - An [Omarchy](https://omarchyplugins.com) plugin — a bar widget and panel for
   stashing and reviewing without opening the window.
 - Code signing on Windows, to retire the SmartScreen warning.
-- An Apple Developer ID, which would retire the Gatekeeper detour, keep macOS
-  permissions across updates, and let macOS auto-update like the other two.
+- Signing macOS releases with a persistent certificate, so permissions survive
+  updates — the pipeline is in place and only needs the certificate.
+- An Apple Developer ID, which would retire the Gatekeeper detour and let macOS
+  auto-update like the other two.
 
 ## Development
 
@@ -222,8 +245,17 @@ npm run dev
 
 macOS and Linux artefacts cannot be cross-built from Windows; CI builds all
 three on a tag push, and the macOS job additionally reads the finished bundle
-back — architecture, signature, entitlements, `Info.plist` — and drives the
-packaged app to check the paths a machine with no permissions granted takes.
+back — architecture, signature, entitlements, `Info.plist` — starts the packaged
+app once on its own, then drives it through Playwright: the keyboard hook, a
+stash end to end, the overlay covering the display, and the renderer painting
+without errors. A manual run of the same workflow packages everything without
+publishing.
+
+macOS releases are ad-hoc signed unless the repository has a `MAC_SIGN_CERT`
+secret (a base64 `.p12`) and `MAC_SIGN_CERT_PASSWORD`, in which case the
+workflow imports that certificate and re-signs the bundle with it. A self-signed
+certificate is enough for macOS to recognise the app across releases and keep
+its permissions.
 
 Three processes with a hard boundary: the renderer has no filesystem, clipboard,
 or hook access, and everything crosses through a typed bridge. The internals —
