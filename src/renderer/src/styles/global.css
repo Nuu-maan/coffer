@@ -30,25 +30,8 @@
  * read is not the same question as contrast where it is only felt.
  */
 :root {
-  /*
-   * One number, and everything else derived from it.
-   *
-   * --window-radius is written onto the element by the renderer from the
-   * setting; this is the fallback for the frame or two before that lands, and
-   * for the clipper windows, which have no panel to match.
-   *
-   * The rule the rest follow is concentricity: a thing nested inside another
-   * is the outer radius less the padding between them, so the curves stay
-   * parallel rather than the inner one looking pinched. The list sits in a
-   * 12px gutter and a card is the window less 8 — a shade softer than strict
-   * concentricity, because a card is small enough that the true concentric
-   * value reads tighter than the window around it. Clamped at both ends: below
-   * about 8px a curve stops reading as one, and past 18 a 52px card turns into
-   * a lozenge.
-   */
-  --window-radius: 20px;
-  --card-radius: clamp(8px, calc(var(--window-radius) - 8px), 18px);
-  --inner-radius: clamp(5px, calc(var(--window-radius) - 12px), 14px);
+  --card-radius: 12px;
+  --inner-radius: 8px;
   --radius: 0.75rem;
 
   --background: #ffffff;
@@ -335,7 +318,6 @@
    * handful of literal px radii in the components are written down rather than
    * left to be re-guessed.
    */
-  --radius-window: var(--window-radius);
   --radius-card: var(--card-radius);
   --radius-inner: var(--inner-radius);
 
