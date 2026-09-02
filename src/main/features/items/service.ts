@@ -140,7 +140,7 @@ export function removeItems(ids: readonly string[]): Snapshot {
   })
 
   undoBuffer = [...removed, ...undoBuffer]
-  discardFiles(undoBuffer.splice(UNDO_DEPTH))
+  discardFiles(undoBuffer.splice(Math.max(UNDO_DEPTH, removed.length)))
   return snapshot()
 }
 
