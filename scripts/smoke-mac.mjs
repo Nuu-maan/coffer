@@ -1,4 +1,5 @@
 import { strict as assert } from 'node:assert'
+import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { _electron as electron } from 'playwright-core'
 
@@ -64,14 +65,29 @@ await check('the app boots, so the tray was created without throwing', async () 
 })
 
 /* Not firstWindow(): the overlay pool primes one hidden window per display
-   before anything else, so the first window is never the one we want. */
+   before anything else, so the first window is never the one we want. A slow
+   runner has taken over ten seconds to reach ready, so the budget is generous. */
 async function mainWindow() {
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 120; attempt++) {
     const found = app.windows().find((page) => page.url().includes('index.html'))
     if (found) return found
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
+  console.error(mainThreadSample(app.process().pid))
   throw new Error(`no index.html window; saw ${app.windows().map((w) => w.url()).join(', ')}`)
+}
+
+/* Where the process is stuck, from the outside: the main thread's stack is
+   the only thing that can say what 'ready' is waiting on. */
+function mainThreadSample(pid) {
+  try {
+    const report = execFileSync('sample', [String(pid), '1', '-mayDie'], { encoding: 'utf8' })
+    const graph = report.slice(report.indexOf('Call graph:'), report.indexOf('Total number in stack'))
+    const main = graph.slice(0, graph.indexOf('\n  Thread_', 20))
+    return `main thread while waiting for a window:\n${main.trim()}`
+  } catch (error) {
+    return `could not sample the process: ${error.message}`
+  }
 }
 
 const page = await mainWindow()
