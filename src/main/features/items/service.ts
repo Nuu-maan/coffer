@@ -93,6 +93,14 @@ export function toggleItem(id: string): Snapshot {
   return snapshot()
 }
 
+export function setItemDone(id: string, done: boolean): Snapshot {
+  mutate((draft) => {
+    const item = draft.items.find((candidate) => candidate.id === id)
+    if (item) item.done = done
+  })
+  return snapshot()
+}
+
 export function updateItem(id: string, text: string): Snapshot {
   const trimmed = text.trim()
   const target = getStore().items.find((item) => item.id === id)
