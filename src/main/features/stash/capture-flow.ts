@@ -4,8 +4,10 @@ import { addImage, addItem } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { readSelection, type Capture } from '@main/features/selection-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
+import { requestAccessibility } from '@main/platform/permissions'
 
 let running = false
+let askedForAccessibility = false
 
 export async function stashSelection(): Promise<void> {
   if (running) return
@@ -19,6 +21,10 @@ export async function stashSelection(): Promise<void> {
     if (!selection.ok) {
       await takeCapturedSource()
       notify(reasonMessage(selection.reason))
+      if (selection.reason === 'no-permission' && !askedForAccessibility) {
+        askedForAccessibility = true
+        void requestAccessibility()
+      }
       return
     }
 
