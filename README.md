@@ -9,8 +9,7 @@
 Grab anything off your screen, keep it in one list, and work it down.
 
 [![License](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-black)](#install)
-[![macOS](https://img.shields.io/badge/macOS-early%20development-orange)](#macos--early-development)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-black)](#install)
 [![Local only](https://img.shields.io/badge/data-local%20only-black)](#your-data)
 
 <img src="docs/media/list-light.png#gh-light-mode-only" alt="Coffer" width="420">
@@ -33,9 +32,7 @@ Claude, or Cursor and ticking it off.
 
 No account, no sync, no telemetry, no network calls of any kind.
 
-Windows and Linux are supported. [macOS is in early development](#macos--early-development)
-— it builds, CI drives the packaged app on every release, and the permission
-flow has been worked through, but it has had little time on real hardware.
+Windows, macOS and Linux are supported.
 
 ## Install
 
@@ -46,21 +43,7 @@ Download the latest build from the [releases page](https://github.com/Nuu-maan/c
 Run `Coffer-Setup.exe`. The installer is not code-signed yet, so SmartScreen
 will warn on first run — choose **More info → Run anyway**.
 
-### macOS — early development
-
-> **macOS support is early and unproven on real hardware.**
->
-> It builds, it starts, and CI drives the packaged app on every change — the
-> keyboard hook starts, a stash runs end to end, and the region overlay covers
-> the whole display. But a CI Mac is a headless machine with permissions already
-> granted, and it cannot answer the questions that matter most: whether copying
-> out of Safari or Terminal really works, whether the overlay covers the menu bar
-> and the Dock the way it should, or whether Gatekeeper behaves as described
-> below. None of that has been seen by a person on a real Mac.
->
-> Treat it as a preview. Windows and Linux are the supported platforms; if you
-> run macOS and something is wrong, an issue with what you saw is genuinely
-> useful.
+### macOS
 
 Take `Coffer-arm64.dmg` on Apple silicon, or `Coffer-x64.dmg` on an Intel Mac.
 Requires macOS 13.5 or newer.
@@ -213,8 +196,6 @@ are there to recover.
 
 ## Roadmap
 
-- Getting macOS out of early development, which mostly means someone running it
-  on a real Mac and reporting what breaks.
 - An [Omarchy](https://omarchyplugins.com) plugin — a bar widget and panel for
   stashing and reviewing without opening the window.
 - Code signing on Windows, to retire the SmartScreen warning.

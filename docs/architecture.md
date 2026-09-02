@@ -63,13 +63,9 @@ is testable without a keyboard.
 | Session | Trigger | Reading the selection |
 | --- | --- | --- |
 | Windows | `uiohook-napi` low-level hook, or accelerator | Synthesize `Ctrl+C`, poll the clipboard, restore it on failure |
-| macOS ¹ | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
+| macOS | Same hook once Accessibility is granted, or accelerator | Synthesize `⌘C` the same way, with `osascript` as the fallback |
 | Linux / X11 | Same hook, or accelerator | Read the PRIMARY selection directly — no keystroke needed |
 | Linux / Wayland | Named actions bound by the compositor through the XDG GlobalShortcuts portal | PRIMARY selection, falling back to the clipboard |
-
-¹ macOS is in early development. Everything below describes what the code does
-and what CI verifies on a runner; none of it has been watched by a person on a
-real Mac, and the places that matters most are listed at the end of this file.
 
 The double-tap trigger needs to watch the keyboard, which Wayland does not
 permit. Neither does it permit `globalShortcut`, which reports success there and
@@ -155,7 +151,7 @@ through the single-instance lock.
   there — Squirrel.Mac verifies the signature, and it does so only after
   downloading the whole update.
 
-## What macOS still needs a real Mac for
+## What CI cannot check on macOS
 
 CI builds both architectures, reads the finished bundle back, and drives the
 packaged app: the keyboard hook starts, a stash runs end to end without losing
@@ -163,7 +159,7 @@ the clipboard, the region overlay covers the full display, and the renderer
 paints without errors. A hosted runner also turns out to be trusted for
 Accessibility and screen capture, so the granted paths are exercised too.
 
-What it cannot answer, and what would move macOS out of early development:
+What it cannot answer, and so has to be checked by hand on a Mac when it changes:
 
 - Whether the synthesised `⌘C` really copies out of Safari, Chrome, VS Code,
   Terminal and Notes, and whether the 500ms clipboard window suits the macOS
