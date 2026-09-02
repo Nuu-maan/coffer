@@ -82,12 +82,17 @@ for app in $apps; do
     fi
   done
 
-  # Signing shape. These are expected to read differently the day a real
-  # certificate lands, which is itself the signal that it did.
-  if codesign -dv --verbose=4 "$app" 2>&1 | grep -q 'Signature=adhoc'; then
+  # Signing shape: ad-hoc unless the workflow imported an identity, in which
+  # case the bundle must carry that identity and nothing else.
+  signature="$(codesign -dv --verbose=4 "$app" 2>&1)"
+  if [ -n "${MAC_SIGN_IDENTITY:-}" ]; then
+    echo "$signature" | grep -q "Authority=${MAC_SIGN_IDENTITY}" \
+      && note "signed as \"${MAC_SIGN_IDENTITY}\"" "ok" \
+      || bad "signed as \"${MAC_SIGN_IDENTITY}\"" "$(echo "$signature" | grep -iE 'signature|authority' | head -3 | tr '\n' ' ')"
+  elif echo "$signature" | grep -q 'Signature=adhoc'; then
     note "signed ad-hoc" "ok"
   else
-    bad "signed ad-hoc" "$(codesign -dv "$app" 2>&1 | grep -i signature || echo 'not signed at all')"
+    bad "signed ad-hoc" "$(echo "$signature" | grep -i signature || echo 'not signed at all')"
   fi
 
   codesign --verify --deep --strict "$app" \

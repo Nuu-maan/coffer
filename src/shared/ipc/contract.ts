@@ -119,11 +119,15 @@ export interface CofferApi {
     minimize(): void
     hideMain(): void
   }
+  app: {
+    relaunch(): void
+  }
   on: {
     clipperFrame(callback: (frame: OverlayFrame) => void): Unsubscribe
     itemsChanged(callback: (snapshot: Snapshot) => void): Unsubscribe
     settingsChanged(callback: (settings: Settings) => void): Unsubscribe
     hotkeyStatus(callback: (status: HotkeyStatus) => void): Unsubscribe
+    permissionsChanged(callback: (permissions: Permissions) => void): Unsubscribe
     showSettings(callback: () => void): Unsubscribe
   }
 }

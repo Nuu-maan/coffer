@@ -19,6 +19,17 @@ export type Release = {
  */
 export const RELEASES: Release[] = [
   {
+    version: '0.3.1',
+    date: '2026-09-02',
+    changes: [
+      'macOS: a permission that System Settings shows as granted but Coffer could not see — the usual state after an update — is cleared and asked for again from Grant…, and the first stash refused for lack of Accessibility asks as well.',
+      'macOS: Accessibility takes effect the moment it is granted. The panel updates and the double-tap trigger starts without a restart; Screen Recording still needs one, and Settings now has a button for it.',
+      'macOS: the panel keeps the system’s own window corners, and the corner radius setting is gone there.',
+      'Undo keeps every stash of a large delete rather than the first fifty, and their images with them.',
+      'A stash file that cannot be read on launch is set aside rather than written over.'
+    ]
+  },
+  {
     version: '0.3.0',
     date: '2026-08-31',
     changes: [

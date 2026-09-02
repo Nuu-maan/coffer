@@ -29,6 +29,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Button } from '@/components/ui/button'
+import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
 import { ease } from '@/lib/motion'
 import { usePlatform } from '@/hooks/use-platform'
@@ -90,33 +91,30 @@ export function SettingsPanel(): React.JSX.Element {
             </ToggleGroup>
           </Row>
 
-          {/* The panel is a transparent window whose corners the renderer
-              draws, so this is a real choice rather than a theme knob: it sits
-              next to whatever rounding the desktop already uses, and only the
-              person looking at it knows what that is. Every other radius in the
-              window is derived from this one. */}
-          <Row
-            label="Corner radius"
-            hint="The panel's corners, and everything shaped to match them"
-            htmlFor="window-radius"
-            icon={<Corners />}
-          >
-            <div className="flex w-[150px] items-center gap-2">
-              <Slider
-                id="window-radius"
-                min={WINDOW_RADIUS.min}
-                max={WINDOW_RADIUS.max}
-                step={WINDOW_RADIUS.step}
-                value={[settings.windowRadius ?? WINDOW_RADIUS.default]}
-                onValueChange={([value]) => {
-                  if (value !== undefined) patch({ windowRadius: value })
-                }}
-              />
-              <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                {settings.windowRadius ?? WINDOW_RADIUS.default}px
-              </span>
-            </div>
-          </Row>
+          {!mac && (
+            <Row
+              label="Corner radius"
+              hint="The panel's corners, and everything shaped to match them"
+              htmlFor="window-radius"
+              icon={<Corners />}
+            >
+              <div className="flex w-[150px] items-center gap-2">
+                <Slider
+                  id="window-radius"
+                  min={WINDOW_RADIUS.min}
+                  max={WINDOW_RADIUS.max}
+                  step={WINDOW_RADIUS.step}
+                  value={[settings.windowRadius ?? WINDOW_RADIUS.default]}
+                  onValueChange={([value]) => {
+                    if (value !== undefined) patch({ windowRadius: value })
+                  }}
+                />
+                <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                  {settings.windowRadius ?? WINDOW_RADIUS.default}px
+                </span>
+              </div>
+            </Row>
+          )}
         </Group>
 
         {acceleratorsAvailable ? (
@@ -275,11 +273,21 @@ export function SettingsPanel(): React.JSX.Element {
           </Group>
         )}
 
+        {mac && access && (!access.accessibility || access.screen !== 'granted') && (
+          <Note>
+            Already switched on in System Settings? macOS is holding that permission
+            for an earlier copy of Coffer. Grant… clears it and asks again.
+          </Note>
+        )}
+
         {mac && access?.needsRestart && (
           <Note variant="warning">
-            macOS keeps its answer for as long as Coffer is running, so a
-            permission you have just granted only takes effect once you quit and
-            reopen it.
+            <span className="flex flex-col items-start gap-2">
+              macOS applies Screen Recording to an app only after it is reopened.
+              <Button variant="outline" size="sm" onClick={() => coffer.app.relaunch()}>
+                Relaunch Coffer
+              </Button>
+            </span>
           </Note>
         )}
 

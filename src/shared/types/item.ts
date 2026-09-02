@@ -128,9 +128,6 @@ export type Permissions = {
   /** False only on macOS, and only until the user grants it. */
   accessibility: boolean
   screen: ScreenAccess
-  /* Both reads are cached for the life of the process, so a grant made while
-     Coffer is running does not show up until it restarts. The UI has to say
-     that rather than invite another attempt. */
   needsRestart: boolean
 }
 

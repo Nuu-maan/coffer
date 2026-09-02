@@ -140,7 +140,7 @@ export function removeItems(ids: readonly string[]): Snapshot {
   })
 
   undoBuffer = [...removed, ...undoBuffer]
-  discardFiles(undoBuffer.splice(UNDO_DEPTH))
+  discardFiles(undoBuffer.splice(Math.max(UNDO_DEPTH, removed.length)))
   return snapshot()
 }
 
@@ -171,7 +171,9 @@ export function restoreItems(ids: readonly string[]): Snapshot {
   mutate((draft) => {
     /* Belt and braces: an id already on the list must not be doubled. */
     const present = new Set(draft.items.map((item) => item.id))
-    draft.items.push(...back.filter((item) => !present.has(item.id)))
+    const returning = back.filter((item) => !present.has(item.id))
+    draft.items.push(...returning)
+    for (const item of returning) if (item.tag) ensureSection(draft, item.tag)
   })
   return snapshot()
 }

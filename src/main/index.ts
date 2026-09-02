@@ -11,6 +11,7 @@ import { applyLinuxCommandLineFlags } from './platform/linux-flags'
 import { registerCofferScheme, serveCofferScheme } from './protocol/coffer'
 import { setWindowVisible } from './platform/activation'
 import { isMac } from './platform/session'
+import { watchPermissions } from './platform/permissions'
 import { flushStore, loadStore, storeIntact } from './store/store'
 import { pruneOrphans } from './features/images/store'
 import { createTray, destroyTray } from './tray'
@@ -18,7 +19,7 @@ import { showMainWindow } from './windows/main-window'
 import { destroyOverlays, primeOverlays } from './windows/clipper-overlay'
 import { stashSelection } from './features/stash/capture-flow'
 import { startClip } from './features/clipper'
-import { syncLoginItem, syncTheme } from './features/settings/service'
+import { getSettings, syncLoginItem, syncTheme } from './features/settings/service'
 import { startUpdateChecks, stopUpdateChecks } from './features/updates'
 
 /* Startup is the one place a failure leaves nothing behind to look at: no
@@ -112,6 +113,10 @@ async function boot(): Promise<void> {
   trace('tray created')
   hotkeys.apply(store.settings)
   trace('hotkeys applied')
+  watchPermissions((next) => {
+    broadcast(CH.ON_PERMISSIONS_CHANGED, next)
+    hotkeys.refresh(getSettings())
+  })
   syncTheme(store.settings.theme)
   trace('theme synced')
   syncLoginItem(store.settings.launchOnLogin)
