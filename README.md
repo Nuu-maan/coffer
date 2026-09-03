@@ -13,6 +13,12 @@
 
 <br>
 
+<img src="docs/media/demo.gif" alt="Stashing a build error, a paragraph of docs and a screenshot, then copying them into an assistant" width="900">
+
+<sub><a href="docs/media/demo.mp4">Watch it at full size</a></sub>
+
+<br><br>
+
 <img src="docs/media/hero-light.png#gh-light-mode-only" alt="The Coffer panel and its settings" width="900">
 <img src="docs/media/hero-dark.png#gh-dark-mode-only" alt="The Coffer panel and its settings" width="900">
 
