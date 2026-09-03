@@ -1,0 +1,1011 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Coffer demo stage</title>
+<style>
+  @font-face {
+    font-family: 'Inter Var';
+    src: url('/inter.woff2') format('woff2');
+    font-weight: 100 900;
+  }
+
+  :root {
+    --sans: 'Inter Var', system-ui, sans-serif;
+    --mono: 'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace;
+    --chrome: #1b1e21;
+    --edge: rgb(255 255 255 / 0.08);
+    --lift: 0 40px 90px rgb(0 0 0 / 0.55), 0 4px 14px rgb(0 0 0 / 0.4);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: var(--sans);
+    background: #0e1012;
+    cursor: none;
+  }
+
+  ::selection {
+    background: #4a7fb8;
+    color: #fff;
+  }
+
+  #desktop {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(90% 70% at 12% -10%, #2f373f 0%, rgb(47 55 63 / 0) 60%),
+      radial-gradient(70% 60% at 92% 105%, #33302b 0%, rgb(51 48 43 / 0) 55%),
+      linear-gradient(160deg, #191d21 0%, #101315 55%, #0b0d0f 100%);
+  }
+
+  #topbar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.55);
+    background: rgb(0 0 0 / 0.35);
+  }
+
+  #topbar .spacer {
+    margin-left: auto;
+  }
+
+  #topbar .tray {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .win {
+    position: absolute;
+    border-radius: 11px;
+    border: 1px solid var(--edge);
+    background: var(--chrome);
+    box-shadow: var(--lift);
+    overflow: hidden;
+    transform-origin: 50% 70%;
+  }
+
+  .bar {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    background: rgb(255 255 255 / 0.035);
+    border-bottom: 1px solid rgb(255 255 255 / 0.06);
+    font-size: 12.5px;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .lights {
+    display: flex;
+    gap: 7px;
+    margin-right: 4px;
+  }
+
+  .lights i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.16);
+  }
+
+  /* ── terminal ────────────────────────────────────────────────── */
+  #term {
+    left: 110px;
+    top: 152px;
+    width: 900px;
+    height: 500px;
+  }
+
+  #term .body {
+    height: calc(100% - 38px);
+    padding: 18px 22px;
+    background: #101315;
+    font-family: var(--mono);
+    font-size: 14.5px;
+    line-height: 1.62;
+    color: #c9d1d6;
+    white-space: pre;
+  }
+
+  .dim-txt {
+    color: #6c777e;
+  }
+  .grn {
+    color: #7fc4a0;
+  }
+  .blu {
+    color: #7aa7d8;
+  }
+  .red {
+    color: #e0797c;
+  }
+  .yel {
+    color: #d9bb7a;
+  }
+
+  /* ── browser ─────────────────────────────────────────────────── */
+  #browser {
+    left: 268px;
+    top: 236px;
+    width: 1010px;
+    height: 690px;
+  }
+
+  #browser .tabs {
+    height: 40px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 0 12px;
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  #browser .tab {
+    height: 31px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    font-size: 12.5px;
+    color: rgb(255 255 255 / 0.45);
+    border-radius: 8px 8px 0 0;
+  }
+
+  #browser .tab.on {
+    background: #fdfdfd;
+    color: #1d1f21;
+    font-weight: 500;
+  }
+
+  #browser .url {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    background: #fdfdfd;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  #browser .url span {
+    font-size: 12.5px;
+    color: #6a7076;
+    background: #f0f1f2;
+    border-radius: 7px;
+    padding: 6px 14px;
+    flex: 1;
+  }
+
+  #browser .page {
+    height: calc(100% - 80px);
+    background: #fdfdfd;
+    color: #22262a;
+    overflow: hidden;
+  }
+
+  .doc {
+    padding: 34px 54px;
+  }
+
+  .doc h1 {
+    font-size: 30px;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .doc .crumb {
+    font-size: 12.5px;
+    color: #8b9298;
+    margin-bottom: 22px;
+  }
+
+  .doc p {
+    font-size: 16.5px;
+    line-height: 1.72;
+    margin: 0 0 16px;
+    max-width: 780px;
+    color: #33383d;
+  }
+
+  .doc code {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    background: #f1f2f3;
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  /* ── CI page ─────────────────────────────────────────────────── */
+  #ci {
+    display: none;
+    padding: 26px 40px;
+  }
+
+  #ci .head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  #ci .sub {
+    font-size: 13px;
+    color: #8b9298;
+    margin-bottom: 22px;
+  }
+
+  #clip-target {
+    border: 1px solid #e4e6e8;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  #clip-target .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 18px;
+    font-size: 14px;
+    border-bottom: 1px solid #eef0f1;
+  }
+
+  #clip-target .row:last-child {
+    border-bottom: 0;
+  }
+
+  #clip-target .row b {
+    font-weight: 550;
+  }
+
+  #clip-target .row .t {
+    margin-left: auto;
+    color: #8b9298;
+    font-size: 12.5px;
+  }
+
+  .mark {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    color: #fff;
+    flex: none;
+  }
+
+  .ok {
+    background: #2e9e63;
+  }
+  .bad {
+    background: #d5453f;
+  }
+  .wait {
+    background: #d0a53c;
+  }
+
+  #clip-target .log {
+    background: #14181b;
+    color: #c9d1d6;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    padding: 14px 18px;
+    white-space: pre;
+  }
+
+  /* ── assistant ───────────────────────────────────────────────── */
+  #chat {
+    left: 268px;
+    top: 196px;
+    width: 1010px;
+    height: 760px;
+  }
+
+  #chat .body {
+    height: calc(100% - 38px);
+    background: #17191b;
+    padding: 26px 30px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #chat .msg {
+    align-self: flex-start;
+    max-width: 460px;
+    background: rgb(255 255 255 / 0.045);
+    border: 1px solid rgb(255 255 255 / 0.06);
+    border-radius: 12px;
+    padding: 16px 18px;
+    color: #d6dade;
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  #chat .composer {
+    margin-top: auto;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 14px;
+    background: rgb(255 255 255 / 0.03);
+    padding: 16px 18px;
+    min-height: 96px;
+    color: #d6dade;
+    font-size: 14.5px;
+    line-height: 1.62;
+  }
+
+  #chat .composer .ph {
+    color: rgb(255 255 255 / 0.3);
+  }
+
+  #chat .paste {
+    display: none;
+  }
+
+  #chat .paste .quote {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #aab4bb;
+    border-left: 2px solid rgb(255 255 255 / 0.18);
+    padding-left: 12px;
+    margin: 0 0 10px;
+    white-space: pre-wrap;
+  }
+
+  #chat .paste img {
+    display: block;
+    max-width: 340px;
+    border-radius: 7px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    margin: 0 0 10px;
+  }
+
+  /* ── coffer panel ────────────────────────────────────────────── */
+  #panel {
+    position: absolute;
+    left: 1338px;
+    top: 214px;
+    width: 460px;
+    height: 620px;
+    border-radius: 12px;
+    background: rgb(12 14 16 / 0.5);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.07),
+      0 40px 90px rgb(0 0 0 / 0.6),
+      0 4px 14px rgb(0 0 0 / 0.45);
+  }
+
+  #panel iframe {
+    border-radius: 12px;
+  }
+
+  #panel iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    display: block;
+  }
+
+  /* ── overlays ────────────────────────────────────────────────── */
+  #dim {
+    position: absolute;
+    inset: 0;
+    background: rgb(8 10 12 / 0.58);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #shot {
+    position: absolute;
+    border: 1px solid rgb(255 255 255 / 0.85);
+    pointer-events: none;
+    display: none;
+  }
+
+  #shot .size {
+    position: absolute;
+    left: 0;
+    top: -30px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    background: rgb(0 0 0 / 0.6);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #clipform {
+    position: absolute;
+    pointer-events: none;
+    display: none;
+    background: rgb(24 26 28 / 0.97);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 11px;
+    box-shadow: var(--lift);
+    padding: 13px 15px;
+    width: 470px;
+  }
+
+  #clipform .cap {
+    font-size: 14px;
+    color: #e4e7ea;
+    min-height: 20px;
+  }
+
+  #clipform .cap i {
+    display: inline-block;
+    width: 1.5px;
+    height: 15px;
+    background: #e4e7ea;
+    vertical-align: -2px;
+    margin-left: 1px;
+  }
+
+  #clipform .hint {
+    margin-top: 9px;
+    font-size: 11.5px;
+    color: rgb(255 255 255 / 0.38);
+  }
+
+  #cursor {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    margin: -2px 0 0 -2px;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.55));
+  }
+
+  #keys {
+    position: absolute;
+    pointer-events: none;
+    left: 50%;
+    bottom: 68px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 9px;
+    opacity: 0;
+  }
+
+  #keys kbd {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 550;
+    color: #f2f4f6;
+    background: rgb(30 33 36 / 0.94);
+    border: 1px solid rgb(255 255 255 / 0.13);
+    border-bottom-width: 3px;
+    border-radius: 9px;
+    padding: 9px 17px;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
+  }
+
+  #caption {
+    position: absolute;
+    pointer-events: none;
+    left: 110px;
+    bottom: 74px;
+    font-size: 30px;
+    font-weight: 550;
+    letter-spacing: -0.02em;
+    color: #f4f6f8;
+    text-shadow: 0 2px 20px rgb(0 0 0 / 0.7);
+    opacity: 0;
+  }
+
+  #caption em {
+    font-style: normal;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .card {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+    background: #0b0d0f;
+    opacity: 0;
+  }
+
+  .card .inner {
+    text-align: center;
+    color: #f2f4f6;
+  }
+
+  .card svg {
+    width: 74px;
+    height: 74px;
+    color: #f2f4f6;
+  }
+
+  .card h1 {
+    font-size: 58px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    margin: 16px 0 0;
+  }
+
+  .card p {
+    font-size: 22px;
+    font-weight: 450;
+    color: rgb(255 255 255 / 0.55);
+    margin: 12px 0 0;
+    letter-spacing: -0.01em;
+  }
+
+  .card .links {
+    margin-top: 34px;
+    font-size: 19px;
+    color: rgb(255 255 255 / 0.42);
+  }
+
+  .card .links b {
+    color: #f2f4f6;
+    font-weight: 550;
+  }
+</style>
+
+<div id="desktop">
+  <div id="topbar">
+    <span style="color: rgb(255 255 255 / 0.8); font-weight: 600">Workspace 2</span>
+    <span>atlas — invoice totals</span>
+    <span class="spacer"></span>
+    <span class="tray">
+      <svg viewBox="1.9 3.9 20.2 18.2" width="15" height="15">
+        <g
+          fill="currentColor"
+          fill-rule="evenodd"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linejoin="miter"
+          stroke-miterlimit="1.5"
+        >
+          <path d="M2.6 9.3 L12 14 L12 21.4 L2.6 16.7 Z" fill-opacity=".5" stroke-opacity=".5" />
+          <path d="M21.4 9.3 L12 14 L12 21.4 L21.4 16.7 Z" fill-opacity=".75" stroke-opacity=".75" />
+          <path
+            d="M12 4.6 L21.4 9.3 L12 14 L2.6 9.3 Z M16.25 11.58 L13.75 12.83 L7.75 9.58 L10.25 8.33 Z"
+          />
+        </g>
+      </svg>
+      <span>14:38</span>
+    </span>
+  </div>
+
+  <!-- terminal -->
+  <section class="win" id="term">
+    <div class="bar">
+      <div class="lights"><i></i><i></i><i></i></div>
+      <span>numan@atlas — zsh</span>
+    </div>
+    <div class="body">
+<span class="grn">~/work/atlas</span> <span class="blu">main</span>
+<span class="yel">$</span> npm run typecheck
+
+<span class="dim-txt">> atlas@2.4.0 typecheck
+> tsc --noEmit -p tsconfig.json</span>
+
+<span id="sel-term"><span class="red">src/billing/invoice.ts:118:31 - error TS2769</span>: No overload matches this call.
+  Argument of type 'string' is not assignable to parameter of type 'number'.</span>
+
+<span class="dim-txt">118</span>   const total = lines.<span class="blu">reduce</span>((sum, line) => sum + line.amount, <span class="grn">"0"</span>)
+                                  <span class="red">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+Found <span class="red">1</span> error in src/billing/invoice.ts:118
+</div>
+  </section>
+
+  <!-- browser -->
+  <section class="win" id="browser">
+    <div class="tabs">
+      <div class="tab on" id="tab-docs">reduce() — JS reference</div>
+      <div class="tab" id="tab-ci">atlas · checks for #482</div>
+    </div>
+    <div class="url"><span id="urlbar">developer.mozilla.org/en-US/docs/…/Array/reduce</span></div>
+    <div class="page">
+      <article class="doc" id="docs">
+        <div class="crumb">JavaScript · Reference · Array · reduce()</div>
+        <h1>Array.prototype.reduce()</h1>
+        <p>
+          The <code>reduce()</code> method executes a user-supplied reducer callback on each element
+          of the array, passing in the return value from the calculation on the preceding element.
+        </p>
+        <p id="sel-docs">
+          If <code>initialValue</code> is provided, the accumulator starts as
+          <code>initialValue</code> and is never coerced — whatever type you seed it with is the type
+          every call receives, and the type the final result carries.
+        </p>
+        <p>
+          If no <code>initialValue</code> is provided, the accumulator is initialised to the first
+          element of the array, and the callback starts from the second.
+        </p>
+      </article>
+
+      <article id="ci">
+        <div class="head">
+          <span class="mark bad">✕</span> Fix invoice totals rounding
+          <span style="font-size: 14px; font-weight: 400; color: #8b9298">#482</span>
+        </div>
+        <div class="sub">2 checks failed · pushed 6 minutes ago</div>
+        <div id="clip-target">
+          <div class="row">
+            <span class="mark ok">✓</span><b>lint</b><span class="t">18s</span>
+          </div>
+          <div class="row">
+            <span class="mark bad">✕</span><b>typecheck</b><span class="t">41s</span>
+          </div>
+          <div class="log">
+tsc --noEmit -p tsconfig.json
+src/billing/invoice.ts(118,31): error TS2769: No overload matches this call.
+  Argument of type 'string' is not assignable to parameter of type 'number'.
+Error: Process completed with exit code 2.</div>
+          <div class="row">
+            <span class="mark bad">✕</span><b>test (billing)</b><span class="t">1m 12s</span>
+          </div>
+          <div class="row">
+            <span class="mark wait">•</span><b>build</b><span class="t">queued</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- assistant -->
+  <section class="win" id="chat">
+    <div class="bar">
+      <div class="lights"><i></i><i></i><i></i></div>
+      <span>Assistant</span>
+    </div>
+    <div class="body">
+      <div class="msg">What are you working on?</div>
+      <div class="composer">
+        <div class="ph" id="chat-ph">Ask anything…</div>
+        <div class="paste" id="chat-paste">
+          <p class="quote">
+src/billing/invoice.ts:118:31 - error TS2769: No overload matches this call.
+  Argument of type 'string' is not assignable to parameter of type 'number'.</p>
+          <p class="quote">
+If initialValue is provided, the accumulator starts as initialValue and is never
+coerced — whatever type you seed it with is the type every call receives.</p>
+          <img id="paste-shot" alt="" />
+          <div>Here's the failure, the rule it breaks, and the CI run. What's the fix?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="panel"><iframe src="/app/index.html"></iframe></div>
+
+  <div id="dim"></div>
+  <div id="shot"><span class="size"></span></div>
+  <div id="clipform">
+    <div class="cap"><span id="clipcap"></span><i></i></div>
+    <div class="hint">Enter to keep it · Esc to discard</div>
+  </div>
+
+  <svg id="cursor" viewBox="0 0 24 24">
+    <path
+      d="M5.5 2.6 L18.6 13.2 L12.1 13.8 L15.1 20.4 L12.2 21.6 L9.3 15.1 L5.5 19.4 Z"
+      fill="#fff"
+      stroke="#16181a"
+      stroke-width="1.3"
+      stroke-linejoin="round"
+    />
+  </svg>
+
+  <div id="keys"></div>
+  <div id="caption"></div>
+</div>
+
+<div class="card" id="title">
+    <div class="inner">
+      <svg viewBox="1.9 3.9 20.2 18.2">
+        <g
+          fill="currentColor"
+          fill-rule="evenodd"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linejoin="miter"
+          stroke-miterlimit="1.5"
+        >
+          <path d="M2.6 9.3 L12 14 L12 21.4 L2.6 16.7 Z" fill-opacity=".5" stroke-opacity=".5" />
+          <path d="M21.4 9.3 L12 14 L12 21.4 L21.4 16.7 Z" fill-opacity=".75" stroke-opacity=".75" />
+          <path
+            d="M12 4.6 L21.4 9.3 L12 14 L2.6 9.3 Z M16.25 11.58 L13.75 12.83 L7.75 9.58 L10.25 8.33 Z"
+          />
+        </g>
+      </svg>
+      <h1>Coffer</h1>
+      <p>A holding pen for everything you pick up while you work.</p>
+    </div>
+  </div>
+
+<div class="card" id="outro">
+    <div class="inner">
+      <svg viewBox="1.9 3.9 20.2 18.2">
+        <g
+          fill="currentColor"
+          fill-rule="evenodd"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linejoin="miter"
+          stroke-miterlimit="1.5"
+        >
+          <path d="M2.6 9.3 L12 14 L12 21.4 L2.6 16.7 Z" fill-opacity=".5" stroke-opacity=".5" />
+          <path d="M21.4 9.3 L12 14 L12 21.4 L21.4 16.7 Z" fill-opacity=".75" stroke-opacity=".75" />
+          <path
+            d="M12 4.6 L21.4 9.3 L12 14 L2.6 9.3 Z M16.25 11.58 L13.75 12.83 L7.75 9.58 L10.25 8.33 Z"
+          />
+        </g>
+      </svg>
+      <h1>coffer.my</h1>
+      <p>Free and open source · macOS, Windows, Linux</p>
+      <div class="links"><b>github.com/Nuu-maan/coffer</b></div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id)
+
+  const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2)
+  const easeOut = (p) => 1 - Math.pow(1 - p, 3)
+
+  /* 0 before t0, 1 after t1, eased in between. */
+  const seg = (t, t0, t1, fn = ease) =>
+    t <= t0 ? 0 : t >= t1 ? 1 : fn((t - t0) / (t1 - t0))
+
+  /* Up over [a,b], held, back down over [c,d]. */
+  const pulse = (t, a, b, c, d) => seg(t, a, b) * (1 - seg(t, c, d))
+
+  const mix = (p, from, to) => from + (to - from) * p
+
+  function setSelection(node, chars) {
+    const selection = window.getSelection()
+    if (chars <= 0) return selection.removeAllRanges()
+
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT)
+    const texts = []
+    for (let n; (n = walker.nextNode()); ) texts.push(n)
+    if (texts.length === 0) return
+
+    const first = texts.find((n) => n.textContent.trim()) ?? texts[0]
+    const range = document.createRange()
+    range.setStart(first, 0)
+
+    let seen = 0
+    for (const text of texts.slice(texts.indexOf(first))) {
+      const len = text.textContent.length
+      if (seen + len >= chars) {
+        range.setEnd(text, chars - seen)
+        selection.removeAllRanges()
+        selection.addRange(range)
+        return
+      }
+      seen += len
+    }
+
+    const last = texts[texts.length - 1]
+    range.setEnd(last, last.textContent.length)
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+
+  const CAPTIONS = [
+    [3.4, 7.4, 'Something broke. <em>Keep the evidence.</em>'],
+    [8.6, 12.4, 'Select in any app. <em>Tap Shift twice.</em>'],
+    [13.2, 18.8, 'Screens too — <em>clip any region.</em>'],
+    [19.8, 23.2, 'File it under whatever you are working on.'],
+    [24.6, 29.6, 'Enter copies. <em>Paste it where it belongs.</em>'],
+    [30.4, 33.6, 'Tick it off once it is handled.']
+  ]
+
+  const KEYS = [
+    [6.2, 7.1, ['Shift', 'Shift']],
+    [11.3, 12.2, ['Shift', 'Shift']],
+    [13.5, 14.4, ['Super', 'Shift', 'S']],
+    [17.4, 18.0, ['Enter']],
+    [25.9, 26.6, ['Enter']],
+    [28.4, 29.2, ['Ctrl', 'V']]
+  ]
+
+  const CLIP_CAPTION = 'CI: typecheck failed on #482'
+
+  /* Where the clipper's region lands. Overwritten before the first frame with
+     the block's real rectangle, so the drag and the thumbnail agree. */
+  const CLIP = { x: 300, y: 452, w: 946, h: 372 }
+
+  /* Cursor path: [time, x, y], eased between waypoints. The three clipper
+     waypoints are filled in from CLIP. */
+  const PATH = [
+    [0, 1700, 980],
+    [3.6, 1700, 980],
+    [4.8, 236, 428],
+    [5.2, 236, 428],
+    [6.1, 742, 452],
+    [8.8, 742, 452],
+    [9.9, 330, 566],
+    [10.3, 330, 566],
+    [11.2, 1128, 640],
+    [13.4, 1128, 640],
+    [14.3, 0, 0],
+    [15.6, 0, 0],
+    [17.9, 0, 0],
+    [19.4, 1560, 345],
+    [26.8, 1560, 345],
+    [28.0, 700, 880],
+    [30.6, 700, 880],
+    [31.3, 1390, 311],
+    [33.8, 1390, 311],
+    [34.6, 1700, 980]
+  ]
+
+  /* Where the pointer meets the panel. Measured from the real rows rather
+     than guessed, because a card's height depends on how its text wraps. */
+  function setTargets({ row, check }) {
+    for (const i of [13, 14]) {
+      PATH[i][1] = row.x
+      PATH[i][2] = row.y
+    }
+    for (const i of [17, 18]) {
+      PATH[i][1] = check.x
+      PATH[i][2] = check.y
+    }
+  }
+
+  function setClip(box) {
+    Object.assign(CLIP, box)
+    PATH[10][1] = CLIP.x
+    PATH[10][2] = CLIP.y
+    for (const i of [11, 12]) {
+      PATH[i][1] = CLIP.x + CLIP.w
+      PATH[i][2] = CLIP.y + CLIP.h
+    }
+  }
+
+  function cursorAt(t) {
+    if (t <= PATH[0][0]) return PATH[0].slice(1)
+    for (let i = 1; i < PATH.length; i += 1) {
+      const [t1, x1, y1] = PATH[i]
+      if (t > t1) continue
+      const [t0, x0, y0] = PATH[i - 1]
+      const p = ease((t - t0) / (t1 - t0))
+      return [mix(p, x0, x1), mix(p, y0, y1)]
+    }
+    return PATH[PATH.length - 1].slice(1)
+  }
+
+  function frame(t) {
+    $('title').style.opacity = seg(t, 0, 0.6) * (1 - seg(t, 2.0, 2.9))
+    $('outro').style.opacity = seg(t, 34.4, 35.4)
+
+    // the desktop settling in behind the title card
+    const wake = seg(t, 2.0, 3.2)
+    $('desktop').style.opacity = wake
+    $('term').style.transform = `scale(${mix(wake, 0.985, 1)})`
+
+    // the browser arrives for the second stash and leaves before the assistant
+    const browser = pulse(t, 8.0, 8.9, 22.6, 23.4)
+    $('browser').style.opacity = browser
+    $('browser').style.transform =
+      `translateY(${mix(browser, 26, 0)}px) scale(${mix(browser, 0.985, 1)})`
+    $('browser').style.display = browser > 0.001 ? 'block' : 'none'
+
+    // the tab switch from the reference page to the CI run
+    const onCi = t >= 12.9
+    $('docs').style.display = onCi ? 'none' : 'block'
+    $('ci').style.display = onCi ? 'block' : 'none'
+    $('tab-docs').classList.toggle('on', !onCi)
+    $('tab-ci').classList.toggle('on', onCi)
+    $('urlbar').textContent = onCi
+      ? 'github.com/atlas/atlas/pull/482/checks'
+      : 'developer.mozilla.org/en-US/docs/…/Array/reduce'
+
+    const chat = seg(t, 23.2, 24.2)
+    $('chat').style.opacity = chat
+    $('chat').style.transform = `translateY(${mix(chat, 26, 0)}px) scale(${mix(chat, 0.985, 1)})`
+    $('chat').style.display = chat > 0.001 ? 'block' : 'none'
+
+    const pasted = t >= 28.7
+    $('chat-ph').style.display = pasted ? 'none' : 'block'
+    $('chat-paste').style.display = pasted ? 'block' : 'none'
+
+    // selections, drawn by the browser itself rather than faked
+    if (t >= 4.9 && t < 8.0) {
+      setSelection($('sel-term'), Math.round(seg(t, 4.9, 5.9, easeOut) * 240))
+    } else if (t >= 9.9 && t < 12.6) {
+      setSelection($('sel-docs'), Math.round(seg(t, 9.9, 11.0, easeOut) * 250))
+    } else {
+      window.getSelection().removeAllRanges()
+    }
+
+    /* The clipper. Once the region is out its own ring is the dim, so the
+       backdrop only carries the moment before the drag and after the commit. */
+    const live = t >= 14.3 && t < 17.9
+    const drag = seg(t, 14.3, 15.6)
+    $('shot').style.display = live ? 'block' : 'none'
+    $('dim').style.opacity = live ? 1 : pulse(t, 13.95, 14.3, 17.9, 18.15)
+
+    if (live) {
+      const w = Math.round(CLIP.w * drag)
+      const h = Math.round(CLIP.h * drag)
+      const [x, y] = [CLIP.x, CLIP.y]
+      Object.assign($('shot').style, {
+        left: `${x}px`,
+        top: `${y}px`,
+        width: `${w}px`,
+        height: `${h}px`
+      })
+      $('shot').firstElementChild.textContent = `${w} × ${h}`
+      /* A hole rather than a ring around the region: a spread that large is
+         not reliably painted, and the dim has to cover every window. */
+      $('dim').style.clipPath =
+        `polygon(0 0, 1920px 0, 1920px 1080px, 0 1080px, 0 0, ` +
+        `${x}px ${y}px, ${x}px ${y + h}px, ${x + w}px ${y + h}px, ${x + w}px ${y}px, ${x}px ${y}px)`
+    } else {
+      $('dim').style.clipPath = 'none'
+    }
+
+    const form = t >= 15.75 && t < 17.9
+    $('clipform').style.display = form ? 'block' : 'none'
+    if (form) {
+      Object.assign($('clipform').style, {
+        left: `${CLIP.x}px`,
+        top: `${CLIP.y + CLIP.h + 14}px`
+      })
+      const typed = Math.round(seg(t, 15.95, 16.9, (p) => p) * CLIP_CAPTION.length)
+      $('clipcap').textContent = CLIP_CAPTION.slice(0, typed)
+    }
+
+    const [cx, cy] = cursorAt(t)
+    $('cursor').style.transform = `translate(${cx}px, ${cy}px)`
+    $('cursor').style.opacity = t > 3.0 && t < 34.4 ? 1 : 0
+
+    const key = KEYS.find(([a, b]) => t >= a && t < b)
+    $('keys').style.opacity = key ? pulse(t, key[0], key[0] + 0.1, key[1] - 0.16, key[1]) : 0
+    if (key) {
+      const want = key[2].join(' ')
+      if ($('keys').dataset.on !== want) {
+        $('keys').dataset.on = want
+        $('keys').innerHTML = key[2].map((k) => `<kbd>${k}</kbd>`).join('')
+      }
+    }
+
+    const line = CAPTIONS.find(([a, b]) => t >= a - 0.5 && t < b + 0.5)
+    if (line) {
+      const [a, b, html] = line
+      if ($('caption').dataset.on !== html) {
+        $('caption').dataset.on = html
+        $('caption').innerHTML = html
+      }
+      const p = pulse(t, a - 0.5, a + 0.1, b, b + 0.5)
+      $('caption').style.opacity = p
+      $('caption').style.transform = `translateY(${mix(p, 10, 0)}px)`
+    } else {
+      $('caption').style.opacity = 0
+    }
+
+    return { x: cx, y: cy }
+  }
+
+  window.__scene = { frame, setClip, setTargets }
+</script>
