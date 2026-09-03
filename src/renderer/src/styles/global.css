@@ -5,26 +5,29 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Light is white. Not off-white, not Apple's grouped-table grey — white.
+ * Light is paper on a desk: white cards on a ground a few steps off white.
  *
- * The mistake was twice the same mistake. First the ground was #f2f2f7, which
- * is the right colour behind a full-screen table on an opaque phone and the
- * wrong one behind a small panel; then it came up to #f6f6f8 and still read
- * grey, because the *sheet* was translucent. A white at 82% over a dark desktop
- * is not a white — it is whatever the wallpaper leaves of it, and on a dark
- * wallpaper that is a mid-grey. Translucency was quietly repainting the panel
- * darker than any value in this file.
+ * The ground spent two releases at #ffffff, and the reasoning was sound but the
+ * premise was broken. It had been #f2f2f7 — right behind a full-screen table on
+ * an opaque phone, too heavy behind a small panel — then #f6f6f8, which still
+ * read grey; so it went to white on the theory that any grey was wrong here.
+ * The actual culprit was translucency: a white at 82% over a dark desktop is
+ * not a white, it is whatever the wallpaper leaves of it, and the sheet was
+ * quietly repainting itself darker than any value in this file. Fixing that
+ * (98%, which keeps the blur's edge treatment and nothing else) also removed
+ * the reason to fear a grey — the value now holds, whatever is behind it.
  *
- * So the sheet is opaque enough to hold its colour — 98%, which keeps the
- * blur's edge treatment and nothing else — and everything on it is white too.
- * (If it still reads grey on your desktop, check the compositor: Hyprland's
- * `inactive_opacity` dims the whole window when it is not focused, and no
- * value in this file can win against a multiply applied after we have drawn.)
- * Which
- * leaves nothing to separate a card from its ground — and that is the point:
- * the separation is the shadow. A white card on a white sheet with a soft drop
- * under it is a piece of paper on a desk, which is the oldest and clearest way
- * to say "this is a thing, and it is on top".
+ * So the ground is #f5f5f7 and the cards stay #ffffff. A whole window of white
+ * at this size is a lamp pointed at the reader, and there was nothing for the
+ * brightness to buy: with card and ground the same colour, the separation was
+ * carried entirely by the shadow. Now the fill says it too, and the shadow only
+ * has to say which way is up. The card is still the brightest thing in the
+ * window, which is what a piece of paper on a desk looks like.
+ *
+ * (If the panel reads darker than #f5f5f7 on your desktop, check the
+ * compositor: Hyprland's `inactive_opacity` dims the whole window when it is
+ * not focused, and no value in this file can win against a multiply applied
+ * after we have drawn.)
  *
  * Text contrast does not follow the surfaces down. Contrast where something is
  * read is not the same question as contrast where it is only felt.
@@ -34,15 +37,20 @@
   --inner-radius: 10px;
   --radius: 1rem;
 
-  --background: #ffffff;
+  --background: #f5f5f7;
   --foreground: #1c1c1e;
 
   --card: #ffffff;
   --card-foreground: #1c1c1e;
   /* A step off the card, not a wash over it. Hover on a card cannot be the
      translucent ink the buttons use — ink over a card shows the panel through
-     it and the card stops being white, which is the one thing it is for. */
-  --card-hover: #f2f2f4;
+     it and the card stops being white, which is the one thing it is for.
+
+     It has to stop above the ground, too. At #f2f2f4 against a #f5f5f7 sheet
+     the hover was darker than the panel the card sits on, so pointing at a card
+     dropped it through its own shelf. Two steps down from white, one step up
+     from the ground. */
+  --card-hover: #f7f7f9;
   --popover: #ffffff;
   --popover-foreground: #1c1c1e;
   --elevated: #ffffff;
@@ -132,7 +140,7 @@
      One value rather than a material utility plus a /alpha, which set the same
      property and fought over it. Opaque enough to read on a busy desktop even
      where the compositor declines to blur behind us. */
-  --sheet: rgb(255 255 255 / 0.98);
+  --sheet: rgb(245 245 247 / 0.98);
 
   /*
    * The elevation ramp, and it is a ramp: every level is the level below it
@@ -695,13 +703,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-iteration-count: 1 !important;
-    transition-duration: 100ms !important;
-  }
 /*
  * Fewer and gentler, not none.
  *
@@ -712,7 +713,13 @@
  * is the same substitution `<MotionConfig reducedMotion="user">` is already
  * making for everything the motion library draws.
  */
-}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    transition-duration: 100ms !important;
+  }
 
   @keyframes materialize-in {
     from {
@@ -731,3 +738,4 @@
       opacity: 0;
     }
   }
+}
