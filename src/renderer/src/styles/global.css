@@ -410,8 +410,6 @@
   --shadow-overlay: var(--shadow-overlay);
 
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-quart: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {
@@ -584,7 +582,7 @@
   }
 
   &[data-state='closed'] {
-    animation: materialize-out 100ms var(--ease-in-quart);
+    animation: materialize-out 100ms var(--ease-out-quart);
   }
 }
 
@@ -617,20 +615,6 @@
 /* The same, scaled harder. A 17px circle taken to 0.96 moves by two thirds of a
    pixel, which is not much feedback; this is the one place the exaggeration is
    the point, and it is reserved for controls under ~20px. */
-@utility press-sm {
-  transition:
-    background-color 90ms var(--ease-out-quart),
-    color 90ms var(--ease-out-quart),
-    box-shadow 120ms var(--ease-out-quart),
-    border-color 90ms var(--ease-out-quart),
-    opacity 90ms var(--ease-out-quart),
-    transform 140ms var(--ease-out-quart);
-
-  &:active:not(:disabled):not([data-disabled]) {
-    filter: brightness(0.94);
-    transform: scale(0.94);
-  }
-}
 
 @utility focus-halo {
   &:focus-visible {
@@ -715,8 +699,35 @@
   *,
   *::before,
   *::after {
-    animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 100ms !important;
   }
+/*
+ * Fewer and gentler, not none.
+ *
+ * This used to crush every CSS animation to 1ms, which does not gentle a menu —
+ * it deletes it, and a surface that teleports in with nothing to say it arrived
+ * is harder to follow, not easier. The preference asks to be spared movement,
+ * not feedback. So the fade stays at its own timing and the scale goes, which
+ * is the same substitution `<MotionConfig reducedMotion="user">` is already
+ * making for everything the motion library draws.
+ */
 }
+
+  @keyframes materialize-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes materialize-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }

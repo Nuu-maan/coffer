@@ -77,7 +77,7 @@ export function SearchField({ value, onChange }: Props): React.JSX.Element {
             onChange('')
             inputRef.current?.focus()
           }}
-          className="press-sm focus-halo -mr-1 shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
+          className="press focus-halo -mr-1 shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
         >
           <X className="size-3" />
         </button>
