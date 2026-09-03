@@ -2,7 +2,7 @@ import { Notification, type NativeImage, type Rectangle } from 'electron'
 import { APP_NAME } from '@shared/constants'
 import type { ClipDraft, ItemSource } from '@shared/types/item'
 import { RESTART_NOTE, openPrivacyPane, requestScreen } from '@main/platform/permissions'
-import { addImage } from '@main/features/items/service'
+import { addImages } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
 import { closeClipForm, openClipForm } from '@main/windows/clipper-form'
@@ -91,7 +91,7 @@ export async function commitClip(caption: string): Promise<void> {
 
   const size = image.getSize()
   broadcastItems(
-    await addImage(image, { caption, ...(attribution ? { source: attribution } : {}) })
+    await addImages([image], { caption, ...(attribution ? { source: attribution } : {}) })
   )
   notify(caption || `Clipped ${size.width}×${size.height}`)
 }

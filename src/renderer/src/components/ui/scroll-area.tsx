@@ -23,7 +23,21 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
         onScroll={onViewportScroll}
-        className="size-full rounded-[inherit] outline-none"
+        /*
+         * Radix wraps the children in a `display: table` box so that content
+         * wider than the viewport can be scrolled to sideways. Nothing in this
+         * app wants that: every panel in here is a column that should wrap or
+         * scroll inside itself. A table shrink-wraps to its widest child, so
+         * one unwrappable line — the config snippet on the Wayland shortcuts
+         * panel — widened the box and took every card in the panel out past the
+         * window edge with it.
+         *
+         * Forcing it back to a block makes the column the window's width and
+         * leaves the overflow where it belongs: on the element that has it.
+         * The bang is because the display is an inline style on Radix's own
+         * element, which a class cannot otherwise reach.
+         */
+        className="size-full rounded-[inherit] outline-none [&>div]:!block"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

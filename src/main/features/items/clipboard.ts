@@ -25,5 +25,10 @@ export async function copyItem(id: string): Promise<boolean> {
     clipboard.writeText(item.text)
     return true
   }
-  return writeImageToClipboard(item.file, item.caption)
+  /* The first, for the paths that can only mean one picture: the tray's copy
+     action and the notification it came from. Picking one out of the set is a
+     click on the picture itself, in the row. */
+  const first = item.images[0]
+  if (!first) return false
+  return writeImageToClipboard(first.file, item.caption)
 }

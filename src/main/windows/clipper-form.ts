@@ -2,8 +2,10 @@ import { BrowserWindow, screen } from 'electron'
 import type { ClipDraft } from '@shared/types/item'
 import { loadPage, preloadPath } from './load'
 
-const WIDTH = 420
-const MAX_HEIGHT = 560
+/* Kept in step with the main panel — a sheet that appears wider than the
+   window it files into reads as a different app. */
+const WIDTH = 360
+const MAX_HEIGHT = 480
 
 let form: BrowserWindow | null = null
 

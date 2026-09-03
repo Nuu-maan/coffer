@@ -1,6 +1,6 @@
 import { Notification } from 'electron'
 import { APP_NAME } from '@shared/constants'
-import { addImage, addItem } from '@main/features/items/service'
+import { addImages, addItem } from '@main/features/items/service'
 import { beginSourceCapture, takeCapturedSource } from '@main/features/source-capture'
 import { readSelection, type Capture } from '@main/features/selection-capture'
 import { broadcastItems } from '@main/ipc/broadcast'
@@ -33,7 +33,7 @@ export async function stashSelection(): Promise<void> {
 
     if (selection.kind === 'image') {
       const size = selection.image.getSize()
-      broadcastItems(await addImage(selection.image, attribution))
+      broadcastItems(await addImages([selection.image], attribution))
       notify(`Image ${size.width}×${size.height}`)
       return
     }

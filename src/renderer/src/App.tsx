@@ -247,7 +247,7 @@ export function App(): React.JSX.Element {
         </main>
       </div>
 
-      <Toaster position="top-center" closeButton={false} />
+      <Toaster position="top-center" />
     </TooltipProvider>
     </MotionConfig>
   )

@@ -137,7 +137,9 @@ async function boot(): Promise<void> {
 
   if (storeIntact()) {
     const kept = new Set(
-      store.items.filter((item) => item.kind === 'image').map((item) => item.file)
+      store.items.flatMap((item) =>
+        item.kind === 'image' ? item.images.map((image) => image.file) : []
+      )
     )
     void pruneOrphans(kept).then((count) => {
       if (count > 0) console.log(`[images] reclaimed ${count} orphaned file(s)`)

@@ -7,7 +7,8 @@ export type ItemsApi = {
   items: Item[]
   sections: Section[]
   addText: (text: string, tag?: string) => void
-  addImage: (data: Uint8Array) => Promise<void>
+  /** One stash for the whole batch, captioned as given. */
+  addImages: (data: Uint8Array[], caption?: string) => Promise<void>
   toggle: (id: string) => void
   update: (id: string, text: string) => void
   remove: (id: string) => void
@@ -43,8 +44,8 @@ export function useItems(): ItemsApi {
         void coffer.items.add({ text, ...(tag ? { tag } : {}) }).then(setSnapshot),
       []
     ),
-    addImage: useCallback(async (data: Uint8Array) => {
-      setSnapshot(await coffer.items.addImage({ data }))
+    addImages: useCallback(async (data: Uint8Array[], caption?: string) => {
+      setSnapshot(await coffer.items.addImage({ data, ...(caption ? { caption } : {}) }))
     }, []),
     toggle: useCallback((id: string) => void coffer.items.toggle(id).then(setSnapshot), []),
     update: useCallback(
