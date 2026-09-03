@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ImagePlus } from '@/components/icons'
-import { AnimatePresence, LayoutGroup, Reorder, motion, useDragControls } from 'motion/react'
-import { itemLabel, sameTag, type Item, type Section } from '@shared/types/item'
+import { AnimatePresence, LayoutGroup, Reorder, frame, motion, useDragControls } from 'motion/react'
+import { sameTag, type Item, type Section } from '@shared/types/item'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import { coffer } from '@/lib/ipc'
 import { cn } from '@/lib/utils'
-import { ease } from '@/lib/motion'
+import { ease, spring } from '@/lib/motion'
 import { useImageIntake } from '@/hooks/use-image-intake'
+import { useStagedImages } from '@/hooks/use-staged-images'
 import { useItems } from '@/hooks/use-items'
 import { useReportScrolled } from '@/hooks/use-scrolled'
 import { usePlatform } from '@/hooks/use-platform'
@@ -18,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ItemRow, type SelectModifiers } from './ItemRow'
 import { SectionCaption } from './SectionCaption'
 import { group, matches, type Group } from './sections'
+import { asNumberedList, asParagraphs } from './copy-text'
 import { Composer } from './Composer'
 
 type Props = {
@@ -51,7 +53,7 @@ export function ItemList({ query }: Props): React.JSX.Element {
     items,
     sections,
     addText,
-    addImage,
+    addImages,
     toggle,
     update,
     remove,
@@ -67,7 +69,8 @@ export function ItemList({ query }: Props): React.JSX.Element {
   } = useItems()
   const platform = usePlatform()
   const settings = useSettings()
-  const { dragging, handlers } = useImageIntake(addImage)
+  const staging = useStagedImages()
+  const { dragging, handlers } = useImageIntake(staging.attach)
   const reportScrolled = useReportScrolled()
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set())
   /* Where a shift-range measures from. Set by every plain click and every
@@ -76,7 +79,13 @@ export function ItemList({ query }: Props): React.JSX.Element {
   /* The end of the selection the keyboard is holding, which is the row a plain
      arrow steps from and a shift-arrow stretches. */
   const focusId = useRef<string | null>(null)
-  const [copied, setCopied] = useState<{ id: string; what: 'image' | 'text' } | null>(null)
+  /* `index` says which picture of a multi-image stash flashed, so the mark
+     lands on the one that was clicked rather than on all of them. */
+  const [copied, setCopied] = useState<{
+    id: string
+    what: 'image' | 'text'
+    index: number
+  } | null>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   /* The section the + menu just made, which opens its caption for naming. A
      name rather than a flag, so a rename landing from another window does not
@@ -108,22 +117,44 @@ export function ItemList({ query }: Props): React.JSX.Element {
      to catch. */
   const [carrying, setCarrying] = useState(false)
   const carryingRef = useRef(false)
+  /* How tall the card in the air is. An empty section's well used to be one
+     line of text tall whatever was being dropped into it, so carrying a stash
+     with a picture and a caption over a 48px slot meant aiming a 136px card at
+     a target a third of its size. Measured from the row itself rather than
+     guessed from its kind, because a caption can wrap to any number of
+     lines. */
+  const [carriedHeight, setCarriedHeight] = useState<number | null>(null)
 
   const registerBlock = useCallback((name: string, element: HTMLElement | null) => {
     if (element) blocks.current.set(name, element)
     else blocks.current.delete(name)
   }, [])
 
-  const trackDrag = useCallback((item: Item, point: { x: number; y: number }) => {
-    if (!carryingRef.current) {
-      carryingRef.current = true
-      setCarrying(true)
-    }
+  /* The card in the air and where the pointer last had it, and whether a test
+     against the blocks is already booked for it. */
+  const carried = useRef<{ item: Item; point: { x: number; y: number } } | null>(null)
+  const booked = useRef(false)
+
+  /*
+   * Which block the pointer is over, measured in the frame loop's read step.
+   *
+   * onDrag fires inside motion's update step, and asking for a rectangle there
+   * forces the browser to flush layout in the middle of a frame motion is still
+   * writing transforms into — a forced reflow per frame, for the whole length of
+   * a drag, on the one interaction in this window that has to hold 60fps.
+   * Booked into the read step instead, where reading costs nothing, and only one
+   * is ever outstanding: the pointer moves faster than the answer changes.
+   */
+  const hitTest = useCallback(() => {
+    booked.current = false
+    const carrying = carried.current
+    /* Let go between the booking and the read. */
+    if (!carrying || !carryingRef.current) return
 
     let found: string | null = null
     for (const [name, element] of blocks.current) {
       const box = element.getBoundingClientRect()
-      if (point.y >= box.top && point.y <= box.bottom) {
+      if (carrying.point.y >= box.top && carrying.point.y <= box.bottom) {
         found = name
         break
       }
@@ -131,7 +162,7 @@ export function ItemList({ query }: Props): React.JSX.Element {
 
     /* Its own section is not a target — dropping a card back where it started
        is a reorder, which the group under it is already handling. */
-    const own = item.tag ?? ''
+    const own = carrying.item.tag ?? ''
     const next = found === null || found.toLocaleLowerCase() === own.toLocaleLowerCase()
       ? null
       : found
@@ -141,6 +172,23 @@ export function ItemList({ query }: Props): React.JSX.Element {
       setDropTarget(next)
     }
   }, [])
+
+  const trackDrag = useCallback(
+    (item: Item, point: { x: number; y: number }) => {
+      if (!carryingRef.current) {
+        carryingRef.current = true
+        setCarrying(true)
+        const row = document.querySelector(`[data-item-id="${CSS.escape(item.id)}"]`)
+        setCarriedHeight(row ? Math.round(row.getBoundingClientRect().height) : null)
+      }
+
+      carried.current = { item, point }
+      if (booked.current) return
+      booked.current = true
+      frame.read(hitTest)
+    },
+    [hitTest]
+  )
 
   const [ordered, setOrdered] = useState<Item[]>(items)
   const reordering = useRef(false)
@@ -230,34 +278,73 @@ export function ItemList({ query }: Props): React.JSX.Element {
     setSelectedIds(new Set())
   }, [])
 
-  const copy = useCallback((item: Item, what: 'image' | 'text') => {
+  /* `index` picks the picture out of a multi-image stash. It is ignored for
+     text, and 0 is the only picture there is on a stash holding one. */
+  const copy = useCallback((item: Item, what: 'image' | 'text', index = 0) => {
     if (item.kind === 'image' && what === 'image') {
-      void coffer.clipboard.writeImage(item.file, item.caption)
+      const image = item.images[index]
+      if (!image) return
+      void coffer.clipboard.writeImage(image.file, item.caption)
     } else {
       const text = item.kind === 'image' ? item.caption : item.text
       if (!text) return
       void coffer.clipboard.write(text)
     }
 
-    setCopied({ id: item.id, what })
+    setCopied({ id: item.id, what, index })
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
     copiedTimer.current = setTimeout(() => setCopied(null), 1400)
   }, [])
+
+  /*
+   * What Return in the composer does, and the only place the two halves of a
+   * stash are put together.
+   *
+   * With pictures waiting, the typed line is their caption and the whole tray
+   * becomes one stash — which is the point of staging them. With nothing
+   * waiting it is the plain text stash it always was. Empty text and an empty
+   * tray is not a stash at all, and the composer will not offer it.
+   */
+  const commit = useCallback(
+    (text: string) => {
+      if (staging.images.length === 0) {
+        addText(text)
+        return
+      }
+      const batch = staging.images.map((image) => image.bytes)
+      staging.clear()
+      void addImages(batch, text)
+    },
+    [staging, addText, addImages]
+  )
 
   const selection = useCallback(
     (): Item[] => visible.filter((item) => selectedIds.has(item.id)),
     [visible, selectedIds]
   )
 
+  /* Ticked, in the order the list shows them — which is the order they will be
+     numbered in. Search-filtered along with everything else on screen: what is
+     copied is what is in front of you. */
+  const ticked = useMemo(() => visible.filter((item) => item.done), [visible])
+
   /*
-   * Plain copy joins the rows with blank lines, the way copying paragraphs
-   * does. As a list, each row becomes one bullet and its own line breaks are
-   * folded into it, so pasting a two-line stash does not silently turn into
-   * two bullets.
+   * Two copies, and they take their rows from different places on purpose.
+   *
+   * Plain copy is about the highlighted rows and joins them with blank lines,
+   * the way copying paragraphs does. As a list is about the *ticked* rows:
+   * ticking is how a run of stashes is gathered up over a session, and the
+   * numbered list is the thing that run was being gathered for. Asking the user
+   * to tick a set and then highlight the same set again to get it out is asking
+   * them to say it twice.
+   *
+   * With nothing ticked it falls back to the highlighted rows, so the command
+   * is never simply dead — a menu item that does nothing at all reads as broken
+   * rather than as inapplicable.
    */
   const copySelection = useCallback(
     (asList: boolean) => {
-      const chosen = selection()
+      const chosen = asList && ticked.length > 0 ? ticked : selection()
       if (chosen.length === 0) return
 
       if (chosen.length === 1 && !asList) {
@@ -266,21 +353,32 @@ export function ItemList({ query }: Props): React.JSX.Element {
         return
       }
 
-      const lines = chosen.map((item) => itemLabel(item).trim()).filter(Boolean)
-      if (lines.length === 0) return
+      const text = asList ? asNumberedList(chosen) : asParagraphs(chosen)
+      if (!text) return
 
-      void coffer.clipboard.write(
-        asList ? lines.map((line) => `- ${line.replace(/\n/g, ' ')}`).join('\n') : lines.join('\n\n')
-      )
+      void coffer.clipboard.write(text)
+
+      /*
+       * The ticked rows are not necessarily the row the menu was opened on, or
+       * even on screen — the flash on a card cannot be the only word back. The
+       * count is, and it doubles as a check that the list is the length it was
+       * meant to be.
+       */
+      if (asList) {
+        /* One line per entry is what asNumberedList promises, so the lines
+           are the entries. */
+        const copiedCount = text.split('\n').length
+        toast(copiedCount === 1 ? 'Copied as a list' : `${copiedCount} stashes copied as a list`)
+      }
 
       const first = chosen[0]
       if (first) {
-        setCopied({ id: first.id, what: 'text' })
+        setCopied({ id: first.id, what: 'text', index: 0 })
         if (copiedTimer.current) clearTimeout(copiedTimer.current)
         copiedTimer.current = setTimeout(() => setCopied(null), 1400)
       }
     },
-    [selection, copy]
+    [ticked, selection, copy]
   )
 
   /*
@@ -409,8 +507,10 @@ export function ItemList({ query }: Props): React.JSX.Element {
     const target = dropTargetRef.current
     dropTargetRef.current = null
     carryingRef.current = false
+    carried.current = null
     setDropTarget(null)
     setCarrying(false)
+    setCarriedHeight(null)
 
     if (target !== null) {
       setTag(id, target)
@@ -482,6 +582,7 @@ export function ItemList({ query }: Props): React.JSX.Element {
     tags: orderedSections.map((section) => section.name),
     selectedIds,
     copied,
+    tickedCount: ticked.length,
     focusId,
     select,
     copy,
@@ -554,10 +655,13 @@ export function ItemList({ query }: Props): React.JSX.Element {
                       dropTarget !== null && sameTag(dropTarget, entry.section?.name ?? undefined)
                     }
                     carrying={carrying}
+                    carriedHeight={carriedHeight}
                     register={registerBlock}
                     onReorderItems={reorderWithin}
                     onDropSection={commitSectionOrder}
-                    composing={composingIn !== null && sameTag(composingIn, entry.section?.name ?? undefined)}
+                    composing={
+                      composingIn !== null && sameTag(composingIn, entry.section?.name ?? undefined)
+                    }
                     onRename={renameSection}
                     onRemove={removeSection}
                     onCompose={setComposingIn}
@@ -572,10 +676,19 @@ export function ItemList({ query }: Props): React.JSX.Element {
                 ))}
               </Reorder.Group>
 
-              {/* No caption over the unfiled items. There is no name to print,
-                  and a caption reading "Untagged" is a label for an absence —
-                  the gap above them already says it. */}
-              {untagged && (
+              {/*
+                No caption over the unfiled items. There is no name to print, and
+                a caption reading "Untagged" is a label for an absence — the gap
+                above them already says it.
+
+                Drawn while a card is in the air even when there is nothing in
+                it, which is the whole of how a card gets back out of a section.
+                The run only existed when it had members, so filing the last
+                loose stash took the target away with it and everything on the
+                panel was stuck in a section for good — the one move with no
+                menu item behind it and no way left to make it.
+              */}
+              {(untagged || carrying) && (
                 <div
                   ref={(element) => registerBlock('', element)}
                   className={cn(
@@ -587,7 +700,19 @@ export function ItemList({ query }: Props): React.JSX.Element {
                     dropTarget === '' ? 'bg-accent' : 'bg-transparent'
                   )}
                 >
-                  <Rows items={untagged.items} rowProps={rowProps} onReorderItems={reorderWithin} />
+                  {untagged ? (
+                    <Rows
+                      items={untagged.items}
+                      rowProps={rowProps}
+                      onReorderItems={reorderWithin}
+                    />
+                  ) : (
+                    <Well
+                      height={carriedHeight}
+                      over={dropTarget === ''}
+                      label="Drop here to unfile"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -639,7 +764,9 @@ export function ItemList({ query }: Props): React.JSX.Element {
                     const cleared = ordered.filter((item) => item.done).map((item) => item.id)
                     clearDone()
                     toast(
-                      cleared.length === 1 ? '1 stash cleared' : `${cleared.length} stashes cleared`,
+                      cleared.length === 1
+                        ? '1 stash cleared'
+                        : `${cleared.length} stashes cleared`,
                       { action: { label: 'Undo', onClick: () => restore(cleared) } }
                     )
                   }}
@@ -651,7 +778,13 @@ export function ItemList({ query }: Props): React.JSX.Element {
           )}
         </AnimatePresence>
 
-        <Composer onSubmit={addText} onNewSection={newSection} />
+        <Composer
+          onSubmit={commit}
+          onNewSection={newSection}
+          staged={staging.images}
+          onRemoveStaged={staging.remove}
+          onAttach={staging.attach}
+        />
       </div>
 
       <AnimatePresence>
@@ -668,7 +801,7 @@ export function ItemList({ query }: Props): React.JSX.Element {
             )}
           >
             <ImagePlus className="size-5 text-tint" />
-            Drop to stash the image
+            Drop to attach
           </motion.div>
         )}
       </AnimatePresence>
@@ -681,10 +814,12 @@ export function ItemList({ query }: Props): React.JSX.Element {
 type RowProps = {
   tags: string[]
   selectedIds: ReadonlySet<string>
-  copied: { id: string; what: 'image' | 'text' } | null
+  copied: { id: string; what: 'image' | 'text'; index: number } | null
+  /** How many rows are ticked, for the label on Copy as list. */
+  tickedCount: number
   focusId: React.RefObject<string | null>
   select: (id: string, modifiers: SelectModifiers) => void
-  copy: (item: Item, what: 'image' | 'text') => void
+  copy: (item: Item, what: 'image' | 'text', index?: number) => void
   copySelection: (asList: boolean) => void
   toggle: (id: string) => void
   update: (id: string, text: string) => void
@@ -709,6 +844,7 @@ function SectionBlock({
   rowProps,
   dropping,
   carrying,
+  carriedHeight,
   composing,
   register,
   onReorderItems,
@@ -728,6 +864,8 @@ function SectionBlock({
   dropping: boolean
   /** A card is being carried somewhere — not necessarily here. */
   carrying: boolean
+  /** How tall that card is, so a well can be cut to fit it. */
+  carriedHeight: number | null
   /** The caption's + was pressed, so this section has a field open. */
   composing: boolean
   register: (name: string, element: HTMLElement | null) => void
@@ -755,11 +893,16 @@ function SectionBlock({
         setDragging(false)
         onDropSection(section.name)
       }}
+      /* The same spring the cards inside it travel on. Left to the default, a
+         section moved on one curve while every row it contains moved on
+         another — two speeds for one movement, which reads as the contents
+         sliding around inside the block rather than coming with it. */
+      transition={spring}
       layout="position"
       style={{ position: 'relative' }}
-      /* Lifted while it travels, and everything inside it comes along — the
-         caption, the cards, the lot. */
-      className={cn('list-none rounded-card', dragging && 'z-30 shadow-float')}
+      /* Only the stacking. The lift itself is drawn one level in, on the box
+         that has padding — see below. */
+      className={cn('list-none rounded-card', dragging && 'z-30')}
     >
       {/*
         The rectangle the drop test is run against, and the thing that lights up
@@ -786,8 +929,21 @@ function SectionBlock({
              a whole section inside it — a 20px corner drawn around a group of
              12px corners, which reads as a second window rather than as a
              highlight on this one. */
-          '-mx-1.5 rounded-card px-1.5 py-1 transition-colors duration-150',
-          dropping ? 'bg-accent' : 'bg-transparent'
+          '-mx-1.5 rounded-card px-1.5 py-1.5 transition-colors duration-150',
+          dropping ? 'bg-accent' : 'bg-transparent',
+          /*
+             The lift, drawn here rather than on the Reorder.Item above.
+             The item's box is pulled tight around the caption and the cards, so
+             the hairline in shadow-float traced them with nothing between the
+             line and the type — a border with no padding at all. This box
+             already holds the six pixels the wash bleeds by, and py-1.5 matches
+             them top and bottom, so the same shadow now has a margin to sit in.
+
+             Filled while it travels, too: a section carried over the list with
+             a hairline and no ground let the rows underneath show through the
+             gaps between its cards.
+          */
+          dragging && 'bg-elevated shadow-float'
         )}
       >
       <div className="mb-1.5">
@@ -822,16 +978,7 @@ function SectionBlock({
       */}
       {entry.items.length === 0 && !composing ? (
         carrying ? (
-          <div
-            style={{ height: CARD_HEIGHT }}
-            className={cn(
-              'flex items-center justify-center rounded-card text-2xs',
-              'transition-colors duration-150',
-              dropping ? 'bg-card text-foreground shadow-card' : 'bg-accent text-muted-foreground'
-            )}
-          >
-            Drop here
-          </div>
+          <Well height={carriedHeight} over={dropping} label="Drop here" />
         ) : (
           <p className="text-2xs text-muted-foreground">Nothing filed here yet</p>
         )
@@ -923,6 +1070,38 @@ function SectionField({
   )
 }
 
+/*
+ * The hole a card is about to go into.
+ *
+ * Cut to the height of the card actually in the air rather than to one line of
+ * text: a placeholder that is not the size of the thing it stands for reads as
+ * a gap in the layout, and — worse — asks you to land a tall stash on a short
+ * target. CARD_HEIGHT is only the floor now, for the case where the row could
+ * not be measured.
+ */
+function Well({
+  height,
+  over,
+  label
+}: {
+  height: number | null
+  over: boolean
+  label: string
+}): React.JSX.Element {
+  return (
+    <div
+      style={{ height: Math.max(height ?? CARD_HEIGHT, CARD_HEIGHT) }}
+      className={cn(
+        'flex items-center justify-center rounded-card text-2xs',
+        'transition-colors duration-150',
+        over ? 'bg-card text-foreground shadow-card' : 'bg-accent text-muted-foreground'
+      )}
+    >
+      {label}
+    </div>
+  )
+}
+
 function Rows({
   items,
   rowProps,
@@ -936,6 +1115,7 @@ function Rows({
     tags,
     selectedIds,
     copied,
+    tickedCount,
     focusId,
     select,
     copy,
@@ -964,7 +1144,8 @@ function Rows({
             tags={tags}
             selected={selectedIds.has(item.id)}
             selectionSize={selectedIds.size}
-            copied={copied?.id === item.id ? copied.what : null}
+            tickedCount={tickedCount}
+            copied={copied?.id === item.id ? copied : null}
             onSelect={(modifiers) => {
               focusId.current = item.id
               select(item.id, modifiers)
@@ -977,7 +1158,7 @@ function Rows({
               focusId.current = item.id
               select(item.id, { shift: false, toggle: false })
             }}
-            onCopy={(what) => copy(item, what)}
+            onCopy={(what, index) => copy(item, what, index)}
             onCopySelection={copySelection}
             onToggle={() => toggle(item.id)}
             onRemove={() => discard([item.id])}

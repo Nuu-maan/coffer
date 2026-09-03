@@ -18,12 +18,14 @@ export function draftUrl(token: number): string {
 /*
  * How many pictures one stash can hold.
  *
- * Four, because four is what fits across a card at this window width and still
- * reads as a picture rather than as a swatch — and because a stash is one
- * thought. A run of screenshots long enough to need scrolling inside a row is
- * not one thought, it is a folder, and this panel is not one.
+ * Six. Four was what fitted across a card while every row also carried a drag
+ * grip in its left margin; the card is its own handle now, and the 22px that
+ * bought back is most of a seventh column. Six still reads as a picture rather
+ * than as a swatch at this window width, and it is still one thought — a run of
+ * screenshots long enough to need scrolling inside a row is not one thought, it
+ * is a folder, and this panel is not one.
  */
-export const MAX_IMAGES = 4
+export const MAX_IMAGES = 6
 
 /** The window's own title bar. macOS is told this so it can centre the traffic lights in it. */
 export const HEADER_HEIGHT = 44
