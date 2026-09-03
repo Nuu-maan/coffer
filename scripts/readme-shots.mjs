@@ -10,6 +10,11 @@ import { chromium } from 'playwright-core'
  * No display, no window manager, and the exact viewport every time.
  */
 const OUT = 'docs/media'
+/* MAIN_WIDTH and MAIN_HEIGHT from src/shared/constants.ts. Not imported —
+   this is plain node and that file is TypeScript — so it is kept in step by
+   hand, and a shot at the wrong size is obvious the moment you look at it. */
+const W = 360
+const H = 510
 const at = (h, m) => Date.UTC(2026, 8, 2, h - 5, m)
 
 const SNAPSHOT = {
@@ -18,7 +23,7 @@ const SNAPSHOT = {
     { id: 'b1', kind: 'text', done: false, order: 1000, createdAt: at(14, 10), tag: 'Release 0.4',
       text: 'Draft the release notes from the merged PR titles, grouped by area, one line each.' },
     { id: 'b2', kind: 'image', done: false, order: 2000, createdAt: at(14, 15), tag: 'Release 0.4',
-      file: 'clip-build.png', width: 760, height: 200, bytes: 9000,
+      images: [{ file: 'clip-build.png', width: 760, height: 200, bytes: 9000 }],
       caption: 'Build failure on main after the store migration' },
     { id: 'b3', kind: 'text', done: true, order: 3000, createdAt: at(14, 20), tag: 'Release 0.4',
       text: 'Why does the migration run twice on a cold start?' },
@@ -70,12 +75,19 @@ const root = join(process.cwd(), 'out/renderer')
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' }
 const server = createServer((req, res) => {
   const path = join(root, req.url === '/' ? 'index.html' : req.url.split('?')[0])
+  /* Read before the header goes out. Writing 200 first and then discovering the
+     file is missing leaves the 404 with nowhere to go — writeHead throws
+     ERR_HTTP_HEADERS_SENT out of the handler and takes the whole run with it,
+     which is a confusing way to be told about one absent asset. */
+  let body
   try {
-    res.writeHead(200, { 'content-type': types[extname(path)] ?? 'application/octet-stream' })
-    res.end(readFileSync(path))
+    body = readFileSync(path)
   } catch {
     res.writeHead(404).end()
+    return
   }
+  res.writeHead(200, { 'content-type': types[extname(path)] ?? 'application/octet-stream' })
+  res.end(body)
 })
 await new Promise((r) => server.listen(0, '127.0.0.1', r))
 const origin = `http://127.0.0.1:${server.address().port}`
@@ -85,12 +97,16 @@ const browser = await chromium.launch()
 const settle = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function render(theme, view) {
-  const context = await browser.newContext({ viewport: { width: 460, height: 620 }, deviceScaleFactor: 2 })
+  const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 2 })
   const page = await context.newPage()
   await page.addInitScript(bridge, { snapshot: SNAPSHOT, settings: { ...SETTINGS, theme }, platform: PLATFORM })
   await page.goto(`${origin}/index.html`)
   await page.waitForFunction(() => document.body.innerText.length > 0)
-  await page.addStyleTag({ content: ':root{--sheet:#ffffff !important} .dark{--sheet:#111111 !important}' })
+  /* The sheet is translucent so it can sample the desktop; these shots have no
+     desktop behind them and are saved with omitBackground, so it is pinned to
+     the opaque equivalent of --sheet in each theme. Keep in step with the two
+     --sheet declarations in src/renderer/src/styles/global.css. */
+  await page.addStyleTag({ content: ':root{--sheet:#f5f5f7 !important} .dark{--sheet:#111111 !important}' })
   await page.evaluate((clip) => {
     for (const img of document.querySelectorAll('img[src^="coffer:"]')) img.src = clip
   }, clip)
@@ -103,12 +119,12 @@ async function render(theme, view) {
 }
 
 async function hero(theme, left, right) {
-  const context = await browser.newContext({ viewport: { width: 460 * 2 + 40, height: 620 }, deviceScaleFactor: 2 })
+  const context = await browser.newContext({ viewport: { width: W * 2 + 40, height: H }, deviceScaleFactor: 2 })
   const page = await context.newPage()
   const src = (file) => `data:image/png;base64,${readFileSync(file).toString('base64')}`
   await page.setContent(
     `<body style="margin:0;background:none;display:flex;gap:40px">` +
-      `<img src="${src(left)}" width="460" height="620"><img src="${src(right)}" width="460" height="620"></body>`
+      `<img src="${src(left)}" width="${W}" height="${H}"><img src="${src(right)}" width="${W}" height="${H}"></body>`
   )
   await page.screenshot({ path: `${OUT}/hero-${theme}.png`, omitBackground: true })
   console.log(`wrote ${OUT}/hero-${theme}.png`)
