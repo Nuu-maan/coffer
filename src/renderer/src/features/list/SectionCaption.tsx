@@ -115,7 +115,7 @@ export function SectionCaption({
            enough to read as a stagger. */
         /* min-h, not h: a fixed height on a container of text clips it the
            moment the reader turns their type size up. */
-        'focus-halo group/caption relative flex min-h-[20px] items-center gap-1 rounded-[4px]',
+        'focus-halo group/caption relative flex min-h-[20px] items-center gap-1 rounded-[6px]',
         'outline-none select-none',
         !editing && 'cursor-grab touch-none active:cursor-grabbing'
       )}
@@ -139,7 +139,7 @@ export function SectionCaption({
             }
           }}
           className={cn(
-            'mr-11 min-w-0 flex-1 rounded-[4px] bg-well px-1 py-px outline-none',
+            'mr-11 min-w-0 flex-1 rounded-[6px] bg-well px-1 py-px outline-none',
             'text-2xs font-semibold tracking-[0.06em] text-foreground uppercase',
             'ring-[3px] ring-ring/30 placeholder:tracking-normal placeholder:normal-case'
           )}
@@ -152,7 +152,7 @@ export function SectionCaption({
             onDoubleClick={() => setEditing(true)}
             title="Double-click to rename"
             className={cn(
-              'focus-halo shrink-0 rounded-[4px] px-0.5 outline-none',
+              'focus-halo shrink-0 rounded-[6px] px-0.5 outline-none',
               'text-2xs font-semibold tracking-[0.06em] uppercase',
               'cursor-text text-muted-foreground transition-colors hover:text-foreground'
             )}

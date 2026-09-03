@@ -30,9 +30,9 @@
  * read is not the same question as contrast where it is only felt.
  */
 :root {
-  --card-radius: 12px;
-  --inner-radius: 8px;
-  --radius: 0.75rem;
+  --card-radius: 16px;
+  --inner-radius: 10px;
+  --radius: 1rem;
 
   --background: #ffffff;
   --foreground: #1c1c1e;
@@ -305,29 +305,31 @@
 
 @theme inline {
   /*
-   * About as square as this can go while still reading as drawn rather than as
-   * a table cell. It started two steps rounder than a window-manager chrome
-   * would draw it, which made a list row read as a pill; a 2xl surface is now
-   * 12px, which is roughly what the platform itself uses for a card.
+   * Soft, and deliberately softer than a window-manager chrome would draw it.
+   * The scale spent a release pulled in tight enough that a card read as a
+   * table cell — square-shouldered against a panel whose own corners the
+   * compositor rounds generously, which made the contents look bolted into the
+   * window rather than laid on it. A card is 16px now and a menu 20px, which
+   * is the register the rest of the platform's floating surfaces sit in.
    *
    * The rule the scale is built on is concentricity: a thing nested inside
    * another is the outer radius less the padding between them, so the curves
    * stay parallel instead of the inner one looking pinched. p-1.5 inside a 2xl
-   * surface lands on 6px, p-[2px] inside a capsule stays a capsule, and so on.
-   * Pulling the scale in moves every derived radius with it, which is why the
+   * surface lands on 14px, p-[2px] inside a capsule stays a capsule, and so on.
+   * Pushing the scale out moves every derived radius with it, which is why the
    * handful of literal px radii in the components are written down rather than
    * left to be re-guessed.
    */
   --radius-card: var(--card-radius);
   --radius-inner: var(--inner-radius);
 
-  --radius-xs: 2px;
-  --radius-sm: 5px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 13px;
-  --radius-2xl: 16px;
-  --radius-3xl: 20px;
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
