@@ -59,6 +59,29 @@ export function RegionSelect(): React.JSX.Element {
   const rect = origin && cursor ? toRect(origin, cursor) : null
   const dragging = rect !== null
 
+  /*
+   * The size of the screen this overlay is standing in for, which is not the
+   * size of the overlay.
+   *
+   * A compositor is free to hand a window something other than the bounds it
+   * asked for, and Hyprland does: a request for the display's own 2560x1440
+   * comes back as a 2580x1460 viewport, with the extra twenty pixels hanging
+   * off the edge of the screen. Painted across `w-full h-full`, the frozen
+   * frame was then stretched to that larger box — the screen underneath
+   * redrawn a fraction of a percent too big, which is the "zoom" — and a
+   * rectangle dragged over it no longer matched the pixels it appeared to
+   * cover, because the crop scales by the display's width and the drag was
+   * measured against the window's.
+   *
+   * Drawn at the display's own size from the top left, every client coordinate
+   * on it is a display coordinate again, and what the overlay shows is what is
+   * actually behind it. `width / scaleFactor` is that size: the frame is
+   * captured at device pixels and scaleFactor is the ratio the crop uses.
+   */
+  const view = frame
+    ? { width: frame.width / frame.scaleFactor, height: frame.height / frame.scaleFactor }
+    : null
+
   function finish(): void {
     if (committed.current) return
     if (!rect || rect.width < MIN_SIZE || rect.height < MIN_SIZE) {
@@ -92,12 +115,13 @@ export function RegionSelect(): React.JSX.Element {
         coffer.clipper.cancel()
       }}
     >
-      {frame && (
+      {frame && view && (
         <img
           src={frame.url}
           alt=""
           draggable={false}
-          className="pointer-events-none absolute inset-0 h-full w-full"
+          className="pointer-events-none absolute top-0 left-0 max-w-none"
+          style={{ width: view.width, height: view.height }}
         />
       )}
 
@@ -122,13 +146,13 @@ export function RegionSelect(): React.JSX.Element {
             className="pointer-events-none absolute overflow-hidden outline outline-[1.5px] outline-white/90"
             style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
           >
-            {frame && (
+            {frame && view && (
               <img
                 src={frame.url}
                 alt=""
                 draggable={false}
-                className="absolute h-screen w-screen max-w-none"
-                style={{ left: -rect.x, top: -rect.y }}
+                className="absolute max-w-none"
+                style={{ left: -rect.x, top: -rect.y, width: view.width, height: view.height }}
               />
             )}
           </div>
@@ -189,8 +213,10 @@ function Loupe({ frame, pointer }: { frame: OverlayFrame; pointer: Point }): Rea
           src={frame.url}
           alt=""
           draggable={false}
-          className="absolute top-0 left-0 h-screen w-screen max-w-none"
+          className="absolute top-0 left-0 max-w-none"
           style={{
+            width: frame.width / frame.scaleFactor,
+            height: frame.height / frame.scaleFactor,
             transformOrigin: `${pointer.x}px ${pointer.y}px`,
             transform: `translate(${(LOUPE / 2 - pointer.x) / LOUPE_ZOOM}px, ${(LOUPE / 2 - pointer.y) / LOUPE_ZOOM}px) scale(${LOUPE_ZOOM})`,
             imageRendering: 'pixelated'

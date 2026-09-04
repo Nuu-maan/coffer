@@ -25,8 +25,8 @@ function Checkbox({
       data-slot="checkbox"
       checked={checked}
       className={cn(
-        'press-sm focus-halo peer relative shrink-0',
-        shape === 'circle' ? 'size-[17px] rounded-full' : 'size-[14px] rounded-[3px]',
+        'press focus-halo peer relative shrink-0',
+        shape === 'circle' ? 'size-[17px] rounded-full' : 'size-[14px] rounded-[4px]',
         /* Border only. shadow-control puts a ring outside this border, which at
            14px is two edges inside three pixels. */
         'border border-input-border bg-control outline-none',

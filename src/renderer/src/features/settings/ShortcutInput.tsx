@@ -58,7 +58,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
       onClick={() => setRecording((current) => !current)}
       aria-live="polite"
       className={cn(
-        'relative w-40 justify-center gap-1 text-xs tabular-nums',
+        'relative w-36 justify-center gap-1 text-xs tabular-nums',
         recording && 'border-tint text-tint',
         invalid && !recording && 'border-destructive text-destructive'
       )}
@@ -77,7 +77,7 @@ export function ShortcutInput({ value, invalid, onChange }: Props): React.JSX.El
           {parts(value, mac).map((part, index) => (
             <kbd
               key={`${part}-${index}`}
-              className="rounded-[2px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground"
+              className="rounded-[3px] bg-well px-1.5 py-px text-[10px] leading-4 text-foreground"
             >
               {part}
             </kbd>

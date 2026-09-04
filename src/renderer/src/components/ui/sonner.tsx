@@ -3,7 +3,8 @@ import {
   InfoIcon,
   Loader2Icon,
   OctagonXIcon,
-  TriangleAlertIcon
+  TriangleAlertIcon,
+  X
 } from '@/components/icons'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
@@ -27,7 +28,12 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
          four seconds is a notice; this one is an offer. */
       duration={6000}
       toastOptions={{
-        closeButton: false,
+        /* Every toast can be dismissed by hand. Swiping it away works and is
+           quicker, but nothing on a capsule says it can be swiped — the ✕ is
+           the part that says so, and it is the only dismissal a pointer can
+           find without being told. The six-second timer stays: this closes the
+           toast early, it is not the only thing that closes it. */
+        closeButton: true,
         classNames: {
           /*
            * The same material a menu is made of, rather than a HUD.
@@ -52,7 +58,26 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
           /* Ink on the panel's own hover wash, so it reads in either theme —
              it used to be white on white/15, which only worked on a dark pill. */
           actionButton:
-            '!ml-1.5 !rounded-full !bg-accent-strong !px-2 !py-0.5 !text-xs !font-medium !text-foreground hover:!bg-accent-strong'
+            '!ml-1.5 !rounded-full !bg-accent-strong !px-2 !py-0.5 !text-xs !font-medium !text-foreground hover:!bg-accent-strong',
+          /*
+           * Sonner hangs its close button off the top-left corner as a bordered
+           * circle, half outside the toast. That is drawn for a rectangular
+           * card; on a capsule the corner is empty space, so the button would
+           * float beside the pill rather than belong to it.
+           *
+           * So it comes back into the row as the last thing in it, after the
+           * Undo, the way the trailing control on a capsule reads. !relative
+           * rather than !static keeps it in flow while leaving the offsets
+           * sonner sets harmless, and the transform is the corner nudge, which
+           * has nothing left to nudge.
+           *
+           * Every declaration it is overriding is sonner's own stylesheet at a
+           * specificity a utility cannot reach, hence the bangs.
+           */
+          closeButton:
+            '!relative !order-last !ml-0.5 !-mr-1 !size-4 !shrink-0 !transform-none !rounded-full ' +
+            '!border-0 !bg-transparent !p-0 !text-muted-foreground transition-colors ' +
+            'hover:!bg-accent-strong hover:!text-foreground'
         }
       }}
       icons={{
@@ -60,7 +85,10 @@ const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
         info: <InfoIcon className="size-3.5" />,
         warning: <TriangleAlertIcon className="size-3.5" />,
         error: <OctagonXIcon className="size-3.5" />,
-        loading: <Loader2Icon className="size-3.5 animate-spin" />
+        loading: <Loader2Icon className="size-3.5 animate-spin" />,
+        /* The app's own ✕ rather than sonner's, so the one glyph that appears
+           on every toast is the one the rest of the panel draws. */
+        close: <X className="size-3" />
       }}
       /*
        * --normal-bg carries the fill, and it has to be set here rather than

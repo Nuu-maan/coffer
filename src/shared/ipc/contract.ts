@@ -31,7 +31,10 @@ export type AddItemInput = {
 }
 
 export type AddImageInput = {
-  data: Uint8Array
+  /* A batch, because a batch is one stash. Anything past MAX_IMAGES is dropped
+     by the main process rather than rejected — the renderer has already capped
+     it, and a paste of six is a user who wanted four, not an error. */
+  data: Uint8Array[]
   caption?: string
   source?: ItemSource
 }
@@ -56,6 +59,7 @@ export interface CofferApi {
   items: {
     list(): Promise<Snapshot>
     add(input: AddItemInput): Promise<Snapshot>
+    /** One stash holding every image in the batch, captioned as given. */
     addImage(input: AddImageInput): Promise<Snapshot>
     toggle(id: string): Promise<Snapshot>
     update(id: string, text: string): Promise<Snapshot>

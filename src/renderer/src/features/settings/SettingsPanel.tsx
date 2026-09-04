@@ -119,7 +119,7 @@ export function SettingsPanel(): React.JSX.Element {
                   disabled={!doubleShiftAvailable}
                   onValueChange={(value) => patch({ hotkeyMode: value as Settings['hotkeyMode'] })}
                 >
-                  <SelectTrigger id="trigger" size="sm" className="w-40">
+                  <SelectTrigger id="trigger" size="sm" className="w-36">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -142,7 +142,7 @@ export function SettingsPanel(): React.JSX.Element {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-40"
+                        className="w-36"
                         onClick={() => void requestPermission('accessibility')}
                       >
                         Grant…
@@ -176,7 +176,7 @@ export function SettingsPanel(): React.JSX.Element {
                       htmlFor="tap-window"
                       icon={<Timer />}
                     >
-                      <div className="flex w-40 items-center gap-2.5">
+                      <div className="flex w-36 items-center gap-2.5">
                         <Slider
                           id="tap-window"
                           min={200}
@@ -317,7 +317,7 @@ function Access({
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={onGrant} className="w-40">
+    <Button variant="outline" size="sm" onClick={onGrant} className="w-36">
       Grant…
     </Button>
   )
@@ -338,7 +338,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
         dense column of rows and small controls where the app's larger radii
         round the cards off faster than the 46px rows inside them can bear.
       */}
-      <div className="overflow-hidden rounded-[8px] bg-card shadow-card [&>:first-child_[data-rule]]:hidden">
+      <div className="overflow-hidden rounded-[12px] bg-card shadow-card [&>:first-child_[data-rule]]:hidden">
         {children}
       </div>
     </section>
@@ -370,7 +370,7 @@ function Note({
     <p
       className={cn(
         /* Pinned to match the cards it sits between. See Group. */
-        'flex items-start gap-2 rounded-[8px] px-3 py-2.5 text-sm',
+        'flex items-start gap-2 rounded-[12px] px-3 py-2.5 text-sm',
         variant === 'warning'
           ? 'bg-destructive/10 text-destructive'
           : 'bg-card text-muted-foreground shadow-card'

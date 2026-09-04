@@ -8,7 +8,7 @@ const surface =
   'materialize material-thick material-edge z-50 min-w-[8rem] overflow-hidden rounded-2xl p-1.5 text-popover-foreground shadow-overlay'
 
 const item = [
-  'relative flex cursor-pointer items-center gap-2 rounded-[10px] px-2.5 py-[5px]',
+  'relative flex cursor-pointer items-center gap-2 rounded-[14px] px-2.5 py-[5px]',
   'text-base outline-hidden select-none transition-colors duration-100',
   /* The highlight is a wash rather than a filled bar. A filled bar is right
      when the fill is a colour — the platform's blue reads as "this one"

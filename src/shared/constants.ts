@@ -15,8 +15,27 @@ export function draftUrl(token: number): string {
   return `${IMAGE_SCHEME}://draft/current?v=${token}`
 }
 
+/*
+ * How many pictures one stash can hold.
+ *
+ * Six. Four was what fitted across a card while every row also carried a drag
+ * grip in its left margin; the card is its own handle now, and the 22px that
+ * bought back is most of a seventh column. Six still reads as a picture rather
+ * than as a swatch at this window width, and it is still one thought — a run of
+ * screenshots long enough to need scrolling inside a row is not one thought, it
+ * is a folder, and this panel is not one.
+ */
+export const MAX_IMAGES = 6
+
 /** The window's own title bar. macOS is told this so it can centre the traffic lights in it. */
 export const HEADER_HEIGHT = 44
 
-export const MAIN_WIDTH = 460
-export const MAIN_HEIGHT = 620
+/*
+ * A panel, not a document window. It sits over whatever you were doing, so the
+ * less of that it covers the better; at this size a row still fits an image
+ * thumbnail with its caption beside the timestamp, and the desktop keeps the
+ * rest of the screen. The window is resizable from here — these are only where
+ * it opens, and nothing persists a size over them.
+ */
+export const MAIN_WIDTH = 360
+export const MAIN_HEIGHT = 510

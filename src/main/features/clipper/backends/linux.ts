@@ -64,21 +64,44 @@ async function captureWithPortal(): Promise<NativeImage> {
   }
 }
 
+/*
+ * The name grim knows a monitor by.
+ *
+ * Electron's Wayland label is the monitor's marketing name with the connector
+ * in brackets after it — "Lenovo Group Limited R27qe Gen2 UTP083DG (HDMI-A-1)"
+ * — and grim only answers to the connector. Handing it the whole label is an
+ * unknown output, which failed the capture for every display and took the whole
+ * grim backend down with it; the clip then came from the portal instead, which
+ * on wlroots is the slow path the preference order exists to avoid. On X11 the
+ * label is already the connector and the brackets are simply absent.
+ */
+export function connectorName(label: string): string {
+  return (/\(([^()]+)\)\s*$/.exec(label)?.[1] ?? label).trim()
+}
+
 async function captureWithGrim(): Promise<DisplayFrame[]> {
   const displays = screen.getAllDisplays()
   const frames: DisplayFrame[] = []
 
   for (const display of displays) {
-    const output = display.label
-    const args = ['-t', 'png', '-l', '1', ...(output ? ['-o', output] : []), '-']
-    const png = await exec('grim', args)
-    const image = nativeImage.createFromBuffer(png)
-    if (image.isEmpty()) return []
+    const output = connectorName(display.label)
+    if (!output) break
 
-    frames.push({ displayId: display.id, bounds: display.bounds, image })
+    /* Per display is the better capture — one image per monitor, at that
+       monitor's own resolution — but it is an optimisation, not the contract.
+       A name grim does not recognise stops the loop and the whole layout is
+       taken in one shot below, which is correct on every compositor. */
+    try {
+      const png = await exec('grim', ['-t', 'png', '-l', '1', '-o', output, '-'])
+      const image = nativeImage.createFromBuffer(png)
+      if (image.isEmpty()) break
+      frames.push({ displayId: display.id, bounds: display.bounds, image })
+    } catch {
+      break
+    }
   }
 
-  if (frames.length === displays.length) return frames
+  if (frames.length > 0 && frames.length === displays.length) return frames
   return sliceComposite(nativeImage.createFromBuffer(await exec('grim', ['-t', 'png', '-l', '1', '-'])))
 }
 

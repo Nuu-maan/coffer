@@ -27,12 +27,28 @@ export type TextItem = ItemBase & {
   text: string
 }
 
-export type ImageItem = ItemBase & {
-  kind: 'image'
+/** One PNG on disk, as the store records it. */
+export type StashedImage = {
   file: string
   width: number
   height: number
   bytes: number
+}
+
+/*
+ * A stash of pictures rather than of a picture. It was a picture — the file,
+ * its size and its bytes sat on the item itself — which made a stash of four
+ * screenshots four rows, four captions and four timestamps for one thought.
+ *
+ * `images` is never empty: an image item with nothing in it is not a state
+ * worth being able to reach, so the migration drops one rather than keeping a
+ * row that can only render as a gap. The cap on how many go in is [[MAX_IMAGES]]
+ * and it is enforced on the way in, not here — a store that somehow holds five
+ * shows five rather than silently losing one.
+ */
+export type ImageItem = ItemBase & {
+  kind: 'image'
+  images: StashedImage[]
   caption: string
 }
 
@@ -48,6 +64,11 @@ export function isImageItem(item: Item): item is ImageItem {
 
 export function itemLabel(item: Item): string {
   return item.kind === 'text' ? item.text : item.caption
+}
+
+/** The one every single-image path still wants: the first, and there is always one. */
+export function firstImage(item: ImageItem): StashedImage | undefined {
+  return item.images[0]
 }
 
 /** What a tag is stored as: trimmed, collapsed, and never ''. */

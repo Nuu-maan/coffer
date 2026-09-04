@@ -14,6 +14,7 @@ import type {
   ReorderInput,
   ReorderSectionInput
 } from '@shared/ipc/contract'
+import { MAX_IMAGES } from '@shared/constants'
 import { getStore, mutate } from '@main/store/store'
 import { deleteImage, saveImage } from '@main/features/images/store'
 import { needsNormalisation, normalise, orderBetween, orderForAppend } from './ordering'
@@ -60,20 +61,36 @@ export function addItem(input: AddItemInput): Snapshot {
   return snapshot()
 }
 
-export async function addImage(
-  image: NativeImage,
+/*
+ * One stash, however many pictures went into it.
+ *
+ * The cap is applied here rather than trusted from the caller: this is the only
+ * door into the store for a picture, and a limit that lives on the far side of
+ * an IPC boundary is a suggestion.
+ *
+ * The files are named after the stash that owns them — `abc123.png`,
+ * `abc123-1.png` — so a folder of PNGs can still be read back to the rows that
+ * claim them, which is what pruneOrphans is deciding about on every boot. The
+ * first keeps the bare id so that a stash written before this took an array is
+ * byte-identical to one written after it.
+ */
+export async function addImages(
+  images: readonly NativeImage[],
   input: Omit<AddImageInput, 'data'> = {}
 ): Promise<Snapshot> {
-  if (image.isEmpty()) return snapshot()
+  const usable = images.filter((image) => !image.isEmpty()).slice(0, MAX_IMAGES)
+  if (usable.length === 0) return snapshot()
 
   const id = nanoid(12)
-  const stored = await saveImage(id, image)
+  const stored = await Promise.all(
+    usable.map((image, index) => saveImage(index === 0 ? id : `${id}-${index}`, image))
+  )
 
   mutate((draft) => {
     draft.items.push({
       id,
       kind: 'image',
-      ...stored,
+      images: stored,
       caption: input.caption?.trim() ?? '',
       done: false,
       order: orderForAppend(draft.items.map((item) => item.order)),
@@ -356,6 +373,7 @@ function ensureSection(draft: Store, name: string): void {
 
 function discardFiles(items: Item[]): void {
   for (const item of items) {
-    if (item.kind === 'image') void deleteImage(item.file)
+    if (item.kind !== 'image') continue
+    for (const image of item.images) void deleteImage(image.file)
   }
 }

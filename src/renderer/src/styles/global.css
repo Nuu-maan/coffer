@@ -5,44 +5,52 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Light is white. Not off-white, not Apple's grouped-table grey — white.
+ * Light is paper on a desk: white cards on a ground a few steps off white.
  *
- * The mistake was twice the same mistake. First the ground was #f2f2f7, which
- * is the right colour behind a full-screen table on an opaque phone and the
- * wrong one behind a small panel; then it came up to #f6f6f8 and still read
- * grey, because the *sheet* was translucent. A white at 82% over a dark desktop
- * is not a white — it is whatever the wallpaper leaves of it, and on a dark
- * wallpaper that is a mid-grey. Translucency was quietly repainting the panel
- * darker than any value in this file.
+ * The ground spent two releases at #ffffff, and the reasoning was sound but the
+ * premise was broken. It had been #f2f2f7 — right behind a full-screen table on
+ * an opaque phone, too heavy behind a small panel — then #f6f6f8, which still
+ * read grey; so it went to white on the theory that any grey was wrong here.
+ * The actual culprit was translucency: a white at 82% over a dark desktop is
+ * not a white, it is whatever the wallpaper leaves of it, and the sheet was
+ * quietly repainting itself darker than any value in this file. Fixing that
+ * (98%, which keeps the blur's edge treatment and nothing else) also removed
+ * the reason to fear a grey — the value now holds, whatever is behind it.
  *
- * So the sheet is opaque enough to hold its colour — 98%, which keeps the
- * blur's edge treatment and nothing else — and everything on it is white too.
- * (If it still reads grey on your desktop, check the compositor: Hyprland's
- * `inactive_opacity` dims the whole window when it is not focused, and no
- * value in this file can win against a multiply applied after we have drawn.)
- * Which
- * leaves nothing to separate a card from its ground — and that is the point:
- * the separation is the shadow. A white card on a white sheet with a soft drop
- * under it is a piece of paper on a desk, which is the oldest and clearest way
- * to say "this is a thing, and it is on top".
+ * So the ground is #f5f5f7 and the cards stay #ffffff. A whole window of white
+ * at this size is a lamp pointed at the reader, and there was nothing for the
+ * brightness to buy: with card and ground the same colour, the separation was
+ * carried entirely by the shadow. Now the fill says it too, and the shadow only
+ * has to say which way is up. The card is still the brightest thing in the
+ * window, which is what a piece of paper on a desk looks like.
+ *
+ * (If the panel reads darker than #f5f5f7 on your desktop, check the
+ * compositor: Hyprland's `inactive_opacity` dims the whole window when it is
+ * not focused, and no value in this file can win against a multiply applied
+ * after we have drawn.)
  *
  * Text contrast does not follow the surfaces down. Contrast where something is
  * read is not the same question as contrast where it is only felt.
  */
 :root {
-  --card-radius: 12px;
-  --inner-radius: 8px;
-  --radius: 0.75rem;
+  --card-radius: 16px;
+  --inner-radius: 10px;
+  --radius: 1rem;
 
-  --background: #ffffff;
+  --background: #f5f5f7;
   --foreground: #1c1c1e;
 
   --card: #ffffff;
   --card-foreground: #1c1c1e;
   /* A step off the card, not a wash over it. Hover on a card cannot be the
      translucent ink the buttons use — ink over a card shows the panel through
-     it and the card stops being white, which is the one thing it is for. */
-  --card-hover: #f2f2f4;
+     it and the card stops being white, which is the one thing it is for.
+
+     It has to stop above the ground, too. At #f2f2f4 against a #f5f5f7 sheet
+     the hover was darker than the panel the card sits on, so pointing at a card
+     dropped it through its own shelf. Two steps down from white, one step up
+     from the ground. */
+  --card-hover: #f7f7f9;
   --popover: #ffffff;
   --popover-foreground: #1c1c1e;
   --elevated: #ffffff;
@@ -132,7 +140,7 @@
      One value rather than a material utility plus a /alpha, which set the same
      property and fought over it. Opaque enough to read on a busy desktop even
      where the compositor declines to blur behind us. */
-  --sheet: rgb(255 255 255 / 0.98);
+  --sheet: rgb(245 245 247 / 0.98);
 
   /*
    * The elevation ramp, and it is a ramp: every level is the level below it
@@ -305,29 +313,31 @@
 
 @theme inline {
   /*
-   * About as square as this can go while still reading as drawn rather than as
-   * a table cell. It started two steps rounder than a window-manager chrome
-   * would draw it, which made a list row read as a pill; a 2xl surface is now
-   * 12px, which is roughly what the platform itself uses for a card.
+   * Soft, and deliberately softer than a window-manager chrome would draw it.
+   * The scale spent a release pulled in tight enough that a card read as a
+   * table cell — square-shouldered against a panel whose own corners the
+   * compositor rounds generously, which made the contents look bolted into the
+   * window rather than laid on it. A card is 16px now and a menu 20px, which
+   * is the register the rest of the platform's floating surfaces sit in.
    *
    * The rule the scale is built on is concentricity: a thing nested inside
    * another is the outer radius less the padding between them, so the curves
    * stay parallel instead of the inner one looking pinched. p-1.5 inside a 2xl
-   * surface lands on 6px, p-[2px] inside a capsule stays a capsule, and so on.
-   * Pulling the scale in moves every derived radius with it, which is why the
+   * surface lands on 14px, p-[2px] inside a capsule stays a capsule, and so on.
+   * Pushing the scale out moves every derived radius with it, which is why the
    * handful of literal px radii in the components are written down rather than
    * left to be re-guessed.
    */
   --radius-card: var(--card-radius);
   --radius-inner: var(--inner-radius);
 
-  --radius-xs: 2px;
-  --radius-sm: 5px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 13px;
-  --radius-2xl: 16px;
-  --radius-3xl: 20px;
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -408,8 +418,6 @@
   --shadow-overlay: var(--shadow-overlay);
 
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-quart: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {
@@ -582,7 +590,7 @@
   }
 
   &[data-state='closed'] {
-    animation: materialize-out 100ms var(--ease-in-quart);
+    animation: materialize-out 100ms var(--ease-out-quart);
   }
 }
 
@@ -615,20 +623,6 @@
 /* The same, scaled harder. A 17px circle taken to 0.96 moves by two thirds of a
    pixel, which is not much feedback; this is the one place the exaggeration is
    the point, and it is reserved for controls under ~20px. */
-@utility press-sm {
-  transition:
-    background-color 90ms var(--ease-out-quart),
-    color 90ms var(--ease-out-quart),
-    box-shadow 120ms var(--ease-out-quart),
-    border-color 90ms var(--ease-out-quart),
-    opacity 90ms var(--ease-out-quart),
-    transform 140ms var(--ease-out-quart);
-
-  &:active:not(:disabled):not([data-disabled]) {
-    filter: brightness(0.94);
-    transform: scale(0.94);
-  }
-}
 
 @utility focus-halo {
   &:focus-visible {
@@ -709,12 +703,39 @@
   }
 }
 
+/*
+ * Fewer and gentler, not none.
+ *
+ * This used to crush every CSS animation to 1ms, which does not gentle a menu —
+ * it deletes it, and a surface that teleports in with nothing to say it arrived
+ * is harder to follow, not easier. The preference asks to be spared movement,
+ * not feedback. So the fade stays at its own timing and the scale goes, which
+ * is the same substitution `<MotionConfig reducedMotion="user">` is already
+ * making for everything the motion library draws.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 100ms !important;
+  }
+
+  @keyframes materialize-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes materialize-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
 }

@@ -9,7 +9,7 @@ import type {
 } from '@shared/ipc/contract'
 import type { HotkeyStatus, PermissionKind, Settings } from '@shared/types/item'
 import {
-  addImage,
+  addImages,
   addItem,
   addSection,
   clearDone,
@@ -56,8 +56,8 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
   ipcMain.handle(CH.ITEMS_LIST, () => snapshot())
   ipcMain.handle(CH.ITEMS_ADD, (_event, input: AddItemInput) => broadcastItems(addItem(input)))
   ipcMain.handle(CH.ITEMS_ADD_IMAGE, async (_event, input: AddImageInput) => {
-    const image = nativeImage.createFromBuffer(Buffer.from(input.data))
-    return broadcastItems(await addImage(image, { caption: input.caption, source: input.source }))
+    const images = input.data.map((bytes) => nativeImage.createFromBuffer(Buffer.from(bytes)))
+    return broadcastItems(await addImages(images, { caption: input.caption, source: input.source }))
   })
   ipcMain.handle(CH.ITEMS_TOGGLE, (_event, id: string) => broadcastItems(toggleItem(id)))
   ipcMain.handle(CH.ITEMS_UPDATE, (_event, id: string, text: string) =>
@@ -121,9 +121,7 @@ export function registerIpc({ onSettingsChanged, hotkeyStatus }: IpcHooks): void
   ipcMain.handle(CH.PLATFORM_INFO, () => platformInfo())
 
   ipcMain.handle(CH.PERMISSIONS_STATUS, () => permissions())
-  ipcMain.handle(CH.PERMISSIONS_REQUEST, (_event, kind: PermissionKind) =>
-    requestPermission(kind)
-  )
+  ipcMain.handle(CH.PERMISSIONS_REQUEST, (_event, kind: PermissionKind) => requestPermission(kind))
   ipcMain.handle(CH.HOTKEY_STATUS, () => hotkeyStatus())
 
   ipcMain.handle(CH.SETTINGS_GET, () => getSettings())
