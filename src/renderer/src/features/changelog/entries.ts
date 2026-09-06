@@ -19,6 +19,16 @@ export type Release = {
  */
 export const RELEASES: Release[] = [
   {
+    version: '0.3.4',
+    date: '2026-09-06',
+    changes: [
+      'One stash holds several pictures. Paste, drop or pick a handful at once and they wait together in the composer under a single caption instead of becoming a row each.',
+      'Wayland: clipping a region uses grim again, so the picker opens straight away, and the rectangle you drag now crops exactly the pixels it covers on Hyprland.',
+      'Menus close on the beat you dismiss them, rows settle faster, and reduced motion fades them rather than removing the fade entirely.',
+      'The whole card is a drag handle, surfaces are rounder, and the light theme sits on a softer ground.'
+    ]
+  },
+  {
     version: '0.3.3',
     date: '2026-09-03',
     changes: [
